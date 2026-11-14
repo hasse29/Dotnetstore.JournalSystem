@@ -8,3 +8,5 @@ await builder
     .RegisterPipeline()
     .RunApplicationAsync()
     .ConfigureAwait(false);
+
+internal sealed partial class Program;
