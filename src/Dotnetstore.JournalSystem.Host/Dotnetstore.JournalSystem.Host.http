@@ -1,0 +1,6 @@
+@Dotnetstore.JournalSystem.Host_HostAddress = http://localhost:5075
+
+GET {{Dotnetstore.JournalSystem.Host_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

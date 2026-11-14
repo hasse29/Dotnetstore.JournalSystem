@@ -3,4 +3,11 @@
     <File Path=".gitignore" />
     <File Path="README.md" />
   </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Dotnetstore.JournalSystem.Host/Dotnetstore.JournalSystem.Host.csproj" />
+    <Project Path="src/Dotnetstore.JournalSystem.Shared/Dotnetstore.JournalSystem.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Dotnetstore.JournalSystem.Integration.Tests/Dotnetstore.JournalSystem.Integration.Tests.csproj" />
+  </Folder>
 </Solution>
