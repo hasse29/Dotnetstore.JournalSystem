@@ -1,3 +1,7 @@
+using System.Globalization;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
+
 namespace Dotnetstore.JournalSystem.Host.Extensions;
 
 internal static class WebApplicationExtensions
@@ -21,7 +25,37 @@ internal static class WebApplicationExtensions
                         .AllowAnyHeader()
                         .AllowAnyMethod();
                 }
-            }));
+            }))
+            .AddRateLimiter(_ => { });
+
+        builder.Services
+            .AddOptions<RateLimiterOptions>()
+            .Configure<IConfiguration>((options, configuration) =>
+            {
+                var permitLimit = configuration.GetValue("RateLimiting:PermitLimit", 100);
+                var windowSeconds = configuration.GetValue("RateLimiting:WindowSeconds", 60);
+
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = permitLimit,
+                            Window = TimeSpan.FromSeconds(windowSeconds),
+                            QueueLimit = 0
+                        }));
+                options.OnRejected = (context, _) =>
+                {
+                    if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                    {
+                        context.HttpContext.Response.Headers.RetryAfter =
+                            ((int)retryAfter.TotalSeconds).ToString(CultureInfo.InvariantCulture);
+                    }
+
+                    return ValueTask.CompletedTask;
+                };
+            });
 
         return builder;
     }
@@ -36,7 +70,8 @@ internal static class WebApplicationExtensions
 
         app
             .UseHttpsRedirection()
-            .UseCors(CorsPolicyName);
+            .UseCors(CorsPolicyName)
+            .UseRateLimiter();
 
         return app;
     }
