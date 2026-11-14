@@ -2,11 +2,11 @@
 
 ## Project Context
 
-Journal system. CRUD-heavy domain, so each module uses Vertical Slice internally. This is a .NET 10 modular monolith with each module using its own internal architecture (VSA, Clean Architecture, or DDD — run the `architecture-advisor` skill per module if needed). The application is composed of independent modules that run in a single deployable unit (the Host) but maintain strict boundaries — each module owns its features, data, and domain logic. Modules communicate through integration events, never by direct cross-module method calls or shared database tables.
+Journal system. CRUD-heavy domain, so each module uses Vertical Slice internally. This is a .NET 11 modular monolith with each module using its own internal architecture (VSA, Clean Architecture, or DDD — run the `architecture-advisor` skill per module if needed). The application is composed of independent modules that run in a single deployable unit (the Host) but maintain strict boundaries — each module owns its features, data, and domain logic. Modules communicate through integration events, never by direct cross-module method calls or shared database tables.
 
 ## Tech Stack
 
-- **.NET 10** / C# 14
+- **.NET 11** / C# 15
 - **ASP.NET Core Minimal APIs** — `IEndpointGroup` per feature with `app.MapEndpoints()` auto-discovery, one endpoint group per feature per module
 - **Entity Framework Core** — one DbContext per module, PostgreSQL (Npgsql)
 - **Wolverine** (or MassTransit) — inter-module messaging via integration events, transactional outbox
@@ -147,7 +147,7 @@ public class OrdersDbContext(DbContextOptions<OrdersDbContext> options) : DbCont
 
 ## Coding Standards
 
-- **C# 14 features** — Use primary constructors, collection expressions, `field` keyword, records, pattern matching
+- **C# 15 features** — Use primary constructors, collection expressions, `field` keyword, records, pattern matching
 - **File-scoped namespaces** — Always
 - **`var` for obvious types** — Use explicit types when the type isn't clear from context
 - **Naming** — PascalCase for public members, `_camelCase` for private fields, suffix async methods with `Async`
@@ -160,7 +160,7 @@ public class OrdersDbContext(DbContextOptions<OrdersDbContext> options) : DbCont
 
 Load these dotnet-claude-kit skills for context:
 
-- `modern-csharp` — C# 14 language features and idioms
+- `modern-csharp` — C# 15 language features and idioms
 - `architecture-advisor` — Choose the internal architecture for each module
 - `vertical-slice` — Feature folder structure and handler patterns (if using VSA)
 - `clean-architecture` — Layered project structure with dependency inversion (if using CA)
