@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shouldly;
 
-namespace Dotnetstore.JournalSystem.Integration.Tests;
+namespace Dotnetstore.JournalSystem.Integration.Tests.Extensions;
 
 public sealed class SecurityLoggingTests
 {

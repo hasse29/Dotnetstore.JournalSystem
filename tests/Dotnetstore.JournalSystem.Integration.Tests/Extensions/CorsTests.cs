@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Shouldly;
 
-namespace Dotnetstore.JournalSystem.Integration.Tests;
+namespace Dotnetstore.JournalSystem.Integration.Tests.Extensions;
 
 public sealed class CorsTests
 {

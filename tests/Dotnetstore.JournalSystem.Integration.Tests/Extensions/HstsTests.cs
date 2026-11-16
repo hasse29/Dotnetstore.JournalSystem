@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Shouldly;
 
-namespace Dotnetstore.JournalSystem.Integration.Tests;
+namespace Dotnetstore.JournalSystem.Integration.Tests.Extensions;
 
 public sealed class HstsTests
 {

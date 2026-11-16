@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 
-namespace Dotnetstore.JournalSystem.Integration.Tests;
+namespace Dotnetstore.JournalSystem.Integration.Tests.Extensions;
 
 public sealed class ForwardedHeadersTests
 {
