@@ -16,6 +16,10 @@
   <Folder Name="/src/Api/Modules/">
     <Project Path="src/Dotnetstore.JournalSystem.Api.Organization/Dotnetstore.JournalSystem.Api.Organization.csproj" />
   </Folder>
+  <Folder Name="/src/Aspire/">
+    <Project Path="src/Dotnetstore.JournalSystem.Aspire.AppHost/Dotnetstore.JournalSystem.Aspire.AppHost.csproj" />
+    <Project Path="src/Dotnetstore.JournalSystem.Aspire.ServiceDefaults/Dotnetstore.JournalSystem.Aspire.ServiceDefaults.csproj" />
+  </Folder>
   <Folder Name="/src/Shared/">
     <Project Path="src/Dotnetstore.JournalSystem.Shared/Dotnetstore.JournalSystem.Shared.csproj" />
   </Folder>

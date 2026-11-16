@@ -2,6 +2,8 @@ namespace Dotnetstore.JournalSystem.Host.Logging;
 
 internal static partial class SecurityLog
 {
+    internal const string Category = "Dotnetstore.JournalSystem.Security";
+
     [LoggerMessage(EventId = 1001, Level = LogLevel.Warning, Message = "Rate limit exceeded for {Method} {Path}")]
     internal static partial void RateLimitExceeded(ILogger logger, string method, string path);
 

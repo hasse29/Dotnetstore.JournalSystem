@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <ItemGroup>
+        <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+        <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
         <PackageReference Include="Dotnetstore.BaseModel" />
         <PackageReference Include="Dotnetstore.Security" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" />

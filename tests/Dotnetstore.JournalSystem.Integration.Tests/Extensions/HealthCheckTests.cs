@@ -20,4 +20,68 @@ public sealed class HealthCheckTests
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         body.ShouldBe("Healthy");
     }
+
+    [Fact]
+    public async Task HealthEndpointStaysHealthyWhenDatabaseIsUnavailable()
+    {
+        // Arrange
+        var settings = new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:journalsystem"] = "Host=localhost;Port=1;Database=unreachable;Username=u;Password=p;Timeout=1"
+        };
+        await using var factory = TestHost.Create("Production", settings);
+        using var client = factory.CreateClient();
+
+        // Act
+        using var response = await client.GetAsync(new Uri("/health", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task ReadyEndpointIsNotExposedInProduction()
+    {
+        // Arrange
+        await using var factory = TestHost.Create("Production");
+        using var client = factory.CreateClient();
+
+        // Act
+        using var response = await client.GetAsync(new Uri("/ready", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task ReadyEndpointIsExposedInDevelopment()
+    {
+        // Arrange
+        await using var factory = TestHost.Create("Development");
+        using var client = factory.CreateClient();
+
+        // Act
+        using var response = await client.GetAsync(new Uri("/ready", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldNotBe(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task ReadyEndpointReportsUnhealthyWhenDatabaseIsUnavailable()
+    {
+        // Arrange
+        var settings = new Dictionary<string, string?>
+        {
+            ["ConnectionStrings:journalsystem"] = "Host=localhost;Port=1;Database=unreachable;Username=u;Password=p;Timeout=1"
+        };
+        await using var factory = TestHost.Create("Development", settings);
+        using var client = factory.CreateClient();
+
+        // Act
+        using var response = await client.GetAsync(new Uri("/ready", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
+    }
 }

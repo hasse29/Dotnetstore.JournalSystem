@@ -23,4 +23,4 @@ internal sealed class OwnCompany : Company
         CorporateNumber = corporateNumber;
         TaxId = taxId;
     }
-}
+}

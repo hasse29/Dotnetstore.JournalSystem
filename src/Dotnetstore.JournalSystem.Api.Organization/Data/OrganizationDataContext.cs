@@ -9,6 +9,7 @@ internal sealed class OrganizationDataContext(DbContextOptions<OrganizationDataC
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        ArgumentNullException.ThrowIfNull(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OrganizationDataContext).Assembly);
     }
-}
+}

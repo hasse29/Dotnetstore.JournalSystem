@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Dotnetstore.JournalSystem.Integration.Tests;
@@ -18,8 +17,11 @@ internal static class TestHost
         new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment(environment);
-            builder.ConfigureAppConfiguration((_, config) =>
-                config.AddInMemoryCollection(settings ?? new Dictionary<string, string?>()));
+
+            foreach (var setting in settings ?? new Dictionary<string, string?>())
+            {
+                builder.UseSetting(setting.Key, setting.Value);
+            }
 
             if (configureServices is not null)
             {
