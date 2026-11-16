@@ -190,6 +190,14 @@ Use `cwm-roslyn-navigator` tools to minimize token consumption:
 - **To check for errors** — Use `get_diagnostics` after changes
 - **To verify module isolation** — Use `get_project_graph` to confirm modules do not reference each other directly
 
+## Testing Conventions
+
+- **Shouldly only** — never `Assert.*`
+- **Positive and negative tests** — every behaviour gets a test for the success path and for the rejection/failure path
+- **Mirror the folder structure** — a test for `src/<Project>/<Folder>/X.cs` lives in `tests/<Project>.Tests/<Folder>/XTests.cs` (same folders and namespaces)
+- **Test our own code** — Dotnetstore code only, not framework or third-party behaviour
+- **Arrange / Act / Assert** — mark the three sections with `// Arrange`, `// Act`, `// Assert` comments
+
 ## Commands
 
 ```bash

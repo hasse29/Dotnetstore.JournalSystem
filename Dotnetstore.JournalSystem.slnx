@@ -13,11 +13,17 @@
   <Folder Name="/src/Api/">
     <Project Path="src/Dotnetstore.JournalSystem.Host/Dotnetstore.JournalSystem.Host.csproj" />
   </Folder>
+  <Folder Name="/src/Api/Modules/">
+    <Project Path="src/Dotnetstore.JournalSystem.Api.Organization/Dotnetstore.JournalSystem.Api.Organization.csproj" />
+  </Folder>
   <Folder Name="/src/Shared/">
     <Project Path="src/Dotnetstore.JournalSystem.Shared/Dotnetstore.JournalSystem.Shared.csproj" />
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/Api/">
     <Project Path="tests/Dotnetstore.JournalSystem.Integration.Tests/Dotnetstore.JournalSystem.Integration.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Api/Modules/">
+    <Project Path="tests/Dotnetstore.JournalSystem.Api.Organization.Tests/Dotnetstore.JournalSystem.Api.Organization.Tests.csproj" />
   </Folder>
 </Solution>

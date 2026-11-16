@@ -114,91 +114,94 @@ internal static class WebApplicationExtensions
         return builder;
     }
 
-    internal static WebApplication RegisterPipeline(this WebApplication app)
+    extension(WebApplication app)
     {
-        app
-            .UseForwardedHeaders()
-            .UseExceptionHandler()
-            .UseStatusCodePages();
-
-        if (!app.Environment.IsDevelopment())
+        internal WebApplication RegisterPipeline()
         {
             app
-                .UseHsts();
-        }
+                .UseForwardedHeaders()
+                .UseExceptionHandler()
+                .UseStatusCodePages();
 
-        app
-            .UseHttpsRedirection();
-
-        app
-            .UseSecurityHeaders()
-            .UseAccessDeniedLogging();
-
-        app
-            .UseCors(CorsPolicyName)
-            .UseRequestTimeouts()
-            .UseRateLimiter();
-
-        if (app.Environment.IsDevelopment())
-        {
-            app
-                .MapOpenApi();
-        }
-
-        app
-            .MapHealthChecks(HealthPath);
-
-        return app;
-    }
-
-    internal static async Task RunApplicationAsync(this WebApplication app, CancellationToken cancellationToken = default)
-    {
-        await app
-            .RunAsync(cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-    private static WebApplication UseSecurityHeaders(this WebApplication app)
-    {
-        app.Use((context, next) =>
-        {
-            context.Response.OnStarting(() =>
+            if (!app.Environment.IsDevelopment())
             {
-                var headers = context.Response.Headers;
-                headers["X-Content-Type-Options"] = "nosniff";
-                headers["X-Frame-Options"] = "DENY";
-                headers["Referrer-Policy"] = "no-referrer";
-                headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'";
-                headers["Cache-Control"] = "no-store";
-                return Task.CompletedTask;
+                app
+                    .UseHsts();
+            }
+
+            app
+                .UseHttpsRedirection();
+
+            app
+                .UseSecurityHeaders()
+                .UseAccessDeniedLogging();
+
+            app
+                .UseCors(CorsPolicyName)
+                .UseRequestTimeouts()
+                .UseRateLimiter();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app
+                    .MapOpenApi();
+            }
+
+            app
+                .MapHealthChecks(HealthPath);
+
+            return app;
+        }
+
+        internal async Task RunApplicationAsync(CancellationToken cancellationToken = default)
+        {
+            await app
+                .RunAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        private WebApplication UseSecurityHeaders()
+        {
+            app.Use((context, next) =>
+            {
+                context.Response.OnStarting(() =>
+                {
+                    var headers = context.Response.Headers;
+                    headers["X-Content-Type-Options"] = "nosniff";
+                    headers["X-Frame-Options"] = "DENY";
+                    headers["Referrer-Policy"] = "no-referrer";
+                    headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'";
+                    headers["Cache-Control"] = "no-store";
+                    return Task.CompletedTask;
+                });
+
+                return next(context);
             });
 
-            return next(context);
-        });
+            return app;
+        }
 
-        return app;
-    }
-
-    private static WebApplication UseAccessDeniedLogging(this WebApplication app)
-    {
-        var logger = app.Services
-            .GetRequiredService<ILoggerFactory>()
-            .CreateLogger("Dotnetstore.JournalSystem.Security");
-
-        app.Use(async (context, next) =>
+        private WebApplication UseAccessDeniedLogging()
         {
-            await next(context).ConfigureAwait(false);
+            var logger = app.Services
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger("Dotnetstore.JournalSystem.Security");
 
-            if (context.Response.StatusCode is StatusCodes.Status401Unauthorized or StatusCodes.Status403Forbidden)
+            app.Use(async (context, next) =>
             {
-                SecurityLog.AccessDenied(
-                    logger,
-                    context.Response.StatusCode,
-                    context.Request.Method,
-                    context.Request.Path.Value ?? string.Empty);
-            }
-        });
+                await next(context).ConfigureAwait(false);
 
-        return app;
+                if (context.Response.StatusCode is StatusCodes.Status401Unauthorized or StatusCodes.Status403Forbidden)
+                {
+                    SecurityLog.AccessDenied(
+                        logger,
+                        context.Response.StatusCode,
+                        context.Request.Method,
+                        context.Request.Path.Value ?? string.Empty);
+                }
+            });
+
+            return app;
+        }
     }
 }
