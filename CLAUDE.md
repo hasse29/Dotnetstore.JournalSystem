@@ -8,7 +8,7 @@ Journal system. CRUD-heavy domain, so each module uses Vertical Slice internally
 
 - **.NET 11** / C# 15
 - **ASP.NET Core Minimal APIs** — `IEndpointGroup` per feature with `app.MapEndpoints()` auto-discovery, one endpoint group per feature per module
-- **Entity Framework Core** — one DbContext per module, PostgreSQL (Npgsql)
+- **Entity Framework Core** — one DbContext per module, SQL Server (Microsoft.EntityFrameworkCore.SqlServer)
 - **Wolverine** (or MassTransit) — inter-module messaging via integration events, transactional outbox
 - **Mediator** (source-generated, MIT) or Wolverine or raw handlers — intra-module command/query dispatch
 - **FluentValidation** — request validation
@@ -69,7 +69,7 @@ public static class OrdersModule
     public static IServiceCollection AddOrdersModule(this IServiceCollection services, IConfiguration config)
     {
         services.AddDbContext<OrdersDbContext>(options =>
-            options.UseNpgsql(config.GetConnectionString("OrdersDb")));
+            options.UseSqlServer(config.GetConnectionString("OrdersDb")));
 
         services.AddMediator(); // source-generated, registers handlers from this assembly
         services.AddValidatorsFromAssembly(typeof(OrdersModule).Assembly);

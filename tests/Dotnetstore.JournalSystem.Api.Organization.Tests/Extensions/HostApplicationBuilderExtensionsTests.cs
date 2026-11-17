@@ -9,7 +9,7 @@ namespace Dotnetstore.JournalSystem.Api.Organization.Tests.Extensions;
 
 public sealed class HostApplicationBuilderExtensionsTests
 {
-    private const string ConnectionString = "Host=localhost;Port=1;Database=journalsystem;Username=u;Password=p;Timeout=1";
+    private const string ConnectionString = "Server=localhost,1;Database=journalsystem;User Id=u;Password=p;Connect Timeout=1;TrustServerCertificate=True";
 
     private static HostApplicationBuilder CreateBuilder(string? connectionString)
     {
@@ -48,7 +48,7 @@ public sealed class HostApplicationBuilderExtensionsTests
     }
 
     [Fact]
-    public void RegisterOrganizationServicesRegistersDataContextForPostgreSql()
+    public void RegisterOrganizationServicesRegistersDataContextForSqlServer()
     {
         // Arrange
         var builder = CreateBuilder(ConnectionString);
@@ -60,8 +60,8 @@ public sealed class HostApplicationBuilderExtensionsTests
         var context = scope.ServiceProvider.GetRequiredService<OrganizationDataContext>();
 
         // Assert
-        context.Database.ProviderName.ShouldBe("Npgsql.EntityFrameworkCore.PostgreSQL");
-        context.Database.GetConnectionString().ShouldNotBeNull().ShouldContain("Database=journalsystem");
+        context.Database.ProviderName.ShouldBe("Microsoft.EntityFrameworkCore.SqlServer");
+        context.Database.GetConnectionString().ShouldNotBeNull().ShouldContain("Initial Catalog=journalsystem");
     }
 
     [Fact]

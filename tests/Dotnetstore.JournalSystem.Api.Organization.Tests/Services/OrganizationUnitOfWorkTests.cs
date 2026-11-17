@@ -1,29 +1,26 @@
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
 using Shouldly;
 
 namespace Dotnetstore.JournalSystem.Api.Organization.Tests.Services;
 
 public sealed class OrganizationUnitOfWorkTests : IDisposable
 {
-    private readonly SqliteConnection _connection;
+    private readonly DbContextOptions<OrganizationDataContext> _options;
     private readonly OrganizationDataContext _context;
     private readonly OwnCompanyRepository _repository;
     private readonly OrganizationUnitOfWork _unitOfWork;
 
-    public OrganizationUnitOfWorkTests()
+    public OrganizationUnitOfWorkTests(SqlServerFixture fixture)
     {
-        _connection = new SqliteConnection("Data Source=:memory:");
-        _connection.Open();
-
-        var options = new DbContextOptionsBuilder<OrganizationDataContext>()
-            .UseSqlite(_connection)
+        _options = new DbContextOptionsBuilder<OrganizationDataContext>()
+            .UseSqlServer(fixture.CreateDatabaseConnectionString())
             .Options;
 
-        _context = new OrganizationDataContext(options);
+        _context = new OrganizationDataContext(_options);
         _context.Database.EnsureCreated();
         _repository = new OwnCompanyRepository(_context);
         _unitOfWork = new OrganizationUnitOfWork(_context, _repository);
@@ -33,7 +30,8 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
     {
         _unitOfWork.Dispose();
         _context.Dispose();
-        _connection.Dispose();
+        using var cleanup = new OrganizationDataContext(_options);
+        cleanup.Database.EnsureDeleted();
     }
 
     private static OwnCompany CreateCompany()

@@ -27,7 +27,7 @@ public sealed class HealthCheckTests
         // Arrange
         var settings = new Dictionary<string, string?>
         {
-            ["ConnectionStrings:journalsystem"] = "Host=localhost;Port=1;Database=unreachable;Username=u;Password=p;Timeout=1"
+            ["ConnectionStrings:journalsystem"] = "Server=localhost,1;Database=unreachable;User Id=u;Password=p;Connect Timeout=1;TrustServerCertificate=True"
         };
         await using var factory = TestHost.Create("Production", settings);
         using var client = factory.CreateClient();
@@ -73,7 +73,7 @@ public sealed class HealthCheckTests
         // Arrange
         var settings = new Dictionary<string, string?>
         {
-            ["ConnectionStrings:journalsystem"] = "Host=localhost;Port=1;Database=unreachable;Username=u;Password=p;Timeout=1"
+            ["ConnectionStrings:journalsystem"] = "Server=localhost,1;Database=unreachable;User Id=u;Password=p;Connect Timeout=1;TrustServerCertificate=True"
         };
         await using var factory = TestHost.Create("Development", settings);
         using var client = factory.CreateClient();

@@ -1,23 +1,19 @@
 using Dotnetstore.JournalSystem.Api.SharedKernel.Services;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Dotnetstore.JournalSystem.Api.SharedKernel.Tests.Fixtures;
 using Shouldly;
 
 namespace Dotnetstore.JournalSystem.Api.SharedKernel.Tests.Services;
 
 public sealed class GenericRepositoryTests : IDisposable
 {
-    private readonly SqliteConnection _connection;
     private readonly TestDbContext _context;
     private readonly GenericRepository<TestItem> _repository;
 
-    public GenericRepositoryTests()
+    public GenericRepositoryTests(SqlServerFixture fixture)
     {
-        _connection = new SqliteConnection("Data Source=:memory:");
-        _connection.Open();
-
         var options = new DbContextOptionsBuilder<TestDbContext>()
-            .UseSqlite(_connection)
+            .UseSqlServer(fixture.CreateDatabaseConnectionString())
             .Options;
 
         _context = new TestDbContext(options);
@@ -27,8 +23,8 @@ public sealed class GenericRepositoryTests : IDisposable
 
     public void Dispose()
     {
+        _context.Database.EnsureDeleted();
         _context.Dispose();
-        _connection.Dispose();
     }
 
     private async Task SeedAsync(params TestItem[] items)

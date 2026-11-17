@@ -1,19 +1,18 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var postgresPassword = builder
+var sqlPassword = builder
     .AddParameter(
-        "postgres-password",
-        new GenerateParameterDefault { MinLength = 32, Special = false },
+        "sql-password",
+        new GenerateParameterDefault { MinLength = 32, Special = false, MinLower = 1, MinUpper = 1, MinNumeric = 1 },
         secret: true,
         persist: true);
 
-var postgres = builder
-    .AddPostgres("postgres", password: postgresPassword)
+var sql = builder
+    .AddSqlServer("sql", password: sqlPassword)
     .WithDataVolume()
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WithPgAdmin();
+    .WithLifetime(ContainerLifetime.Persistent);
 
-var database = postgres
+var database = sql
     .AddDatabase("journalsystem");
 
 builder

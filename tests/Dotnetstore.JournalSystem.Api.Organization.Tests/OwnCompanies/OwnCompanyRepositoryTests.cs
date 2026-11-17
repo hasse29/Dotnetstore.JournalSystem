@@ -1,25 +1,21 @@
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.SharedKernel.Services;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
 using Shouldly;
 
 namespace Dotnetstore.JournalSystem.Api.Organization.Tests.OwnCompanies;
 
 public sealed class OwnCompanyRepositoryTests : IDisposable
 {
-    private readonly SqliteConnection _connection;
     private readonly OrganizationDataContext _context;
     private readonly OwnCompanyRepository _repository;
 
-    public OwnCompanyRepositoryTests()
+    public OwnCompanyRepositoryTests(SqlServerFixture fixture)
     {
-        _connection = new SqliteConnection("Data Source=:memory:");
-        _connection.Open();
-
         var options = new DbContextOptionsBuilder<OrganizationDataContext>()
-            .UseSqlite(_connection)
+            .UseSqlServer(fixture.CreateDatabaseConnectionString())
             .Options;
 
         _context = new OrganizationDataContext(options);
@@ -29,8 +25,8 @@ public sealed class OwnCompanyRepositoryTests : IDisposable
 
     public void Dispose()
     {
+        _context.Database.EnsureDeleted();
         _context.Dispose();
-        _connection.Dispose();
     }
 
     private static OwnCompany CreateCompany(string name = "Dotnetstore AB")

@@ -14,7 +14,7 @@ public static class HostApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.AddNpgsqlDbContext<OrganizationDataContext>(DatabaseConnectionName);
+        builder.AddSqlServerDbContext<OrganizationDataContext>(DatabaseConnectionName);
 
         return builder;
     }

@@ -1,3 +1,7 @@
 [*.cs]
 # xUnit tests run without a synchronization context, so ConfigureAwait adds only noise
 dotnet_diagnostic.CA2007.severity = none
+# xUnit fixtures and test classes must be public
+dotnet_diagnostic.CA1515.severity = none
+# Constructor-injected fixtures are never null
+dotnet_diagnostic.CA1062.severity = none
