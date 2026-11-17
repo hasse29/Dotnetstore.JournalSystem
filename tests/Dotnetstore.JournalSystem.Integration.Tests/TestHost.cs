@@ -10,11 +10,11 @@ internal static class TestHost
     internal const string OpenApiUrl = "/openapi/v1.json";
 
     [SuppressMessage("Reliability", "CA2000", Justification = "The derived factory returned by WithWebHostBuilder is disposed by the caller.")]
-    internal static WebApplicationFactory<Program> Create(
+    internal static WebApplicationFactory<Host.Program> Create(
         string environment,
         IReadOnlyDictionary<string, string?>? settings = null,
         Action<IServiceCollection>? configureServices = null) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        new WebApplicationFactory<Host.Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment(environment);
 

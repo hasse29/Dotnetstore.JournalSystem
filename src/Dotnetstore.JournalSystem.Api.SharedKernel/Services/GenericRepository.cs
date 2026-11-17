@@ -2,81 +2,72 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dotnetstore.JournalSystem.Api.SharedKernel.Services;
 
-public sealed class GenericRepository<T>(DbContext context) : IGenericRepository<T>
+public class GenericRepository<T>(DbContext context) : IGenericRepository<T>
     where T : class
 {
     private readonly DbSet<T> _dbSet = context.Set<T>();
-    
-    async ValueTask<IEnumerable<T>> IGenericRepository<T>.GetAllAsync(CancellationToken cancellationToken)
+
+    public virtual async ValueTask<IEnumerable<T>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .ToListAsync(cancellationToken: cancellationToken)
             .ConfigureAwait(false);
     }
 
-    async ValueTask<T?> IGenericRepository<T>.GetByIdAsync(object id, CancellationToken cancellationToken)
-    {
-        return await GetByIdAsync(id, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-    async ValueTask IGenericRepository<T>.AddAsync(T entity, CancellationToken cancellationToken)
-    {
-        await _dbSet
-            .AddAsync(entity, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-    async ValueTask IGenericRepository<T>.AddAsync(IReadOnlyCollection<T> entities, CancellationToken cancellationToken)
-    {
-        await _dbSet
-            .AddRangeAsync(entities, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
-    void IGenericRepository<T>.Update(T entity)
-    {
-        _dbSet.Update(entity);
-    }
-
-    void IGenericRepository<T>.Update(IReadOnlyCollection<T> entities)
-    {
-        _dbSet.UpdateRange(entities);
-    }
-
-    async ValueTask IGenericRepository<T>.DeleteAsync(object id, CancellationToken cancellationToken)
-    {
-        var entity = await GetByIdAsync(id, cancellationToken)
-            .ConfigureAwait(false);
-        
-        if(entity is not null)
-        {
-            _dbSet.Remove(entity);
-        }
-    }
-
-    async ValueTask IGenericRepository<T>.DeleteAsync(IReadOnlyCollection<object> ids, CancellationToken cancellationToken)
-    {
-        foreach (var id in ids)
-        {
-            var entity = await GetByIdAsync(id, cancellationToken)
-                .ConfigureAwait(false);
-        
-            if(entity is not null)
-            {
-                _dbSet.Remove(entity);
-            }
-        }
-    }
-    
-    private async ValueTask<T?> GetByIdAsync(object id, CancellationToken cancellationToken)
+    public virtual async ValueTask<T?> GetByIdAsync(object id, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .FindAsync([id], cancellationToken)
             .ConfigureAwait(false);
     }
 
-    void IGenericRepository<T>.Detach(T entity)
+    public virtual async ValueTask AddAsync(T entity, CancellationToken cancellationToken = default)
+    {
+        await _dbSet
+            .AddAsync(entity, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public virtual async ValueTask AddAsync(IReadOnlyCollection<T> entities, CancellationToken cancellationToken = default)
+    {
+        await _dbSet
+            .AddRangeAsync(entities, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public virtual void Update(T entity)
+    {
+        _dbSet.Update(entity);
+    }
+
+    public virtual void Update(IReadOnlyCollection<T> entities)
+    {
+        _dbSet.UpdateRange(entities);
+    }
+
+    public virtual async ValueTask DeleteAsync(object id, CancellationToken cancellationToken = default)
+    {
+        var entity = await GetByIdAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (entity is not null)
+        {
+            _dbSet.Remove(entity);
+        }
+    }
+
+    public virtual async ValueTask DeleteAsync(IReadOnlyCollection<object> ids, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(ids);
+
+        foreach (var id in ids)
+        {
+            await DeleteAsync(id, cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
+    public virtual void Detach(T entity)
     {
         context.Entry(entity).State = EntityState.Detached;
     }

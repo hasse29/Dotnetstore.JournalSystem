@@ -9,4 +9,7 @@ await builder
     .RunApplicationAsync()
     .ConfigureAwait(false);
 
-internal sealed partial class Program;
+namespace Dotnetstore.JournalSystem.Host
+{
+    internal sealed partial class Program;
+}

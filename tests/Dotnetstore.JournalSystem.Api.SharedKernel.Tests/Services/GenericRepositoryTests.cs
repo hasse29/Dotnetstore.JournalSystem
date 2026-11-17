@@ -9,7 +9,7 @@ public sealed class GenericRepositoryTests : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly TestDbContext _context;
-    private readonly IGenericRepository<TestItem> _repository;
+    private readonly GenericRepository<TestItem> _repository;
 
     public GenericRepositoryTests()
     {

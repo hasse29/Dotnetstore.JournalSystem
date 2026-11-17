@@ -11,8 +11,8 @@ public sealed class CorsTests
     private const string AllowedOrigin = "http://localhost:3000";
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "The derived factory returned by WithWebHostBuilder is disposed by the caller.")]
-    private static WebApplicationFactory<Program> CreateFactory(string environment, params string[] origins) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+    private static WebApplicationFactory<Host.Program> CreateFactory(string environment, params string[] origins) =>
+        new WebApplicationFactory<Host.Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment(environment);
             builder.ConfigureAppConfiguration((_, config) =>

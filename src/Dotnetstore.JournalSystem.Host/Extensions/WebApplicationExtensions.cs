@@ -1,4 +1,5 @@
 using Dotnetstore.JournalSystem.Api.Organization.Extensions;
+using Dotnetstore.JournalSystem.Aspire.ServiceDefaults;
 
 namespace Dotnetstore.JournalSystem.Host.Extensions;
 

@@ -11,8 +11,8 @@ public sealed class RateLimitingTests
     private const string OpenApiUrl = "/openapi/v1.json";
 
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Reliability", "CA2000", Justification = "The derived factory returned by WithWebHostBuilder is disposed by the caller.")]
-    private static WebApplicationFactory<Program> CreateFactory(int permitLimit) =>
-        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+    private static WebApplicationFactory<Host.Program> CreateFactory(int permitLimit) =>
+        new WebApplicationFactory<Host.Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
             builder.ConfigureAppConfiguration((_, config) =>
