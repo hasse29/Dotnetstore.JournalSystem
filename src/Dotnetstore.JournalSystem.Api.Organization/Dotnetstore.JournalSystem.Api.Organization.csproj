@@ -9,4 +9,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" />
     </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Dotnetstore.JournalSystem.Api.SharedKernel\Dotnetstore.JournalSystem.Api.SharedKernel.csproj" />
+    </ItemGroup>
 </Project>

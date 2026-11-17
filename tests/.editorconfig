@@ -1,0 +1,3 @@
+[*.cs]
+# xUnit tests run without a synchronization context, so ConfigureAwait adds only noise
+dotnet_diagnostic.CA2007.severity = none

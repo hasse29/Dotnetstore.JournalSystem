@@ -15,6 +15,7 @@
   </Folder>
   <Folder Name="/src/Api/Modules/">
     <Project Path="src/Dotnetstore.JournalSystem.Api.Organization/Dotnetstore.JournalSystem.Api.Organization.csproj" />
+    <Project Path="src/Dotnetstore.JournalSystem.Api.SharedKernel/Dotnetstore.JournalSystem.Api.SharedKernel.csproj" />
   </Folder>
   <Folder Name="/src/Aspire/">
     <Project Path="src/Dotnetstore.JournalSystem.Aspire.AppHost/Dotnetstore.JournalSystem.Aspire.AppHost.csproj" />
@@ -29,5 +30,6 @@
   </Folder>
   <Folder Name="/tests/Api/Modules/">
     <Project Path="tests/Dotnetstore.JournalSystem.Api.Organization.Tests/Dotnetstore.JournalSystem.Api.Organization.Tests.csproj" />
+    <Project Path="tests/Dotnetstore.JournalSystem.Api.SharedKernel.Tests/Dotnetstore.JournalSystem.Api.SharedKernel.Tests.csproj" />
   </Folder>
 </Solution>
