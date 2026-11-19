@@ -329,4 +329,58 @@ public sealed class ApiEndpointsTests
         ApiEndpoints.Contact.EmailAddressTypes.GetAll.ShouldNotBe(ApiEndpoints.Contact.AddressTypes.GetAll);
         ApiEndpoints.Contact.EmailAddressTypes.GetById.ShouldNotBe(ApiEndpoints.Contact.EmailAddressTypes.GetAll);
     }
+
+    [Fact]
+    public void EmailAddressCollectionRoutesUseTheContactPath()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.EmailAddresses.GetAll,
+            ApiEndpoints.Contact.EmailAddresses.Create
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/email-addresses");
+    }
+
+    [Fact]
+    public void EmailAddressItemRoutesRequireAGuidId()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.EmailAddresses.GetById,
+            ApiEndpoints.Contact.EmailAddresses.Update,
+            ApiEndpoints.Contact.EmailAddresses.Delete
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/email-addresses/{id:guid}");
+    }
+
+    [Fact]
+    public void EmailAddressRoutesStartWithApiPrefixAndHaveNoTrailingSlash()
+    {
+        // Arrange
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.EmailAddresses.GetAll,
+            ApiEndpoints.Contact.EmailAddresses.GetById,
+            ApiEndpoints.Contact.EmailAddresses.Create,
+            ApiEndpoints.Contact.EmailAddresses.Update,
+            ApiEndpoints.Contact.EmailAddresses.Delete
+        };
+
+        // Act & Assert
+        routes.ShouldAllBe(x => x.StartsWith("/api/", StringComparison.Ordinal) && !x.EndsWith('/'));
+    }
+
+    [Fact]
+    public void EmailAddressRoutesDoNotOverlapWithEmailAddressTypeRoutes()
+    {
+        // Arrange & Act & Assert
+        ApiEndpoints.Contact.EmailAddresses.GetAll.ShouldNotBe(ApiEndpoints.Contact.EmailAddressTypes.GetAll);
+        ApiEndpoints.Contact.EmailAddresses.GetById.ShouldNotBe(ApiEndpoints.Contact.EmailAddresses.GetAll);
+    }
 }

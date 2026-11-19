@@ -1,6 +1,7 @@
 using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
+using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
 using Dotnetstore.JournalSystem.Shared.Constants;
@@ -31,6 +32,8 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IAddressService, AddressService>();
         builder.Services.AddScoped<IEmailAddressTypeRepository, EmailAddressTypeRepository>();
         builder.Services.AddScoped<IEmailAddressTypeService, EmailAddressTypeService>();
+        builder.Services.AddScoped<IEmailAddressRepository, EmailAddressRepository>();
+        builder.Services.AddScoped<IEmailAddressService, EmailAddressService>();
 
         return builder;
     }
@@ -42,7 +45,8 @@ public static class HostApplicationBuilderExtensions
         return app
             .MapAddressTypeEndpoints()
             .MapAddressEndpoints()
-            .MapEmailAddressTypeEndpoints();
+            .MapEmailAddressTypeEndpoints()
+            .MapEmailAddressEndpoints();
     }
 
     public static async Task InitializeContactDatabaseAsync(

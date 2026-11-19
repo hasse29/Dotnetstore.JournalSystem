@@ -1,6 +1,7 @@
 using Dotnetstore.BaseModel.Entities;
 using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
+using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
 using Microsoft.EntityFrameworkCore;
@@ -42,7 +43,7 @@ public sealed class ContactDataContextTests
         var entityTypes = context.Model.GetEntityTypes().ToList();
 
         // Assert
-        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(AddressType), typeof(Address), typeof(EmailAddressType)], ignoreOrder: true);
+        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(AddressType), typeof(Address), typeof(EmailAddressType), typeof(EmailAddress)], ignoreOrder: true);
     }
 
     [Fact]
@@ -140,6 +141,34 @@ public sealed class ContactDataContextTests
 
         // Assert
         entityType.GetTableName().ShouldBe("EmailAddressType");
+        entityType.GetSchema().ShouldBe("Contact");
+    }
+
+    [Fact]
+    public void EmailAddressesDbSetIsExposed()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var dbSet = context.EmailAddresses;
+
+        // Assert
+        dbSet.ShouldNotBeNull();
+        dbSet.EntityType.ClrType.ShouldBe(typeof(EmailAddress));
+    }
+
+    [Fact]
+    public void ModelAppliesEmailAddressConfigurationFromAssembly()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var entityType = context.Model.FindEntityType(typeof(EmailAddress)).ShouldNotBeNull();
+
+        // Assert
+        entityType.GetTableName().ShouldBe("EmailAddress");
         entityType.GetSchema().ShouldBe("Contact");
     }
 
