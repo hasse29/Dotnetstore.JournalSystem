@@ -4,6 +4,10 @@ namespace Dotnetstore.JournalSystem.Host.Extensions;
 
 internal static class SecurityHeadersExtensions
 {
+    internal const string ScalarPath = "/scalar";
+    private const string DefaultContentSecurityPolicy = "default-src 'none'; frame-ancestors 'none'";
+    private const string ScalarContentSecurityPolicy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'";
+
     extension(IServiceCollection services)
     {
         internal IServiceCollection AddHstsPolicy()
@@ -25,7 +29,11 @@ internal static class SecurityHeadersExtensions
         {
             app.Use((context, next) =>
             {
-                context.Response.OnStarting(() => ApplySecurityHeaders(context.Response.Headers));
+                var contentSecurityPolicy = context.Request.Path.StartsWithSegments(ScalarPath, StringComparison.OrdinalIgnoreCase)
+                    ? ScalarContentSecurityPolicy
+                    : DefaultContentSecurityPolicy;
+
+                context.Response.OnStarting(() => ApplySecurityHeaders(context.Response.Headers, contentSecurityPolicy));
 
                 return next(context);
             });
@@ -50,12 +58,12 @@ internal static class SecurityHeadersExtensions
         }
     }
 
-    private static Task ApplySecurityHeaders(IHeaderDictionary headers)
+    private static Task ApplySecurityHeaders(IHeaderDictionary headers, string contentSecurityPolicy)
     {
         headers["X-Content-Type-Options"] = "nosniff";
         headers["X-Frame-Options"] = "DENY";
         headers["Referrer-Policy"] = "no-referrer";
-        headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'";
+        headers["Content-Security-Policy"] = contentSecurityPolicy;
         headers["Cache-Control"] = "no-store";
 
         return Task.CompletedTask;

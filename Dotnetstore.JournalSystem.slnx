@@ -28,6 +28,9 @@
   <Folder Name="/tests/Api/">
     <Project Path="tests/Dotnetstore.JournalSystem.Integration.Tests/Dotnetstore.JournalSystem.Integration.Tests.csproj" />
   </Folder>
+  <Folder Name="/tests/Shared/">
+    <Project Path="tests/Dotnetstore.JournalSystem.Shared.Tests/Dotnetstore.JournalSystem.Shared.Tests.csproj" />
+  </Folder>
   <Folder Name="/tests/Api/Modules/">
     <Project Path="tests/Dotnetstore.JournalSystem.Api.Organization.Tests/Dotnetstore.JournalSystem.Api.Organization.Tests.csproj" />
     <Project Path="tests/Dotnetstore.JournalSystem.Api.SharedKernel.Tests/Dotnetstore.JournalSystem.Api.SharedKernel.Tests.csproj" />

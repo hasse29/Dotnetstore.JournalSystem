@@ -212,7 +212,7 @@ public sealed class OwnCompanyServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task DeleteAsyncReturnsErrorAndKeepsDataForUnknownId()
+    public async Task DeleteAsyncReturnsNotFoundAndKeepsDataForUnknownId()
     {
         // Arrange
         IOwnCompanyService service = _service;
@@ -222,7 +222,7 @@ public sealed class OwnCompanyServiceTests : IDisposable
         var result = await service.DeleteAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 
         // Assert
-        result.IsSuccess.ShouldBeFalse();
+        result.Status.ShouldBe(ResultStatus.NotFound);
         (await CountStoredAsync()).ShouldBe(1);
     }
 }

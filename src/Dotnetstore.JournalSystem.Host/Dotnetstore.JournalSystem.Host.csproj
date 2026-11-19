@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Dotnetstore.Security" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>

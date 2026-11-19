@@ -1,5 +1,6 @@
 using Dotnetstore.JournalSystem.Api.Organization.Extensions;
 using Dotnetstore.JournalSystem.Aspire.ServiceDefaults;
+using Scalar.AspNetCore;
 
 namespace Dotnetstore.JournalSystem.Host.Extensions;
 
@@ -98,7 +99,12 @@ internal static class WebApplicationExtensions
             {
                 app
                     .MapOpenApi();
+                app
+                    .MapScalarApiReference();
             }
+
+            app
+                .MapOrganizationEndpoints();
 
             app
                 .MapHealthEndpoints();

@@ -1,5 +1,9 @@
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.Extensions;
+using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
+using Dotnetstore.JournalSystem.Api.Organization.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -132,5 +136,78 @@ public sealed class HostApplicationBuilderExtensionsTests
 
         // Assert
         await action.ShouldThrowAsync<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void RegisterOrganizationServicesRegistersOwnCompanyServicesAsScoped()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+
+        // Act
+        builder.RegisterOrganizationServices();
+
+        // Assert
+        foreach (var serviceType in new[] { typeof(IOwnCompanyRepository), typeof(IOrganizationUnitOfWork), typeof(IOwnCompanyService) })
+        {
+            builder.Services.Single(d => d.ServiceType == serviceType).Lifetime.ShouldBe(ServiceLifetime.Scoped);
+        }
+    }
+
+    [Fact]
+    public void RegisterOrganizationServicesMakesOwnCompanyServiceResolvable()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterOrganizationServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+
+        // Act
+        using var scope = provider.CreateScope();
+        var service = scope.ServiceProvider.GetService<IOwnCompanyService>();
+
+        // Assert
+        service.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ResolvingOwnCompanyServiceFromRootProviderIsRejected()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterOrganizationServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+
+        // Act
+        var action = () => provider.GetService<IOwnCompanyService>();
+
+        // Assert
+        action.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void MapOrganizationEndpointsReturnsTheSameBuilder()
+    {
+        // Arrange
+        using var app = WebApplication.CreateBuilder().Build();
+
+        // Act
+        var result = app.MapOrganizationEndpoints();
+
+        // Assert
+        result.ShouldBeSameAs(app);
+    }
+
+    [Fact]
+    public void MapOrganizationEndpointsWithNullBuilderThrows()
+    {
+        // Arrange
+        IEndpointRouteBuilder app = null!;
+
+        // Act
+        var action = () => app.MapOrganizationEndpoints();
+
+        // Assert
+        action.ShouldThrow<ArgumentNullException>();
     }
 }

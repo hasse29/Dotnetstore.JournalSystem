@@ -87,6 +87,16 @@ internal sealed class OwnCompanyService(
 
     async ValueTask<Result> IOwnCompanyService.DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
+        var existing = await organizationUnitOfWork
+            .OwnCompanies
+            .GetByIdAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (existing is null)
+        {
+            return Result.NotFound();
+        }
+
         await organizationUnitOfWork
             .OwnCompanies
             .DeleteAsync(id, cancellationToken)
