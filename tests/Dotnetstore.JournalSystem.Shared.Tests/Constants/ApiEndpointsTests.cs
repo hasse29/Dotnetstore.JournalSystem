@@ -383,4 +383,59 @@ public sealed class ApiEndpointsTests
         ApiEndpoints.Contact.EmailAddresses.GetAll.ShouldNotBe(ApiEndpoints.Contact.EmailAddressTypes.GetAll);
         ApiEndpoints.Contact.EmailAddresses.GetById.ShouldNotBe(ApiEndpoints.Contact.EmailAddresses.GetAll);
     }
+
+    [Fact]
+    public void PhoneNumberTypeCollectionRoutesUseTheContactPath()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.PhoneNumberTypes.GetAll,
+            ApiEndpoints.Contact.PhoneNumberTypes.Create
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/phone-number-types");
+    }
+
+    [Fact]
+    public void PhoneNumberTypeItemRoutesRequireAGuidId()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.PhoneNumberTypes.GetById,
+            ApiEndpoints.Contact.PhoneNumberTypes.Update,
+            ApiEndpoints.Contact.PhoneNumberTypes.Delete
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/phone-number-types/{id:guid}");
+    }
+
+    [Fact]
+    public void PhoneNumberTypeRoutesStartWithApiPrefixAndHaveNoTrailingSlash()
+    {
+        // Arrange
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.PhoneNumberTypes.GetAll,
+            ApiEndpoints.Contact.PhoneNumberTypes.GetById,
+            ApiEndpoints.Contact.PhoneNumberTypes.Create,
+            ApiEndpoints.Contact.PhoneNumberTypes.Update,
+            ApiEndpoints.Contact.PhoneNumberTypes.Delete
+        };
+
+        // Act & Assert
+        routes.ShouldAllBe(x => x.StartsWith("/api/", StringComparison.Ordinal) && !x.EndsWith('/'));
+    }
+
+    [Fact]
+    public void PhoneNumberTypeRoutesDoNotOverlapWithOrganizationRoutes()
+    {
+        // Arrange & Act & Assert
+        ApiEndpoints.Contact.PhoneNumberTypes.GetAll.ShouldNotStartWith(ApiEndpoints.Organization.Roles.GetAll);
+        ApiEndpoints.Contact.PhoneNumberTypes.GetAll.ShouldNotBe(ApiEndpoints.Organization.OwnCompanies.GetAll);
+        ApiEndpoints.Contact.PhoneNumberTypes.GetById.ShouldNotBe(ApiEndpoints.Contact.PhoneNumberTypes.GetAll);
+    }
 }

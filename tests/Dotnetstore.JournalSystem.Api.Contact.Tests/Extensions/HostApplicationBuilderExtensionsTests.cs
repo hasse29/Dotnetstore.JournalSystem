@@ -3,6 +3,7 @@ using Dotnetstore.JournalSystem.Api.Contact.Extensions;
 using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
+using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
 using Microsoft.AspNetCore.Builder;
@@ -183,6 +184,53 @@ public sealed class HostApplicationBuilderExtensionsTests
 
         // Act
         var action = () => provider.GetService<IAddressTypeService>();
+
+        // Assert
+        action.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void RegisterContactServicesRegistersPhoneNumberTypeServicesAsScoped()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+
+        // Act
+        builder.RegisterContactServices();
+
+        // Assert
+        foreach (var serviceType in new[] { typeof(IPhoneNumberTypeRepository), typeof(IPhoneNumberTypeService) })
+        {
+            builder.Services.Single(d => d.ServiceType == serviceType).Lifetime.ShouldBe(ServiceLifetime.Scoped);
+        }
+    }
+
+    [Fact]
+    public void RegisterContactServicesMakesPhoneNumberTypeServiceResolvable()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterContactServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+
+        // Act
+        using var scope = provider.CreateScope();
+        var service = scope.ServiceProvider.GetService<IPhoneNumberTypeService>();
+
+        // Assert
+        service.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ResolvingPhoneNumberTypeServiceFromRootProviderIsRejected()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterContactServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+
+        // Act
+        var action = () => provider.GetService<IPhoneNumberTypeService>();
 
         // Assert
         action.ShouldThrow<InvalidOperationException>();

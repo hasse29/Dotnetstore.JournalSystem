@@ -19,6 +19,8 @@ public static class DataSchemeConstants
 
     public const int AddressTypeNameMaxLength = 100;
     public const int AddressTypeDescriptionMaxLength = 500;
+    public const int PhoneNumberTypeNameMaxLength = 100;
+    public const int PhoneNumberTypeDescriptionMaxLength = 500;
 
     public const int EmailAddressTypeNameMaxLength = 100;
     public const int EmailAddressTypeDescriptionMaxLength = 500;
