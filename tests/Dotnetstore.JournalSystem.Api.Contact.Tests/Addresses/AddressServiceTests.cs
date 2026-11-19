@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
 using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Addresses;
@@ -30,7 +31,7 @@ public sealed class AddressServiceTests : IDisposable
         _context.AddressTypes.Add(AddressTypeTestData.Create(_addressTypeId, "Home"));
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
-        _unitOfWork = new ContactUnitOfWork(_context, new AddressTypeRepository(_context), new AddressRepository(_context));
+        _unitOfWork = new ContactUnitOfWork(_context, new AddressTypeRepository(_context), new AddressRepository(_context), new EmailAddressTypeRepository(_context));
         _service = new AddressService(_unitOfWork);
     }
 

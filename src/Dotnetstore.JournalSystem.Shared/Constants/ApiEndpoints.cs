@@ -57,6 +57,17 @@ public static class ApiEndpoints
             public const string Delete = $"{AddressTypeBase}/{{id:guid}}";
         }
 
+        public static class EmailAddressTypes
+        {
+            private const string EmailAddressTypeBase = $"{ContactBase}/email-address-types";
+
+            public const string GetAll = EmailAddressTypeBase;
+            public const string GetById = $"{EmailAddressTypeBase}/{{id:guid}}";
+            public const string Create = EmailAddressTypeBase;
+            public const string Update = $"{EmailAddressTypeBase}/{{id:guid}}";
+            public const string Delete = $"{EmailAddressTypeBase}/{{id:guid}}";
+        }
+
         public static class Addresses
         {
             private const string AddressBase = $"{ContactBase}/addresses";

@@ -2,6 +2,7 @@ using Dotnetstore.JournalSystem.Api.Contact.Data;
 using Dotnetstore.JournalSystem.Api.Contact.Extensions;
 using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
+using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -181,6 +182,53 @@ public sealed class HostApplicationBuilderExtensionsTests
 
         // Act
         var action = () => provider.GetService<IAddressTypeService>();
+
+        // Assert
+        action.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void RegisterContactServicesRegistersEmailAddressTypeServicesAsScoped()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+
+        // Act
+        builder.RegisterContactServices();
+
+        // Assert
+        foreach (var serviceType in new[] { typeof(IEmailAddressTypeRepository), typeof(IEmailAddressTypeService) })
+        {
+            builder.Services.Single(d => d.ServiceType == serviceType).Lifetime.ShouldBe(ServiceLifetime.Scoped);
+        }
+    }
+
+    [Fact]
+    public void RegisterContactServicesMakesEmailAddressTypeServiceResolvable()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterContactServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+
+        // Act
+        using var scope = provider.CreateScope();
+        var service = scope.ServiceProvider.GetService<IEmailAddressTypeService>();
+
+        // Assert
+        service.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ResolvingEmailAddressTypeServiceFromRootProviderIsRejected()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterContactServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+
+        // Act
+        var action = () => provider.GetService<IEmailAddressTypeService>();
 
         // Assert
         action.ShouldThrow<InvalidOperationException>();

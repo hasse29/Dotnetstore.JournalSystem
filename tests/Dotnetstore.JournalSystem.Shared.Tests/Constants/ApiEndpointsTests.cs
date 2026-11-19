@@ -275,4 +275,58 @@ public sealed class ApiEndpointsTests
         ApiEndpoints.Contact.Addresses.GetAll.ShouldNotBe(ApiEndpoints.Contact.AddressTypes.GetAll);
         ApiEndpoints.Contact.Addresses.GetById.ShouldNotBe(ApiEndpoints.Contact.Addresses.GetAll);
     }
+
+    [Fact]
+    public void EmailAddressTypeCollectionRoutesUseTheContactPath()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.EmailAddressTypes.GetAll,
+            ApiEndpoints.Contact.EmailAddressTypes.Create
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/email-address-types");
+    }
+
+    [Fact]
+    public void EmailAddressTypeItemRoutesRequireAGuidId()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.EmailAddressTypes.GetById,
+            ApiEndpoints.Contact.EmailAddressTypes.Update,
+            ApiEndpoints.Contact.EmailAddressTypes.Delete
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/email-address-types/{id:guid}");
+    }
+
+    [Fact]
+    public void EmailAddressTypeRoutesStartWithApiPrefixAndHaveNoTrailingSlash()
+    {
+        // Arrange
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.EmailAddressTypes.GetAll,
+            ApiEndpoints.Contact.EmailAddressTypes.GetById,
+            ApiEndpoints.Contact.EmailAddressTypes.Create,
+            ApiEndpoints.Contact.EmailAddressTypes.Update,
+            ApiEndpoints.Contact.EmailAddressTypes.Delete
+        };
+
+        // Act & Assert
+        routes.ShouldAllBe(x => x.StartsWith("/api/", StringComparison.Ordinal) && !x.EndsWith('/'));
+    }
+
+    [Fact]
+    public void EmailAddressTypeRoutesDoNotOverlapWithAddressTypeRoutes()
+    {
+        // Arrange & Act & Assert
+        ApiEndpoints.Contact.EmailAddressTypes.GetAll.ShouldNotBe(ApiEndpoints.Contact.AddressTypes.GetAll);
+        ApiEndpoints.Contact.EmailAddressTypes.GetById.ShouldNotBe(ApiEndpoints.Contact.EmailAddressTypes.GetAll);
+    }
 }
