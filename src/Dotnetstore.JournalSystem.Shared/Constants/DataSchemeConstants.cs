@@ -19,4 +19,11 @@ public static class DataSchemeConstants
 
     public const int AddressTypeNameMaxLength = 100;
     public const int AddressTypeDescriptionMaxLength = 500;
+
+    public const int AddressCOMaxLength = 100;
+    public const int AddressStreetMaxLength = 200;
+    public const int AddressPostalCodeMaxLength = 20;
+    public const int AddressCityMaxLength = 100;
+    public const int AddressStateMaxLength = 100;
+    public const int AddressCountryMaxLength = 100;
 }

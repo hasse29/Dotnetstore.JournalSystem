@@ -1,4 +1,5 @@
 using Dotnetstore.JournalSystem.Api.Contact.Data;
+using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ public sealed class ContactUnitOfWorkTests : IDisposable
     private readonly DbContextOptions<ContactDataContext> _options;
     private readonly ContactDataContext _context;
     private readonly AddressTypeRepository _repository;
+    private readonly AddressRepository _addressRepository;
     private readonly ContactUnitOfWork _unitOfWork;
 
     public ContactUnitOfWorkTests(SqlServerFixture fixture)
@@ -24,7 +26,8 @@ public sealed class ContactUnitOfWorkTests : IDisposable
         _context = new ContactDataContext(_options);
         _context.Database.EnsureCreated();
         _repository = new AddressTypeRepository(_context);
-        _unitOfWork = new ContactUnitOfWork(_context, _repository);
+        _addressRepository = new AddressRepository(_context);
+        _unitOfWork = new ContactUnitOfWork(_context, _repository, _addressRepository);
     }
 
     public void Dispose()
@@ -56,6 +59,19 @@ public sealed class ContactUnitOfWorkTests : IDisposable
 
         // Assert
         result.ShouldBeSameAs(_repository);
+    }
+
+    [Fact]
+    public void AddressesReturnsTheInjectedRepository()
+    {
+        // Arrange
+        IContactUnitOfWork unitOfWork = _unitOfWork;
+
+        // Act
+        var result = unitOfWork.Addresses;
+
+        // Assert
+        result.ShouldBeSameAs(_addressRepository);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
@@ -25,6 +26,8 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IAddressTypeRepository, AddressTypeRepository>();
         builder.Services.AddScoped<IContactUnitOfWork, ContactUnitOfWork>();
         builder.Services.AddScoped<IAddressTypeService, AddressTypeService>();
+        builder.Services.AddScoped<IAddressRepository, AddressRepository>();
+        builder.Services.AddScoped<IAddressService, AddressService>();
 
         return builder;
     }
@@ -33,7 +36,9 @@ public static class HostApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        return app.MapAddressTypeEndpoints();
+        return app
+            .MapAddressTypeEndpoints()
+            .MapAddressEndpoints();
     }
 
     public static async Task InitializeContactDatabaseAsync(

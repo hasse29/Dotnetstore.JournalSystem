@@ -56,5 +56,16 @@ public static class ApiEndpoints
             public const string Update = $"{AddressTypeBase}/{{id:guid}}";
             public const string Delete = $"{AddressTypeBase}/{{id:guid}}";
         }
+
+        public static class Addresses
+        {
+            private const string AddressBase = $"{ContactBase}/addresses";
+
+            public const string GetAll = AddressBase;
+            public const string GetById = $"{AddressBase}/{{id:guid}}";
+            public const string Create = AddressBase;
+            public const string Update = $"{AddressBase}/{{id:guid}}";
+            public const string Delete = $"{AddressBase}/{{id:guid}}";
+        }
     }
 }

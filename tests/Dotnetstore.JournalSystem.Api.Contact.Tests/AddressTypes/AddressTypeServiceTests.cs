@@ -1,5 +1,6 @@
 using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
+using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
 using Dotnetstore.JournalSystem.Api.Contact.Tests.Fixtures;
@@ -24,7 +25,7 @@ public sealed class AddressTypeServiceTests : IDisposable
 
         _context = new ContactDataContext(_options);
         _context.Database.EnsureCreated();
-        _unitOfWork = new ContactUnitOfWork(_context, new AddressTypeRepository(_context));
+        _unitOfWork = new ContactUnitOfWork(_context, new AddressTypeRepository(_context), new AddressRepository(_context));
         _service = new AddressTypeService(_unitOfWork);
     }
 

@@ -1,4 +1,5 @@
 ﻿using Dotnetstore.JournalSystem.Api.Contact.Data;
+using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -6,12 +7,14 @@ namespace Dotnetstore.JournalSystem.Api.Contact.Services;
 
 internal sealed class ContactUnitOfWork(
     ContactDataContext context,
-    IAddressTypeRepository addressTypeRepository) : IContactUnitOfWork, IDisposable
+    IAddressTypeRepository addressTypeRepository,
+    IAddressRepository addressRepository) : IContactUnitOfWork, IDisposable
 {
     private IDbContextTransaction? _objTransaction;
     private bool _disposed;
 
     IAddressTypeRepository IContactUnitOfWork.AddressTypes => addressTypeRepository;
+    IAddressRepository IContactUnitOfWork.Addresses => addressRepository;
 
     void IContactUnitOfWork.CreateTransaction()
     {

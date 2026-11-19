@@ -1,4 +1,5 @@
 using Dotnetstore.BaseModel.Entities;
+using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +32,7 @@ public sealed class ContactDataContextTests
     }
 
     [Fact]
-    public void ModelContainsOnlyAddressTypeEntity()
+    public void ModelContainsOnlyContactEntities()
     {
         // Arrange
         using var context = CreateContext();
@@ -40,7 +41,7 @@ public sealed class ContactDataContextTests
         var entityTypes = context.Model.GetEntityTypes().ToList();
 
         // Assert
-        entityTypes.ShouldHaveSingleItem().ClrType.ShouldBe(typeof(AddressType));
+        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(AddressType), typeof(Address)], ignoreOrder: true);
     }
 
     [Fact]
@@ -83,6 +84,34 @@ public sealed class ContactDataContextTests
         entityType.GetTableName().ShouldBe("AddressType");
         entityType.GetSchema().ShouldBe("Contact");
         entityType.FindPrimaryKey().ShouldNotBeNull().Properties.ShouldHaveSingleItem().Name.ShouldBe(nameof(AddressType.Id));
+    }
+
+    [Fact]
+    public void AddressesDbSetIsExposed()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var dbSet = context.Addresses;
+
+        // Assert
+        dbSet.ShouldNotBeNull();
+        dbSet.EntityType.ClrType.ShouldBe(typeof(Address));
+    }
+
+    [Fact]
+    public void ModelAppliesAddressConfigurationFromAssembly()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var entityType = context.Model.FindEntityType(typeof(Address)).ShouldNotBeNull();
+
+        // Assert
+        entityType.GetTableName().ShouldBe("Address");
+        entityType.GetSchema().ShouldBe("Contact");
     }
 
     [Fact]

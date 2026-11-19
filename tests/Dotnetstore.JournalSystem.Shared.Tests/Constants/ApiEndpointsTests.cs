@@ -221,4 +221,58 @@ public sealed class ApiEndpointsTests
         ApiEndpoints.Contact.AddressTypes.GetAll.ShouldNotBe(ApiEndpoints.Organization.OwnCompanies.GetAll);
         ApiEndpoints.Contact.AddressTypes.GetById.ShouldNotBe(ApiEndpoints.Contact.AddressTypes.GetAll);
     }
+
+    [Fact]
+    public void AddressCollectionRoutesUseTheContactPath()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.Addresses.GetAll,
+            ApiEndpoints.Contact.Addresses.Create
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/addresses");
+    }
+
+    [Fact]
+    public void AddressItemRoutesRequireAGuidId()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.Addresses.GetById,
+            ApiEndpoints.Contact.Addresses.Update,
+            ApiEndpoints.Contact.Addresses.Delete
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/addresses/{id:guid}");
+    }
+
+    [Fact]
+    public void AddressRoutesStartWithApiPrefixAndHaveNoTrailingSlash()
+    {
+        // Arrange
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.Addresses.GetAll,
+            ApiEndpoints.Contact.Addresses.GetById,
+            ApiEndpoints.Contact.Addresses.Create,
+            ApiEndpoints.Contact.Addresses.Update,
+            ApiEndpoints.Contact.Addresses.Delete
+        };
+
+        // Act & Assert
+        routes.ShouldAllBe(x => x.StartsWith("/api/", StringComparison.Ordinal) && !x.EndsWith('/'));
+    }
+
+    [Fact]
+    public void AddressRoutesDoNotOverlapWithAddressTypeRoutes()
+    {
+        // Arrange & Act & Assert
+        ApiEndpoints.Contact.Addresses.GetAll.ShouldNotBe(ApiEndpoints.Contact.AddressTypes.GetAll);
+        ApiEndpoints.Contact.Addresses.GetById.ShouldNotBe(ApiEndpoints.Contact.Addresses.GetAll);
+    }
 }
