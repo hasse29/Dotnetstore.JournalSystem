@@ -5,6 +5,7 @@ using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
 using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
+using Dotnetstore.JournalSystem.Api.Contact.Tests.PhoneNumbers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
 using Dotnetstore.JournalSystem.Api.Contact.Tests.Fixtures;
@@ -230,4 +231,62 @@ public sealed class PhoneNumberTypeServiceTests : IDisposable
         result.Status.ShouldBe(ResultStatus.NotFound);
         (await CountStoredAsync()).ShouldBe(1);
     }
-}
+
+    [Fact]
+    public async Task DeleteAsyncReturnsConflictAndKeepsTheTypeWhenAnPhoneNumberUsesIt()
+    {
+        // Arrange
+        IPhoneNumberTypeService service = _service;
+        var id = await SeedAsync();
+        _context.PhoneNumbers.Add(PhoneNumberTestData.Create(Guid.NewGuid(), phoneNumberTypeId: id));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        result.Errors.ShouldHaveSingleItem().ShouldContain("in use");
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncSucceedsAfterTheLastPhoneNumberUsingTheTypeIsRemoved()
+    {
+        // Arrange
+        IPhoneNumberTypeService service = _service;
+        var id = await SeedAsync();
+        var phoneNumber = PhoneNumberTestData.Create(Guid.NewGuid(), phoneNumberTypeId: id);
+        _context.PhoneNumbers.Add(phoneNumber);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.PhoneNumbers.Remove(phoneNumber);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        (await CountStoredAsync()).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncIgnoresPhoneNumbersThatUseAnotherType()
+    {
+        // Arrange
+        IPhoneNumberTypeService service = _service;
+        var id = await SeedAsync("Unused");
+        var otherId = await SeedAsync("Used");
+        _context.PhoneNumbers.Add(PhoneNumberTestData.Create(Guid.NewGuid(), phoneNumberTypeId: otherId));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        (await CountStoredAsync()).ShouldBe(1);
+    }}

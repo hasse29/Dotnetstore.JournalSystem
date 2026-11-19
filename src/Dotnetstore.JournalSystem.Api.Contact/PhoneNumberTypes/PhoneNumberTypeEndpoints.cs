@@ -133,6 +133,7 @@ internal static class PhoneNumberTypeEndpoints
         return result.Status switch
         {
             ResultStatus.Ok => TypedResults.NoContent(),
+            ResultStatus.Conflict => TypedResults.Problem(detail: string.Join(" ", result.Errors), statusCode: StatusCodes.Status409Conflict),
             ResultStatus.NotFound => TypedResults.NotFound(),
             _ => TypedResults.Problem()
         };

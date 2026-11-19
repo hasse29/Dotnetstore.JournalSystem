@@ -291,4 +291,46 @@ public sealed class PhoneNumberTypeEndpointsTests(SqlServerFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
     }
-}
+
+    [Fact]
+    public async Task DeleteReturnsConflictAndKeepsTheTypeWhenAnPhoneNumberUsesIt()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        var type = await CreatePhoneNumberTypeAsync(host.Client);
+        using var phoneNumber = await host.Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Contact.PhoneNumbers.Create, UriKind.Relative),
+            new EditPhoneNumberRequest(type.Id, Guid.NewGuid(), "+46 70 123 45 67"),
+            TestContext.Current.CancellationToken);
+        phoneNumber.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act
+        using var response = await host.Client.DeleteAsync(Url($"/{type.Id}"), TestContext.Current.CancellationToken);
+        using var afterwards = await host.Client.GetAsync(Url($"/{type.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldContain("in use");
+        afterwards.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task DeleteSucceedsOnceThePhoneNumberUsingTheTypeIsDeleted()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        var type = await CreatePhoneNumberTypeAsync(host.Client);
+        using var created = await host.Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Contact.PhoneNumbers.Create, UriKind.Relative),
+            new EditPhoneNumberRequest(type.Id, Guid.NewGuid(), "+46 70 123 45 67"),
+            TestContext.Current.CancellationToken);
+        var phoneNumber = (await created.Content.ReadFromJsonAsync<PhoneNumberResponse>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
+        using var deletePhoneNumber = await host.Client.DeleteAsync(new Uri($"{ApiEndpoints.Contact.PhoneNumbers.GetAll}/{phoneNumber.Id}", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Act
+        using var response = await host.Client.DeleteAsync(Url($"/{type.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        deletePhoneNumber.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }}

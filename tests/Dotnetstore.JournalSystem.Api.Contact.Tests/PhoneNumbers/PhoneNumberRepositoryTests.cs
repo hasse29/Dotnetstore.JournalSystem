@@ -184,4 +184,45 @@ public sealed class PhoneNumberRepositoryTests : IDisposable
         // Assert
         (await _context.PhoneNumbers.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
     }
+
+    [Fact]
+    public async Task AnyWithPhoneNumberTypeAsyncReturnsTrueWhenAnPhoneNumberUsesTheType()
+    {
+        // Arrange
+        IPhoneNumberRepository repository = _repository;
+        await SeedAsync(CreatePhoneNumber());
+
+        // Act
+        var result = await repository.AnyWithPhoneNumberTypeAsync(PhoneNumberTestData.PhoneNumberTypeId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AnyWithPhoneNumberTypeAsyncReturnsFalseForATypeNoPhoneNumberUses()
+    {
+        // Arrange
+        IPhoneNumberRepository repository = _repository;
+        await SeedAsync(CreatePhoneNumber());
+
+        // Act
+        var result = await repository.AnyWithPhoneNumberTypeAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AnyWithPhoneNumberTypeAsyncReturnsFalseWhenThereAreNoPhoneNumbers()
+    {
+        // Arrange
+        IPhoneNumberRepository repository = _repository;
+
+        // Act
+        var result = await repository.AnyWithPhoneNumberTypeAsync(PhoneNumberTestData.PhoneNumberTypeId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
 }

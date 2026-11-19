@@ -97,6 +97,16 @@ internal sealed class PhoneNumberTypeService(
             return Result.NotFound();
         }
 
+        var inUse = await contactUnitOfWork
+            .PhoneNumbers
+            .AnyWithPhoneNumberTypeAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (inUse)
+        {
+            return Result.Conflict("The phone number type is in use by one or more phone numbers and cannot be deleted.");
+        }
+
         await contactUnitOfWork
             .PhoneNumberTypes
             .DeleteAsync(id, cancellationToken)
