@@ -1,5 +1,6 @@
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
+using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,8 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IOwnCompanyRepository, OwnCompanyRepository>();
         builder.Services.AddScoped<IOrganizationUnitOfWork, OrganizationUnitOfWork>();
         builder.Services.AddScoped<IOwnCompanyService, OwnCompanyService>();
+        builder.Services.AddScoped<IRoleRepository, RoleRepository>();
+        builder.Services.AddScoped<IRoleService, RoleService>();
 
         return builder;
     }
@@ -29,7 +32,9 @@ public static class HostApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        return app.MapOwnCompanyEndpoints();
+        return app
+            .MapOwnCompanyEndpoints()
+            .MapRoleEndpoints();
     }
 
     public static async Task InitializeOrganizationDatabaseAsync(

@@ -1,6 +1,7 @@
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.Extensions;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
+using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -180,6 +181,53 @@ public sealed class HostApplicationBuilderExtensionsTests
 
         // Act
         var action = () => provider.GetService<IOwnCompanyService>();
+
+        // Assert
+        action.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void RegisterOrganizationServicesRegistersRoleServicesAsScoped()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+
+        // Act
+        builder.RegisterOrganizationServices();
+
+        // Assert
+        foreach (var serviceType in new[] { typeof(IRoleRepository), typeof(IRoleService) })
+        {
+            builder.Services.Single(d => d.ServiceType == serviceType).Lifetime.ShouldBe(ServiceLifetime.Scoped);
+        }
+    }
+
+    [Fact]
+    public void RegisterOrganizationServicesMakesRoleServiceResolvable()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterOrganizationServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+
+        // Act
+        using var scope = provider.CreateScope();
+        var service = scope.ServiceProvider.GetService<IRoleService>();
+
+        // Assert
+        service.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ResolvingRoleServiceFromRootProviderIsRejected()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterOrganizationServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+
+        // Act
+        var action = () => provider.GetService<IRoleService>();
 
         // Assert
         action.ShouldThrow<InvalidOperationException>();

@@ -1,6 +1,7 @@
 using Dotnetstore.BaseModel.Entities;
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
+using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -31,7 +32,7 @@ public sealed class OrganizationDataContextTests
     }
 
     [Fact]
-    public void ModelContainsOnlyOwnCompanyEntity()
+    public void ModelContainsOnlyOrganizationEntities()
     {
         // Arrange
         using var context = CreateContext();
@@ -40,7 +41,7 @@ public sealed class OrganizationDataContextTests
         var entityTypes = context.Model.GetEntityTypes().ToList();
 
         // Assert
-        entityTypes.ShouldHaveSingleItem().ClrType.ShouldBe(typeof(OwnCompany));
+        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(OwnCompany), typeof(Role)], ignoreOrder: true);
     }
 
     [Fact]
@@ -70,6 +71,34 @@ public sealed class OrganizationDataContextTests
         // Assert
         dbSet.ShouldNotBeNull();
         dbSet.EntityType.ClrType.ShouldBe(typeof(OwnCompany));
+    }
+
+    [Fact]
+    public void RolesDbSetIsExposed()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var dbSet = context.Roles;
+
+        // Assert
+        dbSet.ShouldNotBeNull();
+        dbSet.EntityType.ClrType.ShouldBe(typeof(Role));
+    }
+
+    [Fact]
+    public void ModelAppliesRoleConfigurationFromAssembly()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var entityType = context.Model.FindEntityType(typeof(Role)).ShouldNotBeNull();
+
+        // Assert
+        entityType.GetTableName().ShouldBe("Role");
+        entityType.GetSchema().ShouldBe("Organization");
     }
 
     [Fact]

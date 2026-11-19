@@ -1,5 +1,6 @@
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
+using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Microsoft.EntityFrameworkCore;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
@@ -13,6 +14,7 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
     private readonly DbContextOptions<OrganizationDataContext> _options;
     private readonly OrganizationDataContext _context;
     private readonly OwnCompanyRepository _repository;
+    private readonly RoleRepository _roleRepository;
     private readonly OrganizationUnitOfWork _unitOfWork;
 
     public OrganizationUnitOfWorkTests(SqlServerFixture fixture)
@@ -24,7 +26,8 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
         _context = new OrganizationDataContext(_options);
         _context.Database.EnsureCreated();
         _repository = new OwnCompanyRepository(_context);
-        _unitOfWork = new OrganizationUnitOfWork(_context, _repository);
+        _roleRepository = new RoleRepository(_context);
+        _unitOfWork = new OrganizationUnitOfWork(_context, _repository, _roleRepository);
     }
 
     public void Dispose()
@@ -56,6 +59,19 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
 
         // Assert
         result.ShouldBeSameAs(_repository);
+    }
+
+    [Fact]
+    public void RolesReturnsTheInjectedRepository()
+    {
+        // Arrange
+        IOrganizationUnitOfWork unitOfWork = _unitOfWork;
+
+        // Act
+        var result = unitOfWork.Roles;
+
+        // Assert
+        result.ShouldBeSameAs(_roleRepository);
     }
 
     [Fact]

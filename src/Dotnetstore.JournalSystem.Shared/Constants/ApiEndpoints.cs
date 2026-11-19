@@ -18,5 +18,16 @@ public static class ApiEndpoints
             public const string Update = $"{OwnCompanyBase}/{{id:guid}}";
             public const string Delete = $"{OwnCompanyBase}/{{id:guid}}";
         }
+
+        public static class Roles
+        {
+            private const string RoleBase = $"{OrganizationBase}/roles";
+
+            public const string GetAll = RoleBase;
+            public const string GetById = $"{RoleBase}/{{id:guid}}";
+            public const string Create = RoleBase;
+            public const string Update = $"{RoleBase}/{{id:guid}}";
+            public const string Delete = $"{RoleBase}/{{id:guid}}";
+        }
     }
 }
