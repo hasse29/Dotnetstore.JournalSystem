@@ -20,7 +20,7 @@ public sealed class OwnCompanyTests
         const string taxId = "SE556677889901";
 
         // Act
-        var company = new OwnCompany(CompanyId, name, description, LogoUrl, WebsiteUrl, corporateNumber, taxId);
+        var company = OwnCompanyTestData.Create(CompanyId, name, description, LogoUrl, WebsiteUrl, corporateNumber, taxId);
 
         // Assert
         company.Id.ShouldBe(CompanyId);
@@ -33,10 +33,37 @@ public sealed class OwnCompanyTests
     }
 
     [Fact]
+    public void ConstructorSetsAuditValues()
+    {
+        // Arrange
+        var user = Guid.NewGuid();
+        var created = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var updated = created.AddDays(1);
+        var deleted = created.AddDays(2);
+
+        // Act
+        var company = new OwnCompany(CompanyId, "Dotnetstore AB", null, null, null, null, null, created, user, updated, user, deleted, user, true, true, true)
+        {
+            Name = "Dotnetstore AB"
+        };
+
+        // Assert
+        company.CreatedDate.ShouldBe(created);
+        company.CreatedBy.ShouldBe(user);
+        company.LastUpdatedDate.ShouldBe(updated);
+        company.LastUpdatedBy.ShouldBe(user);
+        company.DeletedDate.ShouldBe(deleted);
+        company.DeletedBy.ShouldBe(user);
+        company.IsDeleted.ShouldBeTrue();
+        company.IsSystem.ShouldBeTrue();
+        company.IsGdpr.ShouldBeTrue();
+    }
+
+    [Fact]
     public void ConstructorIsACompany()
     {
         // Arrange & Act
-        var company = new OwnCompany(CompanyId, "Dotnetstore AB", null, null, null, null, null);
+        var company = OwnCompanyTestData.Create(CompanyId, "Dotnetstore AB", null, null, null, null, null);
 
         // Assert
         company.ShouldBeAssignableTo<Company>();
@@ -47,7 +74,7 @@ public sealed class OwnCompanyTests
     public void ConstructorWithoutOptionalValuesLeavesThemNull()
     {
         // Arrange & Act
-        var company = new OwnCompany(CompanyId, "Dotnetstore AB", null, null, null, null, null);
+        var company = OwnCompanyTestData.Create(CompanyId, "Dotnetstore AB", null, null, null, null, null);
 
         // Assert
         company.Description.ShouldBeNull();
@@ -64,7 +91,7 @@ public sealed class OwnCompanyTests
         const string name = "Dotnetstore AB";
 
         // Act
-        var company = new OwnCompany(CompanyId, name, null, null, null, null, null);
+        var company = OwnCompanyTestData.Create(CompanyId, name, null, null, null, null, null);
 
         // Assert
         company.Id.ShouldBe(CompanyId);
@@ -78,8 +105,8 @@ public sealed class OwnCompanyTests
         var otherId = Guid.NewGuid();
 
         // Act
-        var first = new OwnCompany(CompanyId, "First AB", "First", LogoUrl, WebsiteUrl, "111", "T1");
-        var second = new OwnCompany(otherId, "Second AB", null, null, null, null, null);
+        var first = OwnCompanyTestData.Create(CompanyId, "First AB", "First", LogoUrl, WebsiteUrl, "111", "T1");
+        var second = OwnCompanyTestData.Create(otherId, "Second AB", null, null, null, null, null);
 
         // Assert
         second.Id.ShouldNotBe(first.Id);

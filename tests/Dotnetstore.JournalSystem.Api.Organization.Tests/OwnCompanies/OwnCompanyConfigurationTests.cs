@@ -13,11 +13,11 @@ public sealed class OwnCompanyConfigurationTests
         return context.Model.FindEntityType(typeof(OwnCompany)).ShouldNotBeNull();
     }
 
-    private const string ExpectedTableName = "OwnCompanies";
+    private const string ExpectedTableName = "OwnCompany";
     private const string ExpectedSchema = "Organization";
 
     [Fact]
-    public void ConfigureMapsOwnCompanyToTableNamedOwnCompanies()
+    public void ConfigureMapsOwnCompanyToTableNamedOwnCompany()
     {
         // Arrange & Act
         var entityType = BuildEntityType();
@@ -27,13 +27,12 @@ public sealed class OwnCompanyConfigurationTests
     }
 
     [Fact]
-    public void ConfigureDoesNotUseSingularEntityNameOrBaseTypeNameAsTableName()
+    public void ConfigureDoesNotUseBaseTypeNameAsTableName()
     {
         // Arrange & Act
         var entityType = BuildEntityType();
 
         // Assert
-        entityType.GetTableName().ShouldNotBe(nameof(OwnCompany));
         entityType.GetTableName().ShouldNotBe("Company");
     }
 

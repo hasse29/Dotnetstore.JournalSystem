@@ -3,6 +3,7 @@ using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Microsoft.EntityFrameworkCore;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
+using Dotnetstore.JournalSystem.Api.Organization.Tests.OwnCompanies;
 using Shouldly;
 
 namespace Dotnetstore.JournalSystem.Api.Organization.Tests.Services;
@@ -36,7 +37,7 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
 
     private static OwnCompany CreateCompany()
     {
-        return new OwnCompany(Guid.NewGuid(), "Dotnetstore AB", null, null, null, null, null);
+        return OwnCompanyTestData.Create(Guid.NewGuid(), "Dotnetstore AB", null, null, null, null, null);
     }
 
     private async Task<int> CountStoredAsync()
@@ -95,7 +96,7 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
         await unitOfWork.SaveChangesAsync(TestContext.Current.CancellationToken);
         _context.ChangeTracker.Clear();
         await unitOfWork.OwnCompanies.AddAsync(
-            new OwnCompany(company.Id, "Duplicate", null, null, null, null, null),
+            OwnCompanyTestData.Create(company.Id, "Duplicate", null, null, null, null, null),
             TestContext.Current.CancellationToken);
 
         // Act

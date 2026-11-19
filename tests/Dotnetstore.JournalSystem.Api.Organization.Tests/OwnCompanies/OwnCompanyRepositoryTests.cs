@@ -31,7 +31,7 @@ public sealed class OwnCompanyRepositoryTests : IDisposable
 
     private static OwnCompany CreateCompany(string name = "Dotnetstore AB")
     {
-        return new OwnCompany(Guid.NewGuid(), name, "Description", null, new Uri("https://example.com"), "556677-8899", "SE556677889901");
+        return OwnCompanyTestData.Create(Guid.NewGuid(), name, "Description", null, new Uri("https://example.com"), "556677-8899", "SE556677889901");
     }
 
     private async Task SeedAsync(params OwnCompany[] companies)
@@ -145,7 +145,7 @@ public sealed class OwnCompanyRepositoryTests : IDisposable
         // Arrange
         var company = CreateCompany();
         await SeedAsync(company);
-        var changed = new OwnCompany(company.Id, "Renamed AB", null, null, null, null, null);
+        var changed = OwnCompanyTestData.Create(company.Id, "Renamed AB", null, null, null, null, null);
 
         // Act
         _repository.Update(changed);

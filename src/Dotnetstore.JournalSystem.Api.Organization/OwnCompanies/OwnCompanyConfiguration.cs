@@ -1,4 +1,5 @@
 ﻿using Dotnetstore.BaseModel.Configurations;
+using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -11,7 +12,7 @@ internal sealed class OwnCompanyConfiguration : CompanyConfiguration<OwnCompany>
         base.Configure(builder);
         
         builder
-            .ToTable("OwnCompanies", "Organization")
+            .ToTable(nameof(OwnCompany), DataSchemeConstants.SchemeName)
             .HasKey(x => x.Id);
     }
 }

@@ -95,13 +95,13 @@ public sealed class OrganizationDataContextTests
         var entityType = context.Model.FindEntityType(typeof(OwnCompany)).ShouldNotBeNull();
 
         // Assert
-        entityType.GetTableName().ShouldBe("OwnCompanies");
+        entityType.GetTableName().ShouldBe("OwnCompany");
         entityType.GetSchema().ShouldBe("Organization");
         entityType.FindPrimaryKey().ShouldNotBeNull().Properties.ShouldHaveSingleItem().Name.ShouldBe(nameof(OwnCompany.Id));
     }
 
     [Fact]
-    public void ModelDoesNotMapOwnCompanyToDefaultTableOrSchema()
+    public void ModelDoesNotMapOwnCompanyToBaseTableOrDefaultSchema()
     {
         // Arrange
         using var context = CreateContext();
@@ -110,7 +110,7 @@ public sealed class OrganizationDataContextTests
         var entityType = context.Model.FindEntityType(typeof(OwnCompany)).ShouldNotBeNull();
 
         // Assert
-        entityType.GetTableName().ShouldNotBe(nameof(OwnCompany));
+        entityType.GetTableName().ShouldNotBe("Company");
         entityType.GetSchema().ShouldNotBeNull();
     }
 
