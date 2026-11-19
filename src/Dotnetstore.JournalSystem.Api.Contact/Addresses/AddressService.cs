@@ -1,12 +1,14 @@
 ﻿using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
+using Dotnetstore.Security.Handlers;
 using Dotnetstore.JournalSystem.Shared.Requests.Contact;
 using Dotnetstore.JournalSystem.Shared.Responses.Contact;
 
 namespace Dotnetstore.JournalSystem.Api.Contact.Addresses;
 
 internal sealed class AddressService(
-    IContactUnitOfWork contactUnitOfWork) : IAddressService
+    IContactUnitOfWork contactUnitOfWork,
+    IEncryptionHandler encryption) : IAddressService
 {
     async Task<IEnumerable<AddressResponse>> IAddressService.GetAllAsync(CancellationToken cancellationToken)
     {
@@ -15,7 +17,7 @@ internal sealed class AddressService(
             .GetAllAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return items.Select(x => x.ToAddressResponse());
+        return items.Select(x => x.Decrypt(encryption).ToAddressResponse());
     }
 
     async ValueTask<Result<AddressResponse>> IAddressService.GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -26,7 +28,7 @@ internal sealed class AddressService(
             .ConfigureAwait(false);
 
         return address is not null ?
-            Result<AddressResponse>.Success(address.ToAddressResponse()) :
+            Result<AddressResponse>.Success(address.Decrypt(encryption).ToAddressResponse()) :
             Result<AddressResponse>.NotFound();
     }
 
@@ -44,7 +46,7 @@ internal sealed class AddressService(
         
         await contactUnitOfWork
             .Addresses
-            .AddAsync(address, cancellationToken)
+            .AddAsync(address.Encrypt(encryption), cancellationToken)
             .ConfigureAwait(false);
         
         var result = await contactUnitOfWork
@@ -84,7 +86,7 @@ internal sealed class AddressService(
 
         contactUnitOfWork
             .Addresses
-            .Update(addressToUpdate);
+            .Update(addressToUpdate.Encrypt(encryption));
         
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)

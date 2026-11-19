@@ -76,18 +76,12 @@ internal sealed class AddressBuilder :
         SetCountry(request.Country);
     }
 
+    // Sensitive values on an existing row are ciphertext, so they are never copied; the request supplies the new plaintext.
     private void SetAddressValues(Address address)
     {
         SetId(address.Id);
         SetAddressTypeId(address.AddressTypeId);
         SetObjectId(address.ObjectId);
-        SetCO(address.CO);
-        SetStreet1(address.Street1);
-        SetStreet2(address.Street2);
-        SetPostalCode(address.PostalCode);
-        SetCity(address.City);
-        SetState(address.State);
-        SetCountry(address.Country);
         SetCreatedDate(address.CreatedDate);
         SetCreatedBy(address.CreatedBy);
         SetLastUpdatedDate(address.LastUpdatedDate);

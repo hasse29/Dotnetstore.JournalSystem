@@ -360,4 +360,25 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
     }
+
+    [Fact]
+    public async Task CreateStoresTheTextFieldsEncryptedAndStillReturnsPlainText()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        var typeId = await CreateAddressTypeAsync(host.Client);
+
+        // Act
+        var created = await CreateAddressAsync(host.Client, typeId, "Secret Street 9");
+        var street = await host.ReadStoredTextAsync("SELECT [Street1] FROM [Contact].[Address] WHERE [Id] = @id", created.Id);
+        var city = await host.ReadStoredTextAsync("SELECT [City] FROM [Contact].[Address] WHERE [Id] = @id", created.Id);
+        var fetched = await host.Client.GetFromJsonAsync<AddressResponse>(Url($"/{created.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        street.ShouldNotBeNull().ShouldStartWith("dse1.");
+        street.ShouldNotContain("Secret");
+        city.ShouldNotBeNull().ShouldStartWith("dse1.");
+        fetched.ShouldNotBeNull().Street1.ShouldBe("Secret Street 9");
+        fetched.City.ShouldBe("Stockholm");
+    }
 }

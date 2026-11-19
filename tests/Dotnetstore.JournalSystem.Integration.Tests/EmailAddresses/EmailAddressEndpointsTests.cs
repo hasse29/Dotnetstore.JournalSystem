@@ -360,4 +360,22 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
     }
+
+    [Fact]
+    public async Task CreateStoresTheAddressEncryptedAndStillReturnsPlainText()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        var typeId = await CreateEmailAddressTypeAsync(host.Client);
+
+        // Act
+        var created = await CreateEmailAddressAsync(host.Client, typeId, "secret.person@example.com");
+        var stored = await host.ReadStoredTextAsync("SELECT [Address] FROM [Contact].[EmailAddress] WHERE [Id] = @id", created.Id);
+        var fetched = await host.Client.GetFromJsonAsync<EmailAddressResponse>(Url($"/{created.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        stored.ShouldNotBeNull().ShouldStartWith("dse1.");
+        stored.ShouldNotContain("secret.person");
+        fetched.ShouldNotBeNull().Address.ShouldBe("secret.person@example.com");
+    }
 }

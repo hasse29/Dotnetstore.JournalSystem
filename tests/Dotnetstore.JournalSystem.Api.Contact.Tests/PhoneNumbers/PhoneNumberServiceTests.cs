@@ -1,3 +1,4 @@
+using Dotnetstore.Security.Handlers;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
 using Ardalis.Result;
@@ -21,6 +22,7 @@ public sealed class PhoneNumberServiceTests : IDisposable
     private readonly ContactDataContext _context;
     private readonly ContactUnitOfWork _unitOfWork;
     private readonly PhoneNumberService _service;
+    private readonly IEncryptionHandler _encryption = TestEncryption.Create();
     private readonly Guid _phoneNumberTypeId = Guid.NewGuid();
 
     public PhoneNumberServiceTests(SqlServerFixture fixture)
@@ -42,7 +44,7 @@ public sealed class PhoneNumberServiceTests : IDisposable
             new EmailAddressRepository(_context),
             new PhoneNumberTypeRepository(_context),
             new PhoneNumberRepository(_context));
-        _service = new PhoneNumberService(_unitOfWork);
+        _service = new PhoneNumberService(_unitOfWork, _encryption);
     }
 
     public void Dispose()
@@ -148,6 +150,9 @@ public sealed class PhoneNumberServiceTests : IDisposable
         var stored = await _context.PhoneNumbers.SingleAsync(TestContext.Current.CancellationToken);
         stored.Id.ShouldBe(result.Value.Id);
         stored.CreatedBy.ShouldBe(userId);
+        stored.Number.ShouldNotContain("70 123");
+        stored.Number.ShouldStartWith("dse1.");
+        stored.Decrypt(_encryption).Number.ShouldBe("+46 70 123 45 67");
     }
 
     [Fact]
@@ -195,7 +200,8 @@ public sealed class PhoneNumberServiceTests : IDisposable
         result.Value.Number.ShouldBe("+46 70 999 99 99");
         _context.ChangeTracker.Clear();
         var stored = await _context.PhoneNumbers.SingleAsync(TestContext.Current.CancellationToken);
-        stored.Number.ShouldBe("+46 70 999 99 99");
+        stored.Number.ShouldNotContain("999");
+        stored.Decrypt(_encryption).Number.ShouldBe("+46 70 999 99 99");
         stored.LastUpdatedBy.ShouldBe(editor);
         stored.LastUpdatedDate.ShouldNotBeNull();
     }
@@ -226,7 +232,7 @@ public sealed class PhoneNumberServiceTests : IDisposable
         // Assert
         result.Status.ShouldBe(ResultStatus.Invalid);
         _context.ChangeTracker.Clear();
-        (await _context.PhoneNumbers.SingleAsync(TestContext.Current.CancellationToken)).Number.ShouldBe("+46 70 444 44 44");
+        (await _context.PhoneNumbers.SingleAsync(TestContext.Current.CancellationToken)).Decrypt(_encryption).Number.ShouldBe("+46 70 444 44 44");
     }
 
     [Fact]
@@ -242,7 +248,7 @@ public sealed class PhoneNumberServiceTests : IDisposable
         // Assert
         await Should.ThrowAsync<ArgumentException>(act);
         _context.ChangeTracker.Clear();
-        (await _context.PhoneNumbers.SingleAsync(TestContext.Current.CancellationToken)).Number.ShouldBe("+46 70 444 44 44");
+        (await _context.PhoneNumbers.SingleAsync(TestContext.Current.CancellationToken)).Decrypt(_encryption).Number.ShouldBe("+46 70 444 44 44");
     }
 
     [Fact]

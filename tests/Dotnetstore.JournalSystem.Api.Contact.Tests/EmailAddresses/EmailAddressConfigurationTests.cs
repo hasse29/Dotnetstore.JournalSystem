@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.Security;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
@@ -63,7 +64,7 @@ public sealed class EmailAddressConfigurationTests
     }
 
     [Fact]
-    public void ConfigureMakesAddressRequiredWithMaxLength()
+    public void ConfigureMakesAddressRequiredWithEncryptedMaxLength()
     {
         // Arrange & Act
         var entityType = BuildEntityType();
@@ -71,7 +72,7 @@ public sealed class EmailAddressConfigurationTests
         // Assert
         var property = entityType.FindProperty(nameof(EmailAddress.Address)).ShouldNotBeNull();
         property.IsNullable.ShouldBeFalse();
-        property.GetMaxLength().ShouldBe(DataSchemeConstants.EmailAddressMaxLength);
+        property.GetMaxLength().ShouldBe(FieldEncryption.EncryptedMaxLength(DataSchemeConstants.EmailAddressMaxLength));
     }
 
     [Theory]

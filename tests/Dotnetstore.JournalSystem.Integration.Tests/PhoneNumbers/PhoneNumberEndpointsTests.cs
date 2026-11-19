@@ -360,4 +360,22 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
     }
+
+    [Fact]
+    public async Task CreateStoresTheNumberEncryptedAndStillReturnsPlainText()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        var typeId = await CreatePhoneNumberTypeAsync(host.Client);
+
+        // Act
+        var created = await CreatePhoneNumberAsync(host.Client, typeId, "+46 70 987 65 43");
+        var stored = await host.ReadStoredTextAsync("SELECT [Number] FROM [Contact].[PhoneNumber] WHERE [Id] = @id", created.Id);
+        var fetched = await host.Client.GetFromJsonAsync<PhoneNumberResponse>(Url($"/{created.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        stored.ShouldNotBeNull().ShouldStartWith("dse1.");
+        stored.ShouldNotContain("987");
+        fetched.ShouldNotBeNull().Number.ShouldBe("+46 70 987 65 43");
+    }
 }

@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.Security;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -17,6 +18,6 @@ internal sealed class EmailAddressConfiguration : IEntityTypeConfiguration<Email
         builder
             .Property(x => x.Address)
             .IsRequired()
-            .HasMaxLength(DataSchemeConstants.EmailAddressMaxLength);
+            .HasMaxLength(FieldEncryption.EncryptedMaxLength(DataSchemeConstants.EmailAddressMaxLength));
     }
 }

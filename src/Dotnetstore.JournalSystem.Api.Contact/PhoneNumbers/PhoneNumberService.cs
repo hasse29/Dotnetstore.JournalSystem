@@ -1,12 +1,14 @@
 ﻿using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
+using Dotnetstore.Security.Handlers;
 using Dotnetstore.JournalSystem.Shared.Requests.Contact;
 using Dotnetstore.JournalSystem.Shared.Responses.Contact;
 
 namespace Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
 
 internal sealed class PhoneNumberService(
-    IContactUnitOfWork contactUnitOfWork) : IPhoneNumberService
+    IContactUnitOfWork contactUnitOfWork,
+    IEncryptionHandler encryption) : IPhoneNumberService
 {
     async Task<IEnumerable<PhoneNumberResponse>> IPhoneNumberService.GetAllAsync(CancellationToken cancellationToken)
     {
@@ -15,7 +17,7 @@ internal sealed class PhoneNumberService(
             .GetAllAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return items.Select(x => x.ToPhoneNumberResponse());
+        return items.Select(x => x.Decrypt(encryption).ToPhoneNumberResponse());
     }
 
     async ValueTask<Result<PhoneNumberResponse>> IPhoneNumberService.GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -26,7 +28,7 @@ internal sealed class PhoneNumberService(
             .ConfigureAwait(false);
 
         return phoneNumber is not null ?
-            Result<PhoneNumberResponse>.Success(phoneNumber.ToPhoneNumberResponse()) :
+            Result<PhoneNumberResponse>.Success(phoneNumber.Decrypt(encryption).ToPhoneNumberResponse()) :
             Result<PhoneNumberResponse>.NotFound();
     }
 
@@ -44,7 +46,7 @@ internal sealed class PhoneNumberService(
         
         await contactUnitOfWork
             .PhoneNumbers
-            .AddAsync(phoneNumber, cancellationToken)
+            .AddAsync(phoneNumber.Encrypt(encryption), cancellationToken)
             .ConfigureAwait(false);
         
         var result = await contactUnitOfWork
@@ -84,7 +86,7 @@ internal sealed class PhoneNumberService(
 
         contactUnitOfWork
             .PhoneNumbers
-            .Update(phoneNumberToUpdate);
+            .Update(phoneNumberToUpdate.Encrypt(encryption));
         
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)

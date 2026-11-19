@@ -15,6 +15,8 @@ public sealed class RateLimitingTests
         new WebApplicationFactory<Host.Program>().WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Development");
+            builder.UseSetting("Encryption:Keys:" + TestHost.EncryptionKeyId, TestHost.EncryptionKey);
+            builder.UseSetting("Encryption:CurrentKeyId", TestHost.EncryptionKeyId);
             builder.ConfigureAppConfiguration((_, config) =>
                 config.AddInMemoryCollection(
                 [

@@ -64,12 +64,12 @@ internal sealed class EmailAddressBuilder :
         SetAddress(request.Address);
     }
 
+    // Sensitive values on an existing row are ciphertext, so they are never copied; the request supplies the new plaintext.
     private void SetEmailAddressValues(EmailAddress emailAddress)
     {
         SetId(emailAddress.Id);
         SetEmailAddressTypeId(emailAddress.EmailAddressTypeId);
         SetObjectId(emailAddress.ObjectId);
-        SetAddress(emailAddress.Address);
         SetCreatedDate(emailAddress.CreatedDate);
         SetCreatedBy(emailAddress.CreatedBy);
         SetLastUpdatedDate(emailAddress.LastUpdatedDate);

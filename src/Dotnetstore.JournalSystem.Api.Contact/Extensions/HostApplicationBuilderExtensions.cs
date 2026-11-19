@@ -7,6 +7,8 @@ using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
 using Dotnetstore.JournalSystem.Shared.Constants;
+using Dotnetstore.Security.Extensions;
+using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -19,6 +21,7 @@ namespace Dotnetstore.JournalSystem.Api.Contact.Extensions;
 public static class HostApplicationBuilderExtensions
 {
     public const string DatabaseConnectionName = "journalsystem";
+    public const string EncryptionConfigurationSection = "Encryption";
 
     public static TBuilder RegisterContactServices<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
@@ -26,6 +29,8 @@ public static class HostApplicationBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.AddSqlServerDbContext<ContactDataContext>(DatabaseConnectionName);
+
+        builder.Services.AddEncryption(options => builder.Configuration.GetSection(EncryptionConfigurationSection).Bind(options));
 
         builder.Services.AddScoped<IAddressTypeRepository, AddressTypeRepository>();
         builder.Services.AddScoped<IContactUnitOfWork, ContactUnitOfWork>();

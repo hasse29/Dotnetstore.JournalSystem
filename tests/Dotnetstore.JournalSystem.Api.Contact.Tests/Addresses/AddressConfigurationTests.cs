@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.Security;
 using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
@@ -68,7 +69,7 @@ public sealed class AddressConfigurationTests
     [InlineData(nameof(Address.City), DataSchemeConstants.AddressCityMaxLength)]
     [InlineData(nameof(Address.State), DataSchemeConstants.AddressStateMaxLength)]
     [InlineData(nameof(Address.Country), DataSchemeConstants.AddressCountryMaxLength)]
-    public void ConfigureMakesTextPropertiesRequiredWithMaxLength(string propertyName, int maxLength)
+    public void ConfigureMakesTextPropertiesRequiredWithEncryptedMaxLength(string propertyName, int maxLength)
     {
         // Arrange & Act
         var entityType = BuildEntityType();
@@ -76,11 +77,11 @@ public sealed class AddressConfigurationTests
         // Assert
         var property = entityType.FindProperty(propertyName).ShouldNotBeNull();
         property.IsNullable.ShouldBeFalse();
-        property.GetMaxLength().ShouldBe(maxLength);
+        property.GetMaxLength().ShouldBe(FieldEncryption.EncryptedMaxLength(maxLength));
     }
 
     [Fact]
-    public void ConfigureMakesCOOptionalWithMaxLength()
+    public void ConfigureMakesCOOptionalWithEncryptedMaxLength()
     {
         // Arrange & Act
         var entityType = BuildEntityType();
@@ -88,11 +89,11 @@ public sealed class AddressConfigurationTests
         // Assert
         var property = entityType.FindProperty(nameof(Address.CO)).ShouldNotBeNull();
         property.IsNullable.ShouldBeTrue();
-        property.GetMaxLength().ShouldBe(DataSchemeConstants.AddressCOMaxLength);
+        property.GetMaxLength().ShouldBe(FieldEncryption.EncryptedMaxLength(DataSchemeConstants.AddressCOMaxLength));
     }
 
     [Fact]
-    public void ConfigureMakesStreet2OptionalWithMaxLength()
+    public void ConfigureMakesStreet2OptionalWithEncryptedMaxLength()
     {
         // Arrange & Act
         var entityType = BuildEntityType();
@@ -100,7 +101,7 @@ public sealed class AddressConfigurationTests
         // Assert
         var property = entityType.FindProperty(nameof(Address.Street2)).ShouldNotBeNull();
         property.IsNullable.ShouldBeTrue();
-        property.GetMaxLength().ShouldBe(DataSchemeConstants.AddressStreetMaxLength);
+        property.GetMaxLength().ShouldBe(FieldEncryption.EncryptedMaxLength(DataSchemeConstants.AddressStreetMaxLength));
     }
 
     [Theory]

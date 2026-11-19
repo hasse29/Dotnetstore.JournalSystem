@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.Security;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
@@ -63,7 +64,7 @@ public sealed class PhoneNumberConfigurationTests
     }
 
     [Fact]
-    public void ConfigureMakesAddressRequiredWithMaxLength()
+    public void ConfigureMakesNumberRequiredWithEncryptedMaxLength()
     {
         // Arrange & Act
         var entityType = BuildEntityType();
@@ -71,7 +72,7 @@ public sealed class PhoneNumberConfigurationTests
         // Assert
         var property = entityType.FindProperty(nameof(PhoneNumber.Number)).ShouldNotBeNull();
         property.IsNullable.ShouldBeFalse();
-        property.GetMaxLength().ShouldBe(DataSchemeConstants.PhoneNumberMaxLength);
+        property.GetMaxLength().ShouldBe(FieldEncryption.EncryptedMaxLength(DataSchemeConstants.PhoneNumberMaxLength));
     }
 
     [Theory]

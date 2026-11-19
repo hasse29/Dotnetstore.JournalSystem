@@ -1,3 +1,4 @@
+using Dotnetstore.Security.Handlers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Ardalis.Result;
@@ -21,6 +22,7 @@ public sealed class EmailAddressServiceTests : IDisposable
     private readonly ContactDataContext _context;
     private readonly ContactUnitOfWork _unitOfWork;
     private readonly EmailAddressService _service;
+    private readonly IEncryptionHandler _encryption = TestEncryption.Create();
     private readonly Guid _emailAddressTypeId = Guid.NewGuid();
 
     public EmailAddressServiceTests(SqlServerFixture fixture)
@@ -42,7 +44,7 @@ public sealed class EmailAddressServiceTests : IDisposable
             new EmailAddressRepository(_context),
             new PhoneNumberTypeRepository(_context),
             new PhoneNumberRepository(_context));
-        _service = new EmailAddressService(_unitOfWork);
+        _service = new EmailAddressService(_unitOfWork, _encryption);
     }
 
     public void Dispose()
@@ -148,6 +150,9 @@ public sealed class EmailAddressServiceTests : IDisposable
         var stored = await _context.EmailAddresses.SingleAsync(TestContext.Current.CancellationToken);
         stored.Id.ShouldBe(result.Value.Id);
         stored.CreatedBy.ShouldBe(userId);
+        stored.Address.ShouldNotContain("anna");
+        stored.Address.ShouldStartWith("dse1.");
+        stored.Decrypt(_encryption).Address.ShouldBe("anna@example.com");
     }
 
     [Fact]
@@ -195,7 +200,8 @@ public sealed class EmailAddressServiceTests : IDisposable
         result.Value.Address.ShouldBe("changed@example.com");
         _context.ChangeTracker.Clear();
         var stored = await _context.EmailAddresses.SingleAsync(TestContext.Current.CancellationToken);
-        stored.Address.ShouldBe("changed@example.com");
+        stored.Address.ShouldNotContain("changed");
+        stored.Decrypt(_encryption).Address.ShouldBe("changed@example.com");
         stored.LastUpdatedBy.ShouldBe(editor);
         stored.LastUpdatedDate.ShouldNotBeNull();
     }
@@ -226,7 +232,7 @@ public sealed class EmailAddressServiceTests : IDisposable
         // Assert
         result.Status.ShouldBe(ResultStatus.Invalid);
         _context.ChangeTracker.Clear();
-        (await _context.EmailAddresses.SingleAsync(TestContext.Current.CancellationToken)).Address.ShouldBe("original@example.com");
+        (await _context.EmailAddresses.SingleAsync(TestContext.Current.CancellationToken)).Decrypt(_encryption).Address.ShouldBe("original@example.com");
     }
 
     [Fact]
@@ -242,7 +248,7 @@ public sealed class EmailAddressServiceTests : IDisposable
         // Assert
         await Should.ThrowAsync<ArgumentException>(act);
         _context.ChangeTracker.Clear();
-        (await _context.EmailAddresses.SingleAsync(TestContext.Current.CancellationToken)).Address.ShouldBe("original@example.com");
+        (await _context.EmailAddresses.SingleAsync(TestContext.Current.CancellationToken)).Decrypt(_encryption).Address.ShouldBe("original@example.com");
     }
 
     [Fact]

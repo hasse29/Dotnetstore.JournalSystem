@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.Security;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -17,6 +18,6 @@ internal sealed class PhoneNumberConfiguration : IEntityTypeConfiguration<PhoneN
         builder
             .Property(x => x.Number)
             .IsRequired()
-            .HasMaxLength(DataSchemeConstants.PhoneNumberMaxLength);
+            .HasMaxLength(FieldEncryption.EncryptedMaxLength(DataSchemeConstants.PhoneNumberMaxLength));
     }
 }

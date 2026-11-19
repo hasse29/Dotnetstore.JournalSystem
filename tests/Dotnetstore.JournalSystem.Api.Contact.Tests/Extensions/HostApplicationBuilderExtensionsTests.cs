@@ -1,3 +1,5 @@
+using Dotnetstore.JournalSystem.Api.Contact.Tests.Fixtures;
+using Dotnetstore.Security.Handlers;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
 using Dotnetstore.JournalSystem.Api.Contact.Extensions;
 using Dotnetstore.JournalSystem.Api.Contact.Addresses;
@@ -20,13 +22,19 @@ public sealed class HostApplicationBuilderExtensionsTests
 {
     private const string ConnectionString = "Server=localhost,1;Database=journalsystem;User Id=u;Password=p;Connect Timeout=1;TrustServerCertificate=True";
 
-    private static HostApplicationBuilder CreateBuilder(string? connectionString)
+    private static HostApplicationBuilder CreateBuilder(string? connectionString, bool withEncryptionKey = true)
     {
         var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings());
 
         if (connectionString is not null)
         {
             builder.Configuration["ConnectionStrings:" + HostApplicationBuilderExtensions.DatabaseConnectionName] = connectionString;
+        }
+
+        if (withEncryptionKey)
+        {
+            builder.Configuration[HostApplicationBuilderExtensions.EncryptionConfigurationSection + ":Keys:" + TestEncryption.KeyId] = TestEncryption.Key;
+            builder.Configuration[HostApplicationBuilderExtensions.EncryptionConfigurationSection + ":CurrentKeyId"] = TestEncryption.KeyId;
         }
 
         return builder;
@@ -423,6 +431,48 @@ public sealed class HostApplicationBuilderExtensionsTests
 
         // Assert
         action.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void RegisterContactServicesRegistersEncryptionBoundToTheConfigurationSection()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterContactServices();
+        using var provider = builder.Services.BuildServiceProvider();
+        var handler = provider.GetRequiredService<IEncryptionHandler>();
+
+        // Act
+        var payload = handler.Encrypt("secret");
+
+        // Assert
+        payload.ShouldStartWith($"dse1.{TestEncryption.KeyId}.");
+        handler.Decrypt(payload).ShouldBe("secret");
+    }
+
+    [Fact]
+    public void ResolvingEncryptionWithoutAConfiguredKeyThrows()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString, withEncryptionKey: false);
+        builder.RegisterContactServices();
+        using var provider = builder.Services.BuildServiceProvider();
+
+        // Act
+        var action = () => provider.GetRequiredService<IEncryptionHandler>();
+
+        // Assert
+        action.ShouldThrow<Exception>();
+    }
+
+    [Fact]
+    public void EncryptionConfigurationSectionIsEncryption()
+    {
+        // Arrange & Act
+        var section = HostApplicationBuilderExtensions.EncryptionConfigurationSection;
+
+        // Assert
+        section.ShouldBe("Encryption");
     }
 
     [Fact]

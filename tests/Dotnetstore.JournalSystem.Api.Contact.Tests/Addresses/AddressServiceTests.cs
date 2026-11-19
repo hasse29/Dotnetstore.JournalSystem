@@ -1,3 +1,4 @@
+using Dotnetstore.Security.Handlers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
@@ -21,6 +22,7 @@ public sealed class AddressServiceTests : IDisposable
     private readonly ContactDataContext _context;
     private readonly ContactUnitOfWork _unitOfWork;
     private readonly AddressService _service;
+    private readonly IEncryptionHandler _encryption = TestEncryption.Create();
     private readonly Guid _addressTypeId = Guid.NewGuid();
 
     public AddressServiceTests(SqlServerFixture fixture)
@@ -35,7 +37,7 @@ public sealed class AddressServiceTests : IDisposable
         _context.SaveChanges();
         _context.ChangeTracker.Clear();
         _unitOfWork = new ContactUnitOfWork(_context, new AddressTypeRepository(_context), new AddressRepository(_context), new EmailAddressTypeRepository(_context), new EmailAddressRepository(_context), new PhoneNumberTypeRepository(_context), new PhoneNumberRepository(_context));
-        _service = new AddressService(_unitOfWork);
+        _service = new AddressService(_unitOfWork, _encryption);
     }
 
     public void Dispose()
@@ -142,6 +144,9 @@ public sealed class AddressServiceTests : IDisposable
         var stored = await _context.Addresses.SingleAsync(TestContext.Current.CancellationToken);
         stored.Id.ShouldBe(result.Value.Id);
         stored.CreatedBy.ShouldBe(userId);
+        stored.Street1.ShouldNotContain("Main Street");
+        stored.PostalCode.ShouldNotContain("12345");
+        stored.Decrypt(_encryption).Street1.ShouldBe("Main Street 1");
     }
 
     [Fact]
@@ -189,7 +194,8 @@ public sealed class AddressServiceTests : IDisposable
         result.Value.Street1.ShouldBe("Renamed Street");
         _context.ChangeTracker.Clear();
         var stored = await _context.Addresses.SingleAsync(TestContext.Current.CancellationToken);
-        stored.Street1.ShouldBe("Renamed Street");
+        stored.Street1.ShouldNotContain("Renamed Street");
+        stored.Decrypt(_encryption).Street1.ShouldBe("Renamed Street");
         stored.LastUpdatedBy.ShouldBe(editor);
         stored.LastUpdatedDate.ShouldNotBeNull();
     }
@@ -220,7 +226,7 @@ public sealed class AddressServiceTests : IDisposable
         // Assert
         result.Status.ShouldBe(ResultStatus.Invalid);
         _context.ChangeTracker.Clear();
-        (await _context.Addresses.SingleAsync(TestContext.Current.CancellationToken)).Street1.ShouldBe("Original Street");
+        (await _context.Addresses.SingleAsync(TestContext.Current.CancellationToken)).Decrypt(_encryption).Street1.ShouldBe("Original Street");
     }
 
     [Fact]
@@ -236,7 +242,7 @@ public sealed class AddressServiceTests : IDisposable
         // Assert
         await Should.ThrowAsync<ArgumentException>(act);
         _context.ChangeTracker.Clear();
-        (await _context.Addresses.SingleAsync(TestContext.Current.CancellationToken)).Street1.ShouldBe("Original Street");
+        (await _context.Addresses.SingleAsync(TestContext.Current.CancellationToken)).Decrypt(_encryption).Street1.ShouldBe("Original Street");
     }
 
     [Fact]

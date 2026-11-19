@@ -1,12 +1,14 @@
 ﻿using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
+using Dotnetstore.Security.Handlers;
 using Dotnetstore.JournalSystem.Shared.Requests.Contact;
 using Dotnetstore.JournalSystem.Shared.Responses.Contact;
 
 namespace Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 
 internal sealed class EmailAddressService(
-    IContactUnitOfWork contactUnitOfWork) : IEmailAddressService
+    IContactUnitOfWork contactUnitOfWork,
+    IEncryptionHandler encryption) : IEmailAddressService
 {
     async Task<IEnumerable<EmailAddressResponse>> IEmailAddressService.GetAllAsync(CancellationToken cancellationToken)
     {
@@ -15,7 +17,7 @@ internal sealed class EmailAddressService(
             .GetAllAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return items.Select(x => x.ToEmailAddressResponse());
+        return items.Select(x => x.Decrypt(encryption).ToEmailAddressResponse());
     }
 
     async ValueTask<Result<EmailAddressResponse>> IEmailAddressService.GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -26,7 +28,7 @@ internal sealed class EmailAddressService(
             .ConfigureAwait(false);
 
         return emailAddress is not null ?
-            Result<EmailAddressResponse>.Success(emailAddress.ToEmailAddressResponse()) :
+            Result<EmailAddressResponse>.Success(emailAddress.Decrypt(encryption).ToEmailAddressResponse()) :
             Result<EmailAddressResponse>.NotFound();
     }
 
@@ -44,7 +46,7 @@ internal sealed class EmailAddressService(
         
         await contactUnitOfWork
             .EmailAddresses
-            .AddAsync(emailAddress, cancellationToken)
+            .AddAsync(emailAddress.Encrypt(encryption), cancellationToken)
             .ConfigureAwait(false);
         
         var result = await contactUnitOfWork
@@ -84,7 +86,7 @@ internal sealed class EmailAddressService(
 
         contactUnitOfWork
             .EmailAddresses
-            .Update(emailAddressToUpdate);
+            .Update(emailAddressToUpdate.Encrypt(encryption));
         
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)

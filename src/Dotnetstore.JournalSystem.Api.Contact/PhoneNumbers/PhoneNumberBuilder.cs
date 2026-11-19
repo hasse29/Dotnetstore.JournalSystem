@@ -64,12 +64,12 @@ internal sealed class PhoneNumberBuilder :
         SetNumber(request.Number);
     }
 
+    // Sensitive values on an existing row are ciphertext, so they are never copied; the request supplies the new plaintext.
     private void SetPhoneNumberValues(PhoneNumber phoneNumber)
     {
         SetId(phoneNumber.Id);
         SetPhoneNumberTypeId(phoneNumber.PhoneNumberTypeId);
         SetObjectId(phoneNumber.ObjectId);
-        SetNumber(phoneNumber.Number);
         SetCreatedDate(phoneNumber.CreatedDate);
         SetCreatedBy(phoneNumber.CreatedBy);
         SetLastUpdatedDate(phoneNumber.LastUpdatedDate);
