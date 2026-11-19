@@ -11,4 +11,7 @@ public static class DataSchemeConstants
     
     public const int RoleNameMaxLength = 100;
     public const int RoleDescriptionMaxLength = 500;
+
+    public const int WorkGroupNameMaxLength = 100;
+    public const int WorkGroupDescriptionMaxLength = 500;
 }

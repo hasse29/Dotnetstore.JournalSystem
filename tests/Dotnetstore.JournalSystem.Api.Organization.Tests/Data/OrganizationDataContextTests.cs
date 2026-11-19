@@ -2,6 +2,7 @@ using Dotnetstore.BaseModel.Entities;
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
+using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
 
@@ -41,7 +42,7 @@ public sealed class OrganizationDataContextTests
         var entityTypes = context.Model.GetEntityTypes().ToList();
 
         // Assert
-        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(OwnCompany), typeof(Role)], ignoreOrder: true);
+        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(OwnCompany), typeof(Role), typeof(WorkGroup)], ignoreOrder: true);
     }
 
     [Fact]
@@ -98,6 +99,34 @@ public sealed class OrganizationDataContextTests
 
         // Assert
         entityType.GetTableName().ShouldBe("Role");
+        entityType.GetSchema().ShouldBe("Organization");
+    }
+
+    [Fact]
+    public void WorkGroupsDbSetIsExposed()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var dbSet = context.WorkGroups;
+
+        // Assert
+        dbSet.ShouldNotBeNull();
+        dbSet.EntityType.ClrType.ShouldBe(typeof(WorkGroup));
+    }
+
+    [Fact]
+    public void ModelAppliesWorkGroupConfigurationFromAssembly()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var entityType = context.Model.FindEntityType(typeof(WorkGroup)).ShouldNotBeNull();
+
+        // Assert
+        entityType.GetTableName().ShouldBe("WorkGroup");
         entityType.GetSchema().ShouldBe("Organization");
     }
 

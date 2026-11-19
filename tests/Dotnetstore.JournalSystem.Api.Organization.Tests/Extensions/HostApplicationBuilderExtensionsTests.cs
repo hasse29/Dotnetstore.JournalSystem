@@ -2,6 +2,7 @@ using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.Extensions;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
+using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
@@ -228,6 +229,53 @@ public sealed class HostApplicationBuilderExtensionsTests
 
         // Act
         var action = () => provider.GetService<IRoleService>();
+
+        // Assert
+        action.ShouldThrow<InvalidOperationException>();
+    }
+
+    [Fact]
+    public void RegisterOrganizationServicesRegistersWorkGroupServicesAsScoped()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+
+        // Act
+        builder.RegisterOrganizationServices();
+
+        // Assert
+        foreach (var serviceType in new[] { typeof(IWorkGroupRepository), typeof(IWorkGroupService) })
+        {
+            builder.Services.Single(d => d.ServiceType == serviceType).Lifetime.ShouldBe(ServiceLifetime.Scoped);
+        }
+    }
+
+    [Fact]
+    public void RegisterOrganizationServicesMakesWorkGroupServiceResolvable()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterOrganizationServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true });
+
+        // Act
+        using var scope = provider.CreateScope();
+        var service = scope.ServiceProvider.GetService<IWorkGroupService>();
+
+        // Assert
+        service.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void ResolvingWorkGroupServiceFromRootProviderIsRejected()
+    {
+        // Arrange
+        var builder = CreateBuilder(ConnectionString);
+        builder.RegisterOrganizationServices();
+        using var provider = builder.Services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
+
+        // Act
+        var action = () => provider.GetService<IWorkGroupService>();
 
         // Assert
         action.ShouldThrow<InvalidOperationException>();

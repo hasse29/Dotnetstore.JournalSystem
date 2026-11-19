@@ -29,5 +29,16 @@ public static class ApiEndpoints
             public const string Update = $"{RoleBase}/{{id:guid}}";
             public const string Delete = $"{RoleBase}/{{id:guid}}";
         }
+
+        public static class WorkGroups
+        {
+            private const string WorkGroupBase = $"{OrganizationBase}/work-groups";
+
+            public const string GetAll = WorkGroupBase;
+            public const string GetById = $"{WorkGroupBase}/{{id:guid}}";
+            public const string Create = WorkGroupBase;
+            public const string Update = $"{WorkGroupBase}/{{id:guid}}";
+            public const string Delete = $"{WorkGroupBase}/{{id:guid}}";
+        }
     }
 }

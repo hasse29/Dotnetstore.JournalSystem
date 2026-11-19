@@ -1,6 +1,7 @@
 ﻿using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
+using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Dotnetstore.JournalSystem.Api.Organization.Services;
@@ -8,13 +9,15 @@ namespace Dotnetstore.JournalSystem.Api.Organization.Services;
 internal sealed class OrganizationUnitOfWork(
     OrganizationDataContext context,
     IOwnCompanyRepository ownCompanyRepository,
-    IRoleRepository roleRepository) : IOrganizationUnitOfWork, IDisposable
+    IRoleRepository roleRepository,
+    IWorkGroupRepository workGroupRepository) : IOrganizationUnitOfWork, IDisposable
 {
     private IDbContextTransaction? _objTransaction;
     private bool _disposed;
 
     IOwnCompanyRepository IOrganizationUnitOfWork.OwnCompanies => ownCompanyRepository;
     IRoleRepository IOrganizationUnitOfWork.Roles => roleRepository;
+    IWorkGroupRepository IOrganizationUnitOfWork.WorkGroups => workGroupRepository;
 
     void IOrganizationUnitOfWork.CreateTransaction()
     {

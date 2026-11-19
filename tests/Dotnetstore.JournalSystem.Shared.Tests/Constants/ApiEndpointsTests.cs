@@ -111,4 +111,59 @@ public sealed class ApiEndpointsTests
         ApiEndpoints.Organization.Roles.GetAll.ShouldNotBe(ApiEndpoints.Organization.OwnCompanies.GetAll);
         ApiEndpoints.Organization.Roles.GetById.ShouldNotBe(ApiEndpoints.Organization.Roles.GetAll);
     }
+
+    [Fact]
+    public void WorkGroupCollectionRoutesUseTheOrganizationPath()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Organization.WorkGroups.GetAll,
+            ApiEndpoints.Organization.WorkGroups.Create
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/organization/work-groups");
+    }
+
+    [Fact]
+    public void WorkGroupItemRoutesRequireAGuidId()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Organization.WorkGroups.GetById,
+            ApiEndpoints.Organization.WorkGroups.Update,
+            ApiEndpoints.Organization.WorkGroups.Delete
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/organization/work-groups/{id:guid}");
+    }
+
+    [Fact]
+    public void WorkGroupRoutesStartWithApiPrefixAndHaveNoTrailingSlash()
+    {
+        // Arrange
+        var routes = new[]
+        {
+            ApiEndpoints.Organization.WorkGroups.GetAll,
+            ApiEndpoints.Organization.WorkGroups.GetById,
+            ApiEndpoints.Organization.WorkGroups.Create,
+            ApiEndpoints.Organization.WorkGroups.Update,
+            ApiEndpoints.Organization.WorkGroups.Delete
+        };
+
+        // Act & Assert
+        routes.ShouldAllBe(x => x.StartsWith("/api/", StringComparison.Ordinal) && !x.EndsWith('/'));
+    }
+
+    [Fact]
+    public void WorkGroupRoutesDoNotOverlapWithOtherOrganizationRoutes()
+    {
+        // Arrange & Act & Assert
+        ApiEndpoints.Organization.WorkGroups.GetAll.ShouldNotBe(ApiEndpoints.Organization.Roles.GetAll);
+        ApiEndpoints.Organization.WorkGroups.GetAll.ShouldNotBe(ApiEndpoints.Organization.OwnCompanies.GetAll);
+        ApiEndpoints.Organization.WorkGroups.GetById.ShouldNotBe(ApiEndpoints.Organization.WorkGroups.GetAll);
+    }
 }
