@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.Tests.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
 using Ardalis.Result;
@@ -226,6 +227,65 @@ public sealed class AddressTypeServiceTests : IDisposable
 
         // Assert
         result.Status.ShouldBe(ResultStatus.NotFound);
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncReturnsConflictAndKeepsTheTypeWhenAnAddressUsesIt()
+    {
+        // Arrange
+        IAddressTypeService service = _service;
+        var id = await SeedAsync();
+        _context.Addresses.Add(AddressTestData.Create(Guid.NewGuid(), addressTypeId: id));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        result.Errors.ShouldHaveSingleItem().ShouldContain("in use");
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncSucceedsAfterTheLastAddressUsingTheTypeIsRemoved()
+    {
+        // Arrange
+        IAddressTypeService service = _service;
+        var id = await SeedAsync();
+        var address = AddressTestData.Create(Guid.NewGuid(), addressTypeId: id);
+        _context.Addresses.Add(address);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.Addresses.Remove(address);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        (await CountStoredAsync()).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncIgnoresAddressesThatUseAnotherType()
+    {
+        // Arrange
+        IAddressTypeService service = _service;
+        var id = await SeedAsync("Unused");
+        var otherId = await SeedAsync("Used");
+        _context.Addresses.Add(AddressTestData.Create(Guid.NewGuid(), addressTypeId: otherId));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
         (await CountStoredAsync()).ShouldBe(1);
     }
 }

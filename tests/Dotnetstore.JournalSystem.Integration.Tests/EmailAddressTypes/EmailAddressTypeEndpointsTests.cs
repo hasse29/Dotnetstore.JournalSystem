@@ -291,4 +291,47 @@ public sealed class EmailAddressTypeEndpointsTests(SqlServerFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
     }
+
+    [Fact]
+    public async Task DeleteReturnsConflictAndKeepsTheTypeWhenAnEmailAddressUsesIt()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        var type = await CreateEmailAddressTypeAsync(host.Client);
+        using var emailAddress = await host.Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Contact.EmailAddresses.Create, UriKind.Relative),
+            new EditEmailAddressRequest(type.Id, Guid.NewGuid(), "anna@example.com"),
+            TestContext.Current.CancellationToken);
+        emailAddress.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act
+        using var response = await host.Client.DeleteAsync(Url($"/{type.Id}"), TestContext.Current.CancellationToken);
+        using var afterwards = await host.Client.GetAsync(Url($"/{type.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldContain("in use");
+        afterwards.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task DeleteSucceedsOnceTheEmailAddressUsingTheTypeIsDeleted()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        var type = await CreateEmailAddressTypeAsync(host.Client);
+        using var created = await host.Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Contact.EmailAddresses.Create, UriKind.Relative),
+            new EditEmailAddressRequest(type.Id, Guid.NewGuid(), "anna@example.com"),
+            TestContext.Current.CancellationToken);
+        var emailAddress = (await created.Content.ReadFromJsonAsync<EmailAddressResponse>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
+        using var deleteEmailAddress = await host.Client.DeleteAsync(new Uri($"{ApiEndpoints.Contact.EmailAddresses.GetAll}/{emailAddress.Id}", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Act
+        using var response = await host.Client.DeleteAsync(Url($"/{type.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        deleteEmailAddress.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
 }

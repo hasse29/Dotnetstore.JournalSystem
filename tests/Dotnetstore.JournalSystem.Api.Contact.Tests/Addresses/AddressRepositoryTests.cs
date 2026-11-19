@@ -193,4 +193,45 @@ public sealed class AddressRepositoryTests : IDisposable
         // Assert
         (await _context.Addresses.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
     }
+
+    [Fact]
+    public async Task AnyWithAddressTypeAsyncReturnsTrueWhenAnAddressUsesTheType()
+    {
+        // Arrange
+        IAddressRepository repository = _repository;
+        await SeedAsync(CreateAddress());
+
+        // Act
+        var result = await repository.AnyWithAddressTypeAsync(AddressTestData.AddressTypeId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AnyWithAddressTypeAsyncReturnsFalseForATypeNoAddressUses()
+    {
+        // Arrange
+        IAddressRepository repository = _repository;
+        await SeedAsync(CreateAddress());
+
+        // Act
+        var result = await repository.AnyWithAddressTypeAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AnyWithAddressTypeAsyncReturnsFalseWhenThereAreNoAddresses()
+    {
+        // Arrange
+        IAddressRepository repository = _repository;
+
+        // Act
+        var result = await repository.AnyWithAddressTypeAsync(AddressTestData.AddressTypeId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
 }

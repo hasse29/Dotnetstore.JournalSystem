@@ -97,6 +97,16 @@ internal sealed class EmailAddressTypeService(
             return Result.NotFound();
         }
 
+        var inUse = await contactUnitOfWork
+            .EmailAddresses
+            .AnyWithEmailAddressTypeAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (inUse)
+        {
+            return Result.Conflict("The email address type is in use by one or more email addresses and cannot be deleted.");
+        }
+
         await contactUnitOfWork
             .EmailAddressTypes
             .DeleteAsync(id, cancellationToken)

@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.Tests.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Ardalis.Result;
@@ -226,6 +227,65 @@ public sealed class EmailAddressTypeServiceTests : IDisposable
 
         // Assert
         result.Status.ShouldBe(ResultStatus.NotFound);
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncReturnsConflictAndKeepsTheTypeWhenAnEmailAddressUsesIt()
+    {
+        // Arrange
+        IEmailAddressTypeService service = _service;
+        var id = await SeedAsync();
+        _context.EmailAddresses.Add(EmailAddressTestData.Create(Guid.NewGuid(), emailAddressTypeId: id));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        result.Errors.ShouldHaveSingleItem().ShouldContain("in use");
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncSucceedsAfterTheLastEmailAddressUsingTheTypeIsRemoved()
+    {
+        // Arrange
+        IEmailAddressTypeService service = _service;
+        var id = await SeedAsync();
+        var emailAddress = EmailAddressTestData.Create(Guid.NewGuid(), emailAddressTypeId: id);
+        _context.EmailAddresses.Add(emailAddress);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.EmailAddresses.Remove(emailAddress);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        (await CountStoredAsync()).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncIgnoresEmailAddressesThatUseAnotherType()
+    {
+        // Arrange
+        IEmailAddressTypeService service = _service;
+        var id = await SeedAsync("Unused");
+        var otherId = await SeedAsync("Used");
+        _context.EmailAddresses.Add(EmailAddressTestData.Create(Guid.NewGuid(), emailAddressTypeId: otherId));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
         (await CountStoredAsync()).ShouldBe(1);
     }
 }

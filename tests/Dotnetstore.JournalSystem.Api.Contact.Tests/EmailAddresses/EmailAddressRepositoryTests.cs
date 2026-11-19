@@ -184,4 +184,45 @@ public sealed class EmailAddressRepositoryTests : IDisposable
         // Assert
         (await _context.EmailAddresses.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
     }
+
+    [Fact]
+    public async Task AnyWithEmailAddressTypeAsyncReturnsTrueWhenAnEmailAddressUsesTheType()
+    {
+        // Arrange
+        IEmailAddressRepository repository = _repository;
+        await SeedAsync(CreateEmailAddress());
+
+        // Act
+        var result = await repository.AnyWithEmailAddressTypeAsync(EmailAddressTestData.EmailAddressTypeId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task AnyWithEmailAddressTypeAsyncReturnsFalseForATypeNoEmailAddressUses()
+    {
+        // Arrange
+        IEmailAddressRepository repository = _repository;
+        await SeedAsync(CreateEmailAddress());
+
+        // Act
+        var result = await repository.AnyWithEmailAddressTypeAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task AnyWithEmailAddressTypeAsyncReturnsFalseWhenThereAreNoEmailAddresses()
+    {
+        // Arrange
+        IEmailAddressRepository repository = _repository;
+
+        // Act
+        var result = await repository.AnyWithEmailAddressTypeAsync(EmailAddressTestData.EmailAddressTypeId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeFalse();
+    }
 }

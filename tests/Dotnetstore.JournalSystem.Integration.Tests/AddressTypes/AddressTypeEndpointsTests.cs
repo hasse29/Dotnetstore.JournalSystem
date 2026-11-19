@@ -291,4 +291,47 @@ public sealed class AddressTypeEndpointsTests(SqlServerFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
     }
+
+    [Fact]
+    public async Task DeleteReturnsConflictAndKeepsTheTypeWhenAnAddressUsesIt()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        var type = await CreateAddressTypeAsync(host.Client);
+        using var address = await host.Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Contact.Addresses.Create, UriKind.Relative),
+            new EditAddressRequest(type.Id, Guid.NewGuid(), null, "Main Street 1", null, "12345", "Stockholm", "Stockholm", "Sweden"),
+            TestContext.Current.CancellationToken);
+        address.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act
+        using var response = await host.Client.DeleteAsync(Url($"/{type.Id}"), TestContext.Current.CancellationToken);
+        using var afterwards = await host.Client.GetAsync(Url($"/{type.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)).ShouldContain("in use");
+        afterwards.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task DeleteSucceedsOnceTheAddressUsingTheTypeIsDeleted()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        var type = await CreateAddressTypeAsync(host.Client);
+        using var created = await host.Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Contact.Addresses.Create, UriKind.Relative),
+            new EditAddressRequest(type.Id, Guid.NewGuid(), null, "Main Street 1", null, "12345", "Stockholm", "Stockholm", "Sweden"),
+            TestContext.Current.CancellationToken);
+        var address = (await created.Content.ReadFromJsonAsync<AddressResponse>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
+        using var deleteAddress = await host.Client.DeleteAsync(new Uri($"{ApiEndpoints.Contact.Addresses.GetAll}/{address.Id}", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Act
+        using var response = await host.Client.DeleteAsync(Url($"/{type.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        deleteAddress.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
 }

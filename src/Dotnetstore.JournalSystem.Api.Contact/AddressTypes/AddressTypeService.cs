@@ -97,6 +97,16 @@ internal sealed class AddressTypeService(
             return Result.NotFound();
         }
 
+        var inUse = await contactUnitOfWork
+            .Addresses
+            .AnyWithAddressTypeAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (inUse)
+        {
+            return Result.Conflict("The address type is in use by one or more addresses and cannot be deleted.");
+        }
+
         await contactUnitOfWork
             .AddressTypes
             .DeleteAsync(id, cancellationToken)
