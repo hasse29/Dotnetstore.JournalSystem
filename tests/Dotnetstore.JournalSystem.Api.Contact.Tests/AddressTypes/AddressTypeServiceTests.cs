@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Tests.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
@@ -29,7 +30,7 @@ public sealed class AddressTypeServiceTests : IDisposable
 
         _context = new ContactDataContext(_options);
         _context.Database.EnsureCreated();
-        _unitOfWork = new ContactUnitOfWork(_context, new AddressTypeRepository(_context), new AddressRepository(_context), new EmailAddressTypeRepository(_context), new EmailAddressRepository(_context), new PhoneNumberTypeRepository(_context));
+        _unitOfWork = new ContactUnitOfWork(_context, new AddressTypeRepository(_context), new AddressRepository(_context), new EmailAddressTypeRepository(_context), new EmailAddressRepository(_context), new PhoneNumberTypeRepository(_context), new PhoneNumberRepository(_context));
         _service = new AddressTypeService(_unitOfWork);
     }
 

@@ -27,6 +27,8 @@ public static class DataSchemeConstants
 
     public const int EmailAddressMaxLength = 254;
 
+    public const int PhoneNumberMaxLength = 30;
+
     public const int AddressCOMaxLength = 100;
     public const int AddressStreetMaxLength = 200;
     public const int AddressPostalCodeMaxLength = 20;

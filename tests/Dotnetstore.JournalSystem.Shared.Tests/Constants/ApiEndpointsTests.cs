@@ -438,4 +438,58 @@ public sealed class ApiEndpointsTests
         ApiEndpoints.Contact.PhoneNumberTypes.GetAll.ShouldNotBe(ApiEndpoints.Organization.OwnCompanies.GetAll);
         ApiEndpoints.Contact.PhoneNumberTypes.GetById.ShouldNotBe(ApiEndpoints.Contact.PhoneNumberTypes.GetAll);
     }
+
+    [Fact]
+    public void PhoneNumberCollectionRoutesUseTheContactPath()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.PhoneNumbers.GetAll,
+            ApiEndpoints.Contact.PhoneNumbers.Create
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/phone-numbers");
+    }
+
+    [Fact]
+    public void PhoneNumberItemRoutesRequireAGuidId()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.PhoneNumbers.GetById,
+            ApiEndpoints.Contact.PhoneNumbers.Update,
+            ApiEndpoints.Contact.PhoneNumbers.Delete
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/phone-numbers/{id:guid}");
+    }
+
+    [Fact]
+    public void PhoneNumberRoutesStartWithApiPrefixAndHaveNoTrailingSlash()
+    {
+        // Arrange
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.PhoneNumbers.GetAll,
+            ApiEndpoints.Contact.PhoneNumbers.GetById,
+            ApiEndpoints.Contact.PhoneNumbers.Create,
+            ApiEndpoints.Contact.PhoneNumbers.Update,
+            ApiEndpoints.Contact.PhoneNumbers.Delete
+        };
+
+        // Act & Assert
+        routes.ShouldAllBe(x => x.StartsWith("/api/", StringComparison.Ordinal) && !x.EndsWith('/'));
+    }
+
+    [Fact]
+    public void PhoneNumberRoutesDoNotOverlapWithPhoneNumberTypeRoutes()
+    {
+        // Arrange & Act & Assert
+        ApiEndpoints.Contact.PhoneNumbers.GetAll.ShouldNotBe(ApiEndpoints.Contact.PhoneNumberTypes.GetAll);
+        ApiEndpoints.Contact.PhoneNumbers.GetById.ShouldNotBe(ApiEndpoints.Contact.PhoneNumbers.GetAll);
+    }
 }

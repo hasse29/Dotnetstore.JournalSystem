@@ -3,6 +3,7 @@ using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
+using Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
 using Microsoft.EntityFrameworkCore;
@@ -44,7 +45,7 @@ public sealed class ContactDataContextTests
         var entityTypes = context.Model.GetEntityTypes().ToList();
 
         // Assert
-        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(AddressType), typeof(Address), typeof(EmailAddressType), typeof(EmailAddress), typeof(PhoneNumberType)], ignoreOrder: true);
+        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(AddressType), typeof(Address), typeof(EmailAddressType), typeof(EmailAddress), typeof(PhoneNumberType), typeof(PhoneNumber)], ignoreOrder: true);
     }
 
     [Fact]
@@ -198,6 +199,34 @@ public sealed class ContactDataContextTests
 
         // Assert
         entityType.GetTableName().ShouldBe("PhoneNumberType");
+        entityType.GetSchema().ShouldBe("Contact");
+    }
+
+    [Fact]
+    public void PhoneNumbersDbSetIsExposed()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var dbSet = context.PhoneNumbers;
+
+        // Assert
+        dbSet.ShouldNotBeNull();
+        dbSet.EntityType.ClrType.ShouldBe(typeof(PhoneNumber));
+    }
+
+    [Fact]
+    public void ModelAppliesPhoneNumberConfigurationFromAssembly()
+    {
+        // Arrange
+        using var context = CreateContext();
+
+        // Act
+        var entityType = context.Model.FindEntityType(typeof(PhoneNumber)).ShouldNotBeNull();
+
+        // Assert
+        entityType.GetTableName().ShouldBe("PhoneNumber");
         entityType.GetSchema().ShouldBe("Contact");
     }
 

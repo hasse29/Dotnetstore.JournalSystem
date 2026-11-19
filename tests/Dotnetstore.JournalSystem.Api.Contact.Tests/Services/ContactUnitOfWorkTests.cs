@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
@@ -21,6 +22,7 @@ public sealed class ContactUnitOfWorkTests : IDisposable
     private readonly EmailAddressTypeRepository _emailAddressTypeRepository;
     private readonly EmailAddressRepository _emailAddressRepository;
     private readonly PhoneNumberTypeRepository _phoneNumberTypeRepository;
+    private readonly PhoneNumberRepository _phoneNumberRepository;
     private readonly ContactUnitOfWork _unitOfWork;
 
     public ContactUnitOfWorkTests(SqlServerFixture fixture)
@@ -36,7 +38,8 @@ public sealed class ContactUnitOfWorkTests : IDisposable
         _emailAddressTypeRepository = new EmailAddressTypeRepository(_context);
         _emailAddressRepository = new EmailAddressRepository(_context);
         _phoneNumberTypeRepository = new PhoneNumberTypeRepository(_context);
-        _unitOfWork = new ContactUnitOfWork(_context, _repository, _addressRepository, _emailAddressTypeRepository, _emailAddressRepository, _phoneNumberTypeRepository);
+        _phoneNumberRepository = new PhoneNumberRepository(_context);
+        _unitOfWork = new ContactUnitOfWork(_context, _repository, _addressRepository, _emailAddressTypeRepository, _emailAddressRepository, _phoneNumberTypeRepository, _phoneNumberRepository);
     }
 
     public void Dispose()
@@ -120,6 +123,19 @@ public sealed class ContactUnitOfWorkTests : IDisposable
 
         // Assert
         result.ShouldBeSameAs(_phoneNumberTypeRepository);
+    }
+
+    [Fact]
+    public void PhoneNumbersReturnsTheInjectedRepository()
+    {
+        // Arrange
+        IContactUnitOfWork unitOfWork = _unitOfWork;
+
+        // Act
+        var result = unitOfWork.PhoneNumbers;
+
+        // Assert
+        result.ShouldBeSameAs(_phoneNumberRepository);
     }
 
     [Fact]

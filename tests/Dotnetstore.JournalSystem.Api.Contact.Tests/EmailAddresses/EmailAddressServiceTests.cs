@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
@@ -38,7 +39,9 @@ public sealed class EmailAddressServiceTests : IDisposable
             new AddressTypeRepository(_context),
             new AddressRepository(_context),
             new EmailAddressTypeRepository(_context),
-            new EmailAddressRepository(_context), new PhoneNumberTypeRepository(_context));
+            new EmailAddressRepository(_context),
+            new PhoneNumberTypeRepository(_context),
+            new PhoneNumberRepository(_context));
         _service = new EmailAddressService(_unitOfWork);
     }
 

@@ -100,5 +100,16 @@ public static class ApiEndpoints
             public const string Update = $"{EmailAddressBase}/{{id:guid}}";
             public const string Delete = $"{EmailAddressBase}/{{id:guid}}";
         }
+
+        public static class PhoneNumbers
+        {
+            private const string PhoneNumberBase = $"{ContactBase}/phone-numbers";
+
+            public const string GetAll = PhoneNumberBase;
+            public const string GetById = $"{PhoneNumberBase}/{{id:guid}}";
+            public const string Create = PhoneNumberBase;
+            public const string Update = $"{PhoneNumberBase}/{{id:guid}}";
+            public const string Delete = $"{PhoneNumberBase}/{{id:guid}}";
+        }
     }
 }
