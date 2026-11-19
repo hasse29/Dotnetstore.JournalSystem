@@ -14,6 +14,7 @@
     <Project Path="src/Dotnetstore.JournalSystem.Host/Dotnetstore.JournalSystem.Host.csproj" />
   </Folder>
   <Folder Name="/src/Api/Modules/">
+    <Project Path="src/Dotnetstore.JournalSystem.Api.Contact/Dotnetstore.JournalSystem.Api.Contact.csproj" />
     <Project Path="src/Dotnetstore.JournalSystem.Api.Organization/Dotnetstore.JournalSystem.Api.Organization.csproj" />
     <Project Path="src/Dotnetstore.JournalSystem.Api.SharedKernel/Dotnetstore.JournalSystem.Api.SharedKernel.csproj" />
   </Folder>
@@ -32,6 +33,7 @@
     <Project Path="tests/Dotnetstore.JournalSystem.Shared.Tests/Dotnetstore.JournalSystem.Shared.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Api/Modules/">
+    <Project Path="tests/Dotnetstore.JournalSystem.Api.Contact.Tests/Dotnetstore.JournalSystem.Api.Contact.Tests.csproj" />
     <Project Path="tests/Dotnetstore.JournalSystem.Api.Organization.Tests/Dotnetstore.JournalSystem.Api.Organization.Tests.csproj" />
     <Project Path="tests/Dotnetstore.JournalSystem.Api.SharedKernel.Tests/Dotnetstore.JournalSystem.Api.SharedKernel.Tests.csproj" />
   </Folder>

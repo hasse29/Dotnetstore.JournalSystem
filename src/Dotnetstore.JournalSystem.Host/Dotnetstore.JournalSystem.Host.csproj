@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Dotnetstore.JournalSystem.Api.Contact\Dotnetstore.JournalSystem.Api.Contact.csproj" />
     <ProjectReference Include="..\Dotnetstore.JournalSystem.Api.Organization\Dotnetstore.JournalSystem.Api.Organization.csproj" />
     <ProjectReference Include="..\Dotnetstore.JournalSystem.Aspire.ServiceDefaults\Dotnetstore.JournalSystem.Aspire.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Dotnetstore.JournalSystem.Shared\Dotnetstore.JournalSystem.Shared.csproj" />

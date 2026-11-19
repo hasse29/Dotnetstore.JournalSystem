@@ -166,4 +166,59 @@ public sealed class ApiEndpointsTests
         ApiEndpoints.Organization.WorkGroups.GetAll.ShouldNotBe(ApiEndpoints.Organization.OwnCompanies.GetAll);
         ApiEndpoints.Organization.WorkGroups.GetById.ShouldNotBe(ApiEndpoints.Organization.WorkGroups.GetAll);
     }
+
+    [Fact]
+    public void AddressTypeCollectionRoutesUseTheContactPath()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.AddressTypes.GetAll,
+            ApiEndpoints.Contact.AddressTypes.Create
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/address-types");
+    }
+
+    [Fact]
+    public void AddressTypeItemRoutesRequireAGuidId()
+    {
+        // Arrange & Act
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.AddressTypes.GetById,
+            ApiEndpoints.Contact.AddressTypes.Update,
+            ApiEndpoints.Contact.AddressTypes.Delete
+        };
+
+        // Assert
+        routes.ShouldAllBe(x => x == "/api/contact/address-types/{id:guid}");
+    }
+
+    [Fact]
+    public void AddressTypeRoutesStartWithApiPrefixAndHaveNoTrailingSlash()
+    {
+        // Arrange
+        var routes = new[]
+        {
+            ApiEndpoints.Contact.AddressTypes.GetAll,
+            ApiEndpoints.Contact.AddressTypes.GetById,
+            ApiEndpoints.Contact.AddressTypes.Create,
+            ApiEndpoints.Contact.AddressTypes.Update,
+            ApiEndpoints.Contact.AddressTypes.Delete
+        };
+
+        // Act & Assert
+        routes.ShouldAllBe(x => x.StartsWith("/api/", StringComparison.Ordinal) && !x.EndsWith('/'));
+    }
+
+    [Fact]
+    public void AddressTypeRoutesDoNotOverlapWithOrganizationRoutes()
+    {
+        // Arrange & Act & Assert
+        ApiEndpoints.Contact.AddressTypes.GetAll.ShouldNotStartWith(ApiEndpoints.Organization.Roles.GetAll);
+        ApiEndpoints.Contact.AddressTypes.GetAll.ShouldNotBe(ApiEndpoints.Organization.OwnCompanies.GetAll);
+        ApiEndpoints.Contact.AddressTypes.GetById.ShouldNotBe(ApiEndpoints.Contact.AddressTypes.GetAll);
+    }
 }

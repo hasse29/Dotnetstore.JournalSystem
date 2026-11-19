@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Contact.Extensions;
 using Dotnetstore.JournalSystem.Api.Organization.Extensions;
 using Dotnetstore.JournalSystem.Aspire.ServiceDefaults;
 using Scalar.AspNetCore;
@@ -10,7 +11,8 @@ internal static class WebApplicationExtensions
     {
         builder
             .AddServiceDefaults()
-            .RegisterOrganizationServices();
+            .RegisterOrganizationServices()
+            .RegisterContactServices();
 
         builder.WebHost
             .ConfigureRequestLimits();
@@ -49,6 +51,10 @@ internal static class WebApplicationExtensions
             {
                 await app.Services
                     .InitializeOrganizationDatabaseAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                await app.Services
+                    .InitializeContactDatabaseAsync(cancellationToken)
                     .ConfigureAwait(false);
             }
 
@@ -104,7 +110,8 @@ internal static class WebApplicationExtensions
             }
 
             app
-                .MapOrganizationEndpoints();
+                .MapOrganizationEndpoints()
+                .MapContactEndpoints();
 
             app
                 .MapHealthEndpoints();

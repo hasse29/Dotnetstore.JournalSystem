@@ -14,4 +14,9 @@ public static class DataSchemeConstants
 
     public const int WorkGroupNameMaxLength = 100;
     public const int WorkGroupDescriptionMaxLength = 500;
+
+    public const string ContactSchemeName = "Contact";
+
+    public const int AddressTypeNameMaxLength = 100;
+    public const int AddressTypeDescriptionMaxLength = 500;
 }

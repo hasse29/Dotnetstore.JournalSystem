@@ -1,4 +1,6 @@
+using Dotnetstore.JournalSystem.Api.Contact.Extensions;
 using Dotnetstore.JournalSystem.Api.Organization.Extensions;
+using OrganizationExtensions = Dotnetstore.JournalSystem.Api.Organization.Extensions.HostApplicationBuilderExtensions;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,11 +26,12 @@ internal sealed class ApiTestHost : IAsyncDisposable
         var connectionString = fixture.CreateDatabaseConnectionString();
         var settings = new Dictionary<string, string?>
         {
-            ["ConnectionStrings:" + HostApplicationBuilderExtensions.DatabaseConnectionName] = connectionString
+            ["ConnectionStrings:" + OrganizationExtensions.DatabaseConnectionName] = connectionString
         };
 
         var factory = TestHost.Create("Production", settings);
         await factory.Services.InitializeOrganizationDatabaseAsync(cancellationToken);
+        await factory.Services.InitializeContactDatabaseAsync(cancellationToken);
         var client = factory.CreateClient();
 
         return new ApiTestHost(factory, client, connectionString);

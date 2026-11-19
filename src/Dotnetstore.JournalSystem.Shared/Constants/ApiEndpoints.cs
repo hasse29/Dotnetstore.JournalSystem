@@ -41,4 +41,20 @@ public static class ApiEndpoints
             public const string Delete = $"{WorkGroupBase}/{{id:guid}}";
         }
     }
+
+    public static class Contact
+    {
+        private const string ContactBase = $"{Base}/contact";
+
+        public static class AddressTypes
+        {
+            private const string AddressTypeBase = $"{ContactBase}/address-types";
+
+            public const string GetAll = AddressTypeBase;
+            public const string GetById = $"{AddressTypeBase}/{{id:guid}}";
+            public const string Create = AddressTypeBase;
+            public const string Update = $"{AddressTypeBase}/{{id:guid}}";
+            public const string Delete = $"{AddressTypeBase}/{{id:guid}}";
+        }
+    }
 }
