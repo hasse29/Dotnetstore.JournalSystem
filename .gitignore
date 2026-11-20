@@ -485,3 +485,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Private seed data (sensitive records) - never commit. Public seed data lives in seed/seed.json
+seed/*.local.json
+seed/private/
+*.age.key
+keys.txt

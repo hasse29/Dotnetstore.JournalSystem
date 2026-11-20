@@ -1,0 +1,28 @@
+{
+  "ownCompanies": [
+    {
+      "name": "Dotnetstore",
+      "description": "Owner of the application",
+      "websiteUrl": "https://www.dotnetstore.se/",
+      "taxId": "710520-1433"
+    }
+  ],
+  "addressTypes": [
+    { "name": "Besök" },
+    { "name": "Hem" },
+    { "name": "Arbete" },
+    { "name": "Faktura" },
+    { "name": "Leverans" },
+    { "name": "Post" }
+  ],
+  "phoneNumberTypes": [
+    { "name": "Hem" },
+    { "name": "Mobil" },
+    { "name": "Arbete" },
+    { "name": "Fax" }
+  ],
+  "emailAddressTypes": [
+    { "name": "Hem" },
+    { "name": "Arbete" }
+  ]
+}

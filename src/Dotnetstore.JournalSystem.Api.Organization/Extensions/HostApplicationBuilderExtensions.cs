@@ -1,6 +1,7 @@
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
+using Dotnetstore.JournalSystem.Api.Organization.Seeding;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Microsoft.AspNetCore.Routing;
@@ -54,6 +55,24 @@ public static class HostApplicationBuilderExtensions
 
             await context.Database
                 .EnsureCreatedAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+    }
+
+    public static async Task<int> SeedOrganizationDataAsync(
+        this IServiceProvider services,
+        IEnumerable<string> seedFilePaths,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        var scope = services.CreateAsyncScope();
+        await using (scope.ConfigureAwait(false))
+        {
+            var context = scope.ServiceProvider.GetRequiredService<OrganizationDataContext>();
+
+            return await OrganizationSeeder
+                .SeedAsync(context, seedFilePaths, cancellationToken)
                 .ConfigureAwait(false);
         }
     }

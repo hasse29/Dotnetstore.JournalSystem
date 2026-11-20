@@ -5,6 +5,7 @@ using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumberTypes;
 using Dotnetstore.JournalSystem.Api.Contact.Data;
+using Dotnetstore.JournalSystem.Api.Contact.Seeding;
 using Dotnetstore.JournalSystem.Api.Contact.Services;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Dotnetstore.Security.Extensions;
@@ -91,6 +92,24 @@ public static class HostApplicationBuilderExtensions
                     .CreateTablesAsync(cancellationToken)
                     .ConfigureAwait(false);
             }
+        }
+    }
+
+    public static async Task<int> SeedContactDataAsync(
+        this IServiceProvider services,
+        IEnumerable<string> seedFilePaths,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+
+        var scope = services.CreateAsyncScope();
+        await using (scope.ConfigureAwait(false))
+        {
+            var context = scope.ServiceProvider.GetRequiredService<ContactDataContext>();
+
+            return await ContactSeeder
+                .SeedAsync(context, seedFilePaths, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

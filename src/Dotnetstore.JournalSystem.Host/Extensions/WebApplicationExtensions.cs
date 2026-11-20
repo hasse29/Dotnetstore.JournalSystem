@@ -56,6 +56,18 @@ internal static class WebApplicationExtensions
                 await app.Services
                     .InitializeContactDatabaseAsync(cancellationToken)
                     .ConfigureAwait(false);
+
+                var seedFiles = (app.Configuration.GetSection("Seeding:Paths").Get<string[]>()
+                        ?? ["../../seed/seed.json", "../../seed/seed.local.json"])
+                    .Select(path => Path.Combine(app.Environment.ContentRootPath, path));
+
+                await app.Services
+                    .SeedOrganizationDataAsync(seedFiles, cancellationToken)
+                    .ConfigureAwait(false);
+
+                await app.Services
+                    .SeedContactDataAsync(seedFiles, cancellationToken)
+                    .ConfigureAwait(false);
             }
 
             await app
