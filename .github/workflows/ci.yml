@@ -36,4 +36,4 @@ jobs:
 
       # Integration and E2E tests start SQL Server through Testcontainers, which the runner's Docker provides.
       - name: Test
-        run: dotnet test --no-build --configuration Debug --project tests/Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests
+        run: dotnet test --no-build --configuration Debug
