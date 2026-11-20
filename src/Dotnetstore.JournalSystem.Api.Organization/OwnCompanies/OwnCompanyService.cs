@@ -36,16 +36,16 @@ internal sealed class OwnCompanyService(
             .Create()
             .WithCreateValues(request, userId)
             .Build();
-        
+
         await organizationUnitOfWork
             .OwnCompanies
             .AddAsync(ownCompany, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<OwnCompanyResponse>.Success(ownCompany.ToOwnCompanyResponse()) :
             Result<OwnCompanyResponse>.Error("Failed to create the own company.");
@@ -57,17 +57,17 @@ internal sealed class OwnCompanyService(
             .OwnCompanies
             .GetByIdAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         if (existing is null)
         {
             return Result<OwnCompanyResponse>.NotFound();
         }
-        
+
         var ownCompanyToUpdate = OwnCompanyBuilder
             .Update()
             .WithUpdateValues(existing, ownCompany, userId)
             .Build();
-        
+
         organizationUnitOfWork
             .OwnCompanies
             .Detach(existing);
@@ -75,11 +75,11 @@ internal sealed class OwnCompanyService(
         organizationUnitOfWork
             .OwnCompanies
             .Update(ownCompanyToUpdate);
-        
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<OwnCompanyResponse>.Success(ownCompanyToUpdate.ToOwnCompanyResponse()) :
             Result<OwnCompanyResponse>.Error("Failed to update the own company.");
@@ -101,13 +101,13 @@ internal sealed class OwnCompanyService(
             .OwnCompanies
             .DeleteAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
-        return result > 0 ? 
-            Result.Success() : 
+
+        return result > 0 ?
+            Result.Success() :
             Result.Error("Failed to delete the own company.");
     }
 }

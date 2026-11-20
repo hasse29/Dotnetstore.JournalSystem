@@ -289,4 +289,5 @@ public sealed class PhoneNumberTypeServiceTests : IDisposable
         // Assert
         result.IsSuccess.ShouldBeTrue();
         (await CountStoredAsync()).ShouldBe(1);
-    }}
+    }
+}

@@ -333,4 +333,5 @@ public sealed class PhoneNumberTypeEndpointsTests(SqlServerFixture fixture)
         // Assert
         deletePhoneNumber.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-    }}
+    }
+}

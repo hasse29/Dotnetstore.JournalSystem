@@ -36,16 +36,16 @@ internal sealed class AddressTypeService(
             .Create()
             .WithCreateValues(request, userId)
             .Build();
-        
+
         await contactUnitOfWork
             .AddressTypes
             .AddAsync(addressType, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<AddressTypeResponse>.Success(addressType.ToAddressTypeResponse()) :
             Result<AddressTypeResponse>.Error("Failed to create the address type.");
@@ -57,17 +57,17 @@ internal sealed class AddressTypeService(
             .AddressTypes
             .GetByIdAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         if (existing is null)
         {
             return Result<AddressTypeResponse>.NotFound();
         }
-        
+
         var addressTypeToUpdate = AddressTypeBuilder
             .Update()
             .WithUpdateValues(existing, addressType, userId)
             .Build();
-        
+
         contactUnitOfWork
             .AddressTypes
             .Detach(existing);
@@ -75,11 +75,11 @@ internal sealed class AddressTypeService(
         contactUnitOfWork
             .AddressTypes
             .Update(addressTypeToUpdate);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<AddressTypeResponse>.Success(addressTypeToUpdate.ToAddressTypeResponse()) :
             Result<AddressTypeResponse>.Error("Failed to update the address type.");
@@ -111,13 +111,13 @@ internal sealed class AddressTypeService(
             .AddressTypes
             .DeleteAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
-        return result > 0 ? 
-            Result.Success() : 
+
+        return result > 0 ?
+            Result.Success() :
             Result.Error("Failed to delete the address type.");
     }
 }
