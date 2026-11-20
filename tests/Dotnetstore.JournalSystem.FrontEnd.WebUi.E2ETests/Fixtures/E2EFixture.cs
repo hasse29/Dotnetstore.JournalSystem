@@ -65,6 +65,7 @@ public sealed class E2EFixture : IAsyncLifetime
         await _api.Services.InitializeContactDatabaseAsync(CancellationToken.None);
         await SeedBootstrapAdminAsync(_api);
 
+        Microsoft.IdentityModel.Logging.IdentityModelEventSource.ShowPII = true; // TEMP diagnostics
         _idp = await FakeIdentityProvider.StartAsync(MintAdminAccessTokenAsync);
         _webUi = await StartWebUiAsync(_api, _idp);
         WebUiAddress = _webUi.Services
