@@ -27,6 +27,10 @@ jobs:
       - name: Restore
         run: dotnet restore
 
+      # Analyzer rules already fail the build as errors, so this step only needs to cover whitespace and layout.
+      - name: Check formatting
+        run: dotnet format whitespace Dotnetstore.JournalSystem.slnx --verify-no-changes
+
       - name: Build
         run: dotnet build --no-restore --configuration Debug
 
