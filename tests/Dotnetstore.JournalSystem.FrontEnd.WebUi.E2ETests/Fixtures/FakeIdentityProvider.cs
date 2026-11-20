@@ -77,6 +77,8 @@ internal sealed class FakeIdentityProvider : IAsyncDisposable
     private async Task RunAsync()
     {
         var builder = WebApplication.CreateBuilder();
+        // The test output folder can carry the Host project's appsettings.json, whose AllowedHosts only permits localhost.
+        builder.Configuration["AllowedHosts"] = "*";
         builder.WebHost.UseUrls("http://127.0.0.1:0");
         builder.Logging.ClearProviders();
         var app = builder.Build();
