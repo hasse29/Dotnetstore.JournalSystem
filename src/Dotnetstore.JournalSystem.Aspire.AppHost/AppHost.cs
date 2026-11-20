@@ -16,7 +16,7 @@ var database = sql
     .AddDatabase("journalsystem");
 
 builder
-    .AddProject<Projects.Dotnetstore_JournalSystem_Host>("api")
+    .AddDotnetProject("api", "../Dotnetstore.JournalSystem.Host/Dotnetstore.JournalSystem.Host.csproj")
     .WithHttpHealthCheck("/health", endpointName: "https")
     .WithEnvironment("Database__EnsureCreatedOnStartup", "true")
     .WithReference(database)
