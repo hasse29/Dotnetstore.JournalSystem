@@ -17,6 +17,7 @@ public sealed class CorsTests
             builder.UseEnvironment(environment);
             builder.UseSetting("Encryption:Keys:" + TestHost.EncryptionKeyId, TestHost.EncryptionKey);
             builder.UseSetting("Encryption:CurrentKeyId", TestHost.EncryptionKeyId);
+            builder.UseSetting("Tokens:SigningKeys:" + TestHost.TokenSigningKeyId, TestHost.TokenSigningKey);
             builder.ConfigureAppConfiguration((_, config) =>
             {
                 var settings = origins

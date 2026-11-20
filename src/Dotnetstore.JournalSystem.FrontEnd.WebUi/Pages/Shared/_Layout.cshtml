@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] – Journal System</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="admin">
+    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+        <a class="brand" asp-page="/Dashboard/Index">
+            <span class="brand-mark" aria-hidden="true">J</span>
+            <span class="brand-name">Journal System</span>
+        </a>
+        <nav>
+            <p class="nav-heading">Overview</p>
+            <ul class="nav-list">
+                <li>
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Dashboard/Index" ? "active" : null)"
+                       asp-page="/Dashboard/Index" data-testid="nav-dashboard">Dashboard</a>
+                </li>
+            </ul>
+        </nav>
+    </aside>
+
+    <div class="main">
+        <header class="topbar">
+            <button type="button" class="icon-button" id="sidebar-toggle" aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation">
+                <span aria-hidden="true">☰</span>
+            </button>
+            <div class="topbar-spacer"></div>
+            <span class="topbar-user" data-testid="current-user">@User.Identity?.Name</span>
+            <form method="post" asp-page="/Account/Logout">
+                <button type="submit" class="btn btn-secondary" data-testid="logout">Sign out</button>
+            </form>
+        </header>
+
+        <main class="content" id="content">
+            @RenderBody()
+        </main>
+
+        <footer class="footer">Dotnetstore Journal System</footer>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

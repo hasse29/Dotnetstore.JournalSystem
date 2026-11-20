@@ -4,6 +4,11 @@ public static class ApiEndpoints
 {
     private const string Base = "/api";
     
+    public static class Auth
+    {
+        public const string Login = $"{Base}/auth/login";
+    }
+
     public static class Organization
     {
         private const string OrganizationBase = $"{Base}/organization";
@@ -28,6 +33,17 @@ public static class ApiEndpoints
             public const string Create = RoleBase;
             public const string Update = $"{RoleBase}/{{id:guid}}";
             public const string Delete = $"{RoleBase}/{{id:guid}}";
+        }
+
+        public static class Users
+        {
+            private const string UserBase = $"{OrganizationBase}/users";
+
+            public const string GetAll = UserBase;
+            public const string GetById = $"{UserBase}/{{id:guid}}";
+            public const string Create = UserBase;
+            public const string Update = $"{UserBase}/{{id:guid}}";
+            public const string Delete = $"{UserBase}/{{id:guid}}";
         }
 
         public static class WorkGroups

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
+using Dotnetstore.JournalSystem.Api.Organization.Extensions;
 using Dotnetstore.JournalSystem.Host.Logging;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -29,7 +30,12 @@ internal static class RateLimitingExtensions
         var window = TimeSpan.FromSeconds(configuration.GetValue("RateLimiting:WindowSeconds", 60));
         var logger = loggerFactory.CreateLogger(SecurityLog.Category);
 
+        var loginPermitLimit = configuration.GetValue("RateLimiting:LoginPermitLimit", 10);
+
         options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.AddPolicy(
+            HostApplicationBuilderExtensions.LoginRateLimitPolicy,
+            context => CreatePartition(context, loginPermitLimit, window));
         options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(
             context => CreatePartition(context, permitLimit, window));
         options.OnRejected = (context, _) => HandleRejection(context, logger);

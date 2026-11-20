@@ -17,6 +17,7 @@ public sealed class RateLimitingTests
             builder.UseEnvironment("Development");
             builder.UseSetting("Encryption:Keys:" + TestHost.EncryptionKeyId, TestHost.EncryptionKey);
             builder.UseSetting("Encryption:CurrentKeyId", TestHost.EncryptionKeyId);
+            builder.UseSetting("Tokens:SigningKeys:" + TestHost.TokenSigningKeyId, TestHost.TokenSigningKey);
             builder.ConfigureAppConfiguration((_, config) =>
                 config.AddInMemoryCollection(
                 [

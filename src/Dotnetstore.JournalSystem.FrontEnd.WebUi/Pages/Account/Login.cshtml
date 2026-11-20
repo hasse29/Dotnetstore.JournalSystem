@@ -1,0 +1,41 @@
+@page
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Account.LoginModel
+@{
+    Layout = "_LoginLayout";
+    ViewData["Title"] = "Sign in";
+}
+
+<h1 class="auth-title">Sign in</h1>
+<p class="auth-subtitle">Use your Journal System account.</p>
+
+<form method="post" novalidate data-testid="login-form">
+    <input type="hidden" asp-for="ReturnUrl" />
+
+    @if (ModelState[string.Empty] is { Errors.Count: > 0 } formErrors)
+    {
+        <div class="alert alert-danger" role="alert" data-testid="login-error">
+            @formErrors.Errors[0].ErrorMessage
+        </div>
+    }
+
+    <div class="field">
+        <label asp-for="Input.Username"></label>
+        <input asp-for="Input.Username" autocomplete="username" autofocus />
+        <span asp-validation-for="Input.Username" class="field-error"></span>
+    </div>
+
+    <div class="field">
+        <label asp-for="Input.Password"></label>
+        <input asp-for="Input.Password" autocomplete="current-password" />
+        <span asp-validation-for="Input.Password" class="field-error"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+</form>
+
+@if (Model.EntraEnabled)
+{
+    <div class="auth-divider" role="separator"><span>or</span></div>
+    <a class="btn btn-secondary btn-block" data-testid="microsoft-signin"
+       asp-page="/Account/ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl">Sign in with Microsoft</a>
+}

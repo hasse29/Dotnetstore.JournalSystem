@@ -12,6 +12,12 @@ public static class DataSchemeConstants
     public const int RoleNameMaxLength = 100;
     public const int RoleDescriptionMaxLength = 500;
 
+    public const int UserNameMaxLength = 25;
+    public const int UserUsernameMaxLength = 256;
+    public const int UserExternalIdMaxLength = 100;
+    public const int UserPasswordMinLength = 12;
+    public const int UserPasswordMaxLength = 128;
+
     public const int WorkGroupNameMaxLength = 100;
     public const int WorkGroupDescriptionMaxLength = 500;
 

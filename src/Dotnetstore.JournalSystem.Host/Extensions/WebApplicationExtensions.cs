@@ -12,7 +12,8 @@ internal static class WebApplicationExtensions
         builder
             .AddServiceDefaults()
             .RegisterOrganizationServices()
-            .RegisterContactServices();
+            .RegisterContactServices()
+            .AddJournalAuthentication();
 
         builder.WebHost
             .ConfigureRequestLimits();
@@ -40,6 +41,7 @@ internal static class WebApplicationExtensions
                 .UseErrorHandling()
                 .UseTransportSecurity()
                 .UseRequestProtection()
+                .UseJournalAuthentication()
                 .MapApplicationEndpoints();
 
             return app;
@@ -47,7 +49,7 @@ internal static class WebApplicationExtensions
 
         internal async Task RunApplicationAsync(CancellationToken cancellationToken = default)
         {
-            if (app.Configuration.GetValue("Database:EnsureCreatedOnStartup", false))
+            if (app.Configuration.GetValue("Database:MigrateOnStartup", false))
             {
                 await app.Services
                     .InitializeOrganizationDatabaseAsync(cancellationToken)
@@ -67,6 +69,10 @@ internal static class WebApplicationExtensions
 
                 await app.Services
                     .SeedContactDataAsync(seedFiles, cancellationToken)
+                    .ConfigureAwait(false);
+
+                await app.Services
+                    .BootstrapOrganizationAdminAsync(app.Configuration, cancellationToken)
                     .ConfigureAwait(false);
             }
 

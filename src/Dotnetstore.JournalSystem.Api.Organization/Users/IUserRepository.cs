@@ -1,0 +1,23 @@
+using Dotnetstore.JournalSystem.Api.SharedKernel.Services;
+
+namespace Dotnetstore.JournalSystem.Api.Organization.Users;
+
+internal interface IUserRepository : IGenericRepository<User>
+{
+    Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
+    Task<User?> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken = default);
+
+    Task RegisterFailedLoginAsync(
+        Guid id,
+        int maxFailedAttempts,
+        DateTime lockoutEnd,
+        CancellationToken cancellationToken = default);
+
+    Task RegisterSuccessfulLoginAsync(
+        Guid id,
+        DateTime loginAt,
+        string? newPasswordHash,
+        CancellationToken cancellationToken = default);
+
+    Task ClearLockoutAsync(Guid id, CancellationToken cancellationToken = default);
+}

@@ -6,10 +6,14 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Dotnetstore.JournalSystem.Integration.Tests" />
+    <InternalsVisibleTo Include="Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Dotnetstore.Security" />
+    <PackageReference Include="Dotnetstore.Security.AspNetCore" />
+    <PackageReference Include="Microsoft.Identity.Web" />
+    <PackageReference Include="Microsoft.Identity.Web.GraphServiceClient" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Scalar.AspNetCore" />
   </ItemGroup>

@@ -1,6 +1,7 @@
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
+using Dotnetstore.JournalSystem.Api.Organization.Users;
 using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
     private readonly OrganizationDataContext _context;
     private readonly OwnCompanyRepository _repository;
     private readonly RoleRepository _roleRepository;
+    private readonly UserRepository _userRepository;
     private readonly WorkGroupRepository _workGroupRepository;
     private readonly OrganizationUnitOfWork _unitOfWork;
 
@@ -30,7 +32,8 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
         _repository = new OwnCompanyRepository(_context);
         _roleRepository = new RoleRepository(_context);
         _workGroupRepository = new WorkGroupRepository(_context);
-        _unitOfWork = new OrganizationUnitOfWork(_context, _repository, _roleRepository, _workGroupRepository);
+        _userRepository = new UserRepository(_context);
+        _unitOfWork = new OrganizationUnitOfWork(_context, _repository, _roleRepository, _userRepository, _workGroupRepository);
     }
 
     public void Dispose()
@@ -75,6 +78,19 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
 
         // Assert
         result.ShouldBeSameAs(_roleRepository);
+    }
+
+    [Fact]
+    public void UsersReturnsTheInjectedRepository()
+    {
+        // Arrange
+        IOrganizationUnitOfWork unitOfWork = _unitOfWork;
+
+        // Act
+        var result = unitOfWork.Users;
+
+        // Assert
+        result.ShouldBeSameAs(_userRepository);
     }
 
     [Fact]

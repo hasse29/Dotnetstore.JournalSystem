@@ -2,6 +2,7 @@ using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
+using Dotnetstore.JournalSystem.Api.Organization.Users;
 using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
@@ -26,7 +27,7 @@ public sealed class WorkGroupServiceTests : IDisposable
 
         _context = new OrganizationDataContext(_options);
         _context.Database.EnsureCreated();
-        _unitOfWork = new OrganizationUnitOfWork(_context, new OwnCompanyRepository(_context), new RoleRepository(_context), new WorkGroupRepository(_context));
+        _unitOfWork = new OrganizationUnitOfWork(_context, new OwnCompanyRepository(_context), new RoleRepository(_context), new UserRepository(_context), new WorkGroupRepository(_context));
         _service = new WorkGroupService(_unitOfWork);
     }
 

@@ -15,12 +15,18 @@ var sql = builder
 var database = sql
     .AddDatabase("journalsystem");
 
-builder
+var api = builder
     .AddDotnetProject("api", "../Dotnetstore.JournalSystem.Host/Dotnetstore.JournalSystem.Host.csproj")
     .WithHttpHealthCheck("/health", endpointName: "https")
-    .WithEnvironment("Database__EnsureCreatedOnStartup", "true")
+    .WithEnvironment("Database__MigrateOnStartup", "true")
     .WithReference(database)
     .WaitFor(database);
+
+builder
+    .AddDotnetProject("webui", "../Dotnetstore.JournalSystem.FrontEnd.WebUi/Dotnetstore.JournalSystem.FrontEnd.WebUi.csproj")
+    .WithEnvironment("JournalApi__BaseAddress", "https+http://api")
+    .WithReference(api)
+    .WaitFor(api);
 
 await builder
     .Build()

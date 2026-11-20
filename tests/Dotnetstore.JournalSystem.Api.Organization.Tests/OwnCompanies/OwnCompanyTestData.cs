@@ -13,7 +13,8 @@ internal static class OwnCompanyTestData
         Uri? logoUrl = null,
         Uri? websiteUrl = null,
         string? corporateNumber = null,
-        string? taxId = null)
+        string? taxId = null,
+        bool isSystem = false)
     {
         return new OwnCompany(
             id,
@@ -30,7 +31,7 @@ internal static class OwnCompanyTestData
             null,
             null,
             false,
-            false,
+            isSystem,
             false)
         {
             Name = name

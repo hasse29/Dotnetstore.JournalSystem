@@ -22,12 +22,17 @@
     <Project Path="src/Dotnetstore.JournalSystem.Aspire.AppHost/Dotnetstore.JournalSystem.Aspire.AppHost.csproj" />
     <Project Path="src/Dotnetstore.JournalSystem.Aspire.ServiceDefaults/Dotnetstore.JournalSystem.Aspire.ServiceDefaults.csproj" />
   </Folder>
+  <Folder Name="/src/FrontEnd/">
+    <Project Path="src/Dotnetstore.JournalSystem.FrontEnd.WebUi/Dotnetstore.JournalSystem.FrontEnd.WebUi.csproj" />
+  </Folder>
   <Folder Name="/src/Shared/">
     <Project Path="src/Dotnetstore.JournalSystem.Shared/Dotnetstore.JournalSystem.Shared.csproj" />
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/Api/">
     <Project Path="tests/Dotnetstore.JournalSystem.Integration.Tests/Dotnetstore.JournalSystem.Integration.Tests.csproj" />
+    <Project Path="tests/Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests/Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests.csproj" />
+    <Project Path="tests/Dotnetstore.JournalSystem.FrontEnd.WebUi.Tests/Dotnetstore.JournalSystem.FrontEnd.WebUi.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/Shared/">
     <Project Path="tests/Dotnetstore.JournalSystem.Shared.Tests/Dotnetstore.JournalSystem.Shared.Tests.csproj" />

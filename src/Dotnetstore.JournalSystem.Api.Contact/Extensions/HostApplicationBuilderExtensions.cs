@@ -29,7 +29,9 @@ public static class HostApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        builder.AddSqlServerDbContext<ContactDataContext>(DatabaseConnectionName);
+        builder.AddSqlServerDbContext<ContactDataContext>(
+            DatabaseConnectionName,
+            configureDbContextOptions: options => options.UseSqlServer(ContactDataContext.ConfigureSqlServer));
 
         builder.Services.AddEncryption(options => builder.Configuration.GetSection(EncryptionConfigurationSection).Bind(options));
 
@@ -74,24 +76,9 @@ public static class HostApplicationBuilderExtensions
         {
             var context = scope.ServiceProvider.GetRequiredService<ContactDataContext>();
 
-            // The database is shared with other modules, and EnsureCreated does nothing once any
-            // module has created its tables, so this module's tables are created explicitly.
             await context.Database
-                .EnsureCreatedAsync(cancellationToken)
+                .MigrateAsync(cancellationToken)
                 .ConfigureAwait(false);
-
-            var tableCount = await context.Database
-                .SqlQuery<int>($"SELECT COUNT(*) AS [Value] FROM sys.tables AS t INNER JOIN sys.schemas AS s ON s.schema_id = t.schema_id WHERE s.name = {DataSchemeConstants.ContactSchemeName}")
-                .SingleAsync(cancellationToken)
-                .ConfigureAwait(false);
-
-            if (tableCount == 0)
-            {
-                await context
-                    .GetService<IRelationalDatabaseCreator>()
-                    .CreateTablesAsync(cancellationToken)
-                    .ConfigureAwait(false);
-            }
         }
     }
 

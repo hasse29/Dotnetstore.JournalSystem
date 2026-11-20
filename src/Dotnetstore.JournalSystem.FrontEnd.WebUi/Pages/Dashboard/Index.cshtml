@@ -1,0 +1,56 @@
+@page
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Dashboard.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <h1>Dashboard</h1>
+    <p>Welcome back, <span data-testid="welcome-name">@User.Identity?.Name</span>.</p>
+</div>
+
+@if (Model.ApiUnavailable)
+{
+    <div class="alert alert-danger" role="alert" data-testid="api-unavailable">
+        The API could not be reached. Figures are not available right now.
+    </div>
+}
+else
+{
+    <section class="stat-grid" aria-label="Summary">
+        @foreach (var stat in Model.Stats)
+        {
+            <article class="card stat" data-testid="stat-@stat.Key">
+                <span class="stat-label">@stat.Label</span>
+                <span class="stat-value" data-testid="stat-@(stat.Key)-value">@stat.Value</span>
+            </article>
+        }
+    </section>
+
+    <section class="card" aria-labelledby="recent-heading">
+        <h2 id="recent-heading">Recent sign-ins</h2>
+        @if (Model.RecentSignIns.Count == 0)
+        {
+            <p class="muted" data-testid="recent-empty">No sign-ins recorded yet.</p>
+        }
+        else
+        {
+            <table class="table" data-testid="recent-table">
+                <thead>
+                    <tr><th>Name</th><th>Username</th><th>Provider</th><th>Last sign-in (UTC)</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model.RecentSignIns)
+                    {
+                        <tr>
+                            <td>@user.FirstName @user.LastName</td>
+                            <td>@user.Username</td>
+                            <td>@user.AuthProvider</td>
+                            <td>@user.LastLoginAt?.ToString("yyyy-MM-dd HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+}

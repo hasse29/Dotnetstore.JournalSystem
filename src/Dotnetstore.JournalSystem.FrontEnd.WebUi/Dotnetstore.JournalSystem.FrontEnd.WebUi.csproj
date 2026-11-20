@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <UserSecretsId>dotnetstore-journalsystem-webui</UserSecretsId>
+    <NoWarn>$(NoWarn);CA1515;CA1054;CA1056</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dotnetstore.JournalSystem.Aspire.ServiceDefaults\Dotnetstore.JournalSystem.Aspire.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Dotnetstore.JournalSystem.Shared\Dotnetstore.JournalSystem.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
