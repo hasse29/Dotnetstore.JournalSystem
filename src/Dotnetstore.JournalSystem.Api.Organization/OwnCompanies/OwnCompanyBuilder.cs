@@ -41,7 +41,7 @@ internal sealed class OwnCompanyBuilder :
     {
         return new OwnCompanyBuilder();
     }
-    
+
     OwnCompanyBuilder IWithCreateValues.WithCreateValues(EditOwnCompanyRequest request, Guid? userId)
     {
         SetId(Guid.CreateVersion7());
@@ -55,7 +55,7 @@ internal sealed class OwnCompanyBuilder :
         SetCreatedBy(userId);
         return this;
     }
-    
+
     OwnCompanyBuilder IWithUpdateValues.WithUpdateValues(OwnCompany existing, EditOwnCompanyRequest request, Guid? userId)
     {
         SetOwnCompanyValues(existing);
@@ -69,7 +69,7 @@ internal sealed class OwnCompanyBuilder :
         SetLastUpdatedBy(userId);
         return this;
     }
-    
+
     private void SetOwnCompanyValues(OwnCompany ownCompany)
     {
         SetId(ownCompany.Id);
@@ -96,33 +96,33 @@ internal sealed class OwnCompanyBuilder :
         _id = id;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetName(string name)
     {
         Guard.Against.NullOrWhiteSpace(name);
         Guard.Against.StringTooLong(name, DataSchemeConstants.OwnCompanyNameMaxLength);
-        
+
         _name = name;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetDescription(string? description)
     {
         if (!string.IsNullOrWhiteSpace(description))
         {
             Guard.Against.StringTooLong(description, DataSchemeConstants.OwnCompanyDescriptionMaxLength);
         }
-        
+
         _description = description;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetLogoUrl(Uri? logoUrl)
     {
         _logoUrl = logoUrl;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetWebsiteUrl(Uri? websiteUrl)
     {
         _websiteUrl = websiteUrl;
@@ -135,87 +135,87 @@ internal sealed class OwnCompanyBuilder :
         {
             Guard.Against.StringTooLong(corporateNumber, DataSchemeConstants.OwnCompanyCorporateNumberMaxLength);
         }
-        
+
         _corporateNumber = corporateNumber;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetTaxId(string? taxId)
     {
         if (!string.IsNullOrWhiteSpace(taxId))
         {
             Guard.Against.StringTooLong(taxId, DataSchemeConstants.OwnCompanyTaxIdMaxLength);
         }
-        
+
         _taxId = taxId;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetCreatedDate(DateTime createdDate)
     {
         Guard.Against.Default(createdDate);
-        
+
         _createdDate = createdDate;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetCreatedBy(Guid? createdBy)
     {
         if (createdBy.HasValue)
         {
             Guard.Against.Default(createdBy.Value, nameof(createdBy));
         }
-        
+
         _createdBy = createdBy;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetLastUpdatedDate(DateTime? lastUpdatedDate)
     {
         _lastUpdatedDate = lastUpdatedDate;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetLastUpdatedBy(Guid? lastUpdatedBy)
     {
         if (lastUpdatedBy.HasValue)
         {
             Guard.Against.Default(lastUpdatedBy.Value, nameof(lastUpdatedBy));
         }
-        
+
         _lastUpdatedBy = lastUpdatedBy;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetDeletedDate(DateTime? deletedDate)
     {
         _deletedDate = deletedDate;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetDeletedBy(Guid? deletedBy)
     {
         if (deletedBy.HasValue)
         {
             Guard.Against.Default(deletedBy.Value, nameof(deletedBy));
         }
-        
+
         _deletedBy = deletedBy;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetIsDeleted(bool isDeleted)
     {
         _isDeleted = isDeleted;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetIsSystem(bool isSystem)
     {
         _isSystem = isSystem;
         return this;
     }
-    
+
     internal OwnCompanyBuilder SetIsGdpr(bool isGdpr)
     {
         _isGdpr = isGdpr;

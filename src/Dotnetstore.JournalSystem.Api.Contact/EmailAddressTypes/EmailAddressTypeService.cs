@@ -36,16 +36,16 @@ internal sealed class EmailAddressTypeService(
             .Create()
             .WithCreateValues(request, userId)
             .Build();
-        
+
         await contactUnitOfWork
             .EmailAddressTypes
             .AddAsync(emailAddressType, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<EmailAddressTypeResponse>.Success(emailAddressType.ToEmailAddressTypeResponse()) :
             Result<EmailAddressTypeResponse>.Error("Failed to create the email address type.");
@@ -57,17 +57,17 @@ internal sealed class EmailAddressTypeService(
             .EmailAddressTypes
             .GetByIdAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         if (existing is null)
         {
             return Result<EmailAddressTypeResponse>.NotFound();
         }
-        
+
         var emailAddressTypeToUpdate = EmailAddressTypeBuilder
             .Update()
             .WithUpdateValues(existing, emailAddressType, userId)
             .Build();
-        
+
         contactUnitOfWork
             .EmailAddressTypes
             .Detach(existing);
@@ -75,11 +75,11 @@ internal sealed class EmailAddressTypeService(
         contactUnitOfWork
             .EmailAddressTypes
             .Update(emailAddressTypeToUpdate);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<EmailAddressTypeResponse>.Success(emailAddressTypeToUpdate.ToEmailAddressTypeResponse()) :
             Result<EmailAddressTypeResponse>.Error("Failed to update the email address type.");
@@ -111,13 +111,13 @@ internal sealed class EmailAddressTypeService(
             .EmailAddressTypes
             .DeleteAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
-        return result > 0 ? 
-            Result.Success() : 
+
+        return result > 0 ?
+            Result.Success() :
             Result.Error("Failed to delete the email address type.");
     }
 }

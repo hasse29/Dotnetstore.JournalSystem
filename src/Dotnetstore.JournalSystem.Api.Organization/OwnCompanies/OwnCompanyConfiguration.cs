@@ -10,7 +10,7 @@ internal sealed class OwnCompanyConfiguration : CompanyConfiguration<OwnCompany>
     public override void Configure(EntityTypeBuilder<OwnCompany> builder)
     {
         base.Configure(builder);
-        
+
         builder
             .ToTable(nameof(OwnCompany), DataSchemeConstants.SchemeName)
             .HasKey(x => x.Id);

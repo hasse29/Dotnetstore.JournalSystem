@@ -43,16 +43,16 @@ internal sealed class AddressService(
             .Create()
             .WithCreateValues(request, userId)
             .Build();
-        
+
         await contactUnitOfWork
             .Addresses
             .AddAsync(address.Encrypt(encryption), cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<AddressResponse>.Success(address.ToAddressResponse()) :
             Result<AddressResponse>.Error("Failed to create the address.");
@@ -64,7 +64,7 @@ internal sealed class AddressService(
             .Addresses
             .GetByIdAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         if (existing is null)
         {
             return Result<AddressResponse>.NotFound();
@@ -74,12 +74,12 @@ internal sealed class AddressService(
         {
             return Result<AddressResponse>.Invalid(UnknownAddressType());
         }
-        
+
         var addressToUpdate = AddressBuilder
             .Update()
             .WithUpdateValues(existing, address, userId)
             .Build();
-        
+
         contactUnitOfWork
             .Addresses
             .Detach(existing);
@@ -87,11 +87,11 @@ internal sealed class AddressService(
         contactUnitOfWork
             .Addresses
             .Update(addressToUpdate.Encrypt(encryption));
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<AddressResponse>.Success(addressToUpdate.ToAddressResponse()) :
             Result<AddressResponse>.Error("Failed to update the address.");
@@ -113,13 +113,13 @@ internal sealed class AddressService(
             .Addresses
             .DeleteAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
-        return result > 0 ? 
-            Result.Success() : 
+
+        return result > 0 ?
+            Result.Success() :
             Result.Error("Failed to delete the address.");
     }
 

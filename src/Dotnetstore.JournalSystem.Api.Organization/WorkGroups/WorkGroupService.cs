@@ -36,16 +36,16 @@ internal sealed class WorkGroupService(
             .Create()
             .WithCreateValues(request, userId)
             .Build();
-        
+
         await organizationUnitOfWork
             .WorkGroups
             .AddAsync(workGroup, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<WorkGroupResponse>.Success(workGroup.ToWorkGroupResponse()) :
             Result<WorkGroupResponse>.Error("Failed to create the work group.");
@@ -57,17 +57,17 @@ internal sealed class WorkGroupService(
             .WorkGroups
             .GetByIdAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         if (existing is null)
         {
             return Result<WorkGroupResponse>.NotFound();
         }
-        
+
         var workGroupToUpdate = WorkGroupBuilder
             .Update()
             .WithUpdateValues(existing, workGroup, userId)
             .Build();
-        
+
         organizationUnitOfWork
             .WorkGroups
             .Detach(existing);
@@ -75,11 +75,11 @@ internal sealed class WorkGroupService(
         organizationUnitOfWork
             .WorkGroups
             .Update(workGroupToUpdate);
-        
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<WorkGroupResponse>.Success(workGroupToUpdate.ToWorkGroupResponse()) :
             Result<WorkGroupResponse>.Error("Failed to update the work group.");
@@ -101,13 +101,13 @@ internal sealed class WorkGroupService(
             .WorkGroups
             .DeleteAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
-        return result > 0 ? 
-            Result.Success() : 
+
+        return result > 0 ?
+            Result.Success() :
             Result.Error("Failed to delete the work group.");
     }
 }

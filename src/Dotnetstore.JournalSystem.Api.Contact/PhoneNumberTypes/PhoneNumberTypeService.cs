@@ -36,16 +36,16 @@ internal sealed class PhoneNumberTypeService(
             .Create()
             .WithCreateValues(request, userId)
             .Build();
-        
+
         await contactUnitOfWork
             .PhoneNumberTypes
             .AddAsync(phoneNumberType, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<PhoneNumberTypeResponse>.Success(phoneNumberType.ToPhoneNumberTypeResponse()) :
             Result<PhoneNumberTypeResponse>.Error("Failed to create the phone number type.");
@@ -57,17 +57,17 @@ internal sealed class PhoneNumberTypeService(
             .PhoneNumberTypes
             .GetByIdAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         if (existing is null)
         {
             return Result<PhoneNumberTypeResponse>.NotFound();
         }
-        
+
         var phoneNumberTypeToUpdate = PhoneNumberTypeBuilder
             .Update()
             .WithUpdateValues(existing, phoneNumberType, userId)
             .Build();
-        
+
         contactUnitOfWork
             .PhoneNumberTypes
             .Detach(existing);
@@ -75,11 +75,11 @@ internal sealed class PhoneNumberTypeService(
         contactUnitOfWork
             .PhoneNumberTypes
             .Update(phoneNumberTypeToUpdate);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<PhoneNumberTypeResponse>.Success(phoneNumberTypeToUpdate.ToPhoneNumberTypeResponse()) :
             Result<PhoneNumberTypeResponse>.Error("Failed to update the phone number type.");
@@ -111,13 +111,13 @@ internal sealed class PhoneNumberTypeService(
             .PhoneNumberTypes
             .DeleteAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await contactUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
-        return result > 0 ? 
-            Result.Success() : 
+
+        return result > 0 ?
+            Result.Success() :
             Result.Error("Failed to delete the phone number type.");
     }
 }

@@ -36,16 +36,16 @@ internal sealed class RoleService(
             .Create()
             .WithCreateValues(request, userId)
             .Build();
-        
+
         await organizationUnitOfWork
             .Roles
             .AddAsync(role, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<RoleResponse>.Success(role.ToRoleResponse()) :
             Result<RoleResponse>.Error("Failed to create the role.");
@@ -57,17 +57,17 @@ internal sealed class RoleService(
             .Roles
             .GetByIdAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         if (existing is null)
         {
             return Result<RoleResponse>.NotFound();
         }
-        
+
         var roleToUpdate = RoleBuilder
             .Update()
             .WithUpdateValues(existing, role, userId)
             .Build();
-        
+
         organizationUnitOfWork
             .Roles
             .Detach(existing);
@@ -75,11 +75,11 @@ internal sealed class RoleService(
         organizationUnitOfWork
             .Roles
             .Update(roleToUpdate);
-        
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
+
         return result > 0 ?
             Result<RoleResponse>.Success(roleToUpdate.ToRoleResponse()) :
             Result<RoleResponse>.Error("Failed to update the role.");
@@ -101,13 +101,13 @@ internal sealed class RoleService(
             .Roles
             .DeleteAsync(id, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
-        
-        return result > 0 ? 
-            Result.Success() : 
+
+        return result > 0 ?
+            Result.Success() :
             Result.Error("Failed to delete the role.");
     }
 }
