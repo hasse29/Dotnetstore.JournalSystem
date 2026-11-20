@@ -25,4 +25,4 @@ internal sealed class OrganizationDataContext(DbContextOptions<OrganizationDataC
         ArgumentNullException.ThrowIfNull(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OrganizationDataContext).Assembly);
     }
-}
+}

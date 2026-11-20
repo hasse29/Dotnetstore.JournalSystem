@@ -1,4 +1,11 @@
 root = true
 
+# Matches .gitattributes (eol=crlf) so formatting checks agree between Windows and CI.
+[*]
+end_of_line = crlf
+
+[*.sh]
+end_of_line = lf
+
 [**/Migrations/*.cs]
 generated_code = true
