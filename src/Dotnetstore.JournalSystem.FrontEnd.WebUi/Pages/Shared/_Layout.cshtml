@@ -28,6 +28,10 @@
                     <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Profile/Index" ? "active" : null)"
                        asp-page="/Profile/Index" data-testid="nav-profile">My profile</a>
                 </li>
+                <li>
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Companies/Index" ? "active" : null)"
+                       asp-page="/Companies/Index" data-testid="nav-companies">Own companies</a>
+                </li>
             </ul>
             @if (AccessGate.IsAdministratorOrUnknown(User))
             {
