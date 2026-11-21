@@ -53,25 +53,51 @@ else
                         </div>
 
                         <form method="post" asp-page-handler="Approve" asp-route-id="@request.Id" class="request-approve">
-                            <label class="visually-hidden" for="role-@request.Id">Role</label>
-                            <select id="role-@request.Id" name="roleId" required data-testid="role-select">
-                                <option value="">Role…</option>
-                                @foreach (var role in Model.Roles)
-                                {
-                                    <option value="@role.Value">@role.Text</option>
-                                }
-                            </select>
-                            <label class="visually-hidden" for="company-@request.Id">Company</label>
-                            <select id="company-@request.Id" name="ownCompanyId" required data-testid="company-select">
-                                @if (Model.Companies.Count != 1)
-                                {
-                                    <option value="">Company…</option>
-                                }
-                                @foreach (var company in Model.Companies)
-                                {
-                                    <option value="@company.Value">@company.Text</option>
-                                }
-                            </select>
+                            <div class="form-grid">
+                                <label>First name
+                                    <input name="FirstName" value="@request.SuggestedFirstName" required maxlength="@DataSchemeConstants.UserNameMaxLength" data-testid="first-name" />
+                                </label>
+                                <label>Middle name
+                                    <input name="MiddleName" maxlength="@DataSchemeConstants.UserNameMaxLength" data-testid="middle-name" />
+                                </label>
+                                <label>Last name
+                                    <input name="LastName" value="@request.SuggestedLastName" required maxlength="@DataSchemeConstants.UserNameMaxLength" data-testid="last-name" />
+                                </label>
+                                <label>Gender
+                                    <select name="Gender" required data-testid="gender">
+                                        <option value="">Gender…</option>
+                                        <option value="female">Female</option>
+                                        <option value="male">Male</option>
+                                    </select>
+                                </label>
+                                <label>Date of birth (optional)
+                                    <input name="DateOfBirth" type="date" data-testid="date-of-birth" />
+                                </label>
+                                <label>Personal ID number (optional)
+                                    <input name="SocialSecurityNumber" autocomplete="off" maxlength="@(DataSchemeConstants.PersonalIdentityNumberMaxLength + 1)" placeholder="YYYYMMDD-NNNN" data-testid="personal-id" />
+                                </label>
+                                <label>Role
+                                    <select name="RoleId" required data-testid="role-select">
+                                        <option value="">Role…</option>
+                                        @foreach (var role in Model.Roles)
+                                        {
+                                            <option value="@role.Value">@role.Text</option>
+                                        }
+                                    </select>
+                                </label>
+                                <label>Company
+                                    <select name="OwnCompanyId" required data-testid="company-select">
+                                        @if (Model.Companies.Count != 1)
+                                        {
+                                            <option value="">Company…</option>
+                                        }
+                                        @foreach (var company in Model.Companies)
+                                        {
+                                            <option value="@company.Value">@company.Text</option>
+                                        }
+                                    </select>
+                                </label>
+                            </div>
                             <button type="submit" class="btn btn-primary" data-testid="approve">Approve</button>
                         </form>
 

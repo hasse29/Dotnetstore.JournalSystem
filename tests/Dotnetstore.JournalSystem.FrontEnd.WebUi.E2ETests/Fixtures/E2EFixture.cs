@@ -33,6 +33,8 @@ namespace Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests.Fixtures;
 public sealed class E2EFixture : IAsyncLifetime
 {
     public const string AdminUsername = "admin@example.com";
+    public const string AdminFullName = "System Administrator";
+    public const string UserFullName = "Test Person";
     public const string AdminPassword = "correct-horse-battery-staple";
     public const string UserPassword = "a-long-enough-password";
 

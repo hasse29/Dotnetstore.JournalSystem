@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests.Fixtures;
 using Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests.Pages;
 using Microsoft.Playwright;
+using Shouldly;
 using static Microsoft.Playwright.Assertions;
 
 namespace Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests.AccessRequests;
@@ -229,5 +230,95 @@ public sealed class AccessRequestTests(E2EFixture fixture)
 
         // Assert
         await Expect(requests.Forbidden).ToBeVisibleAsync();
+    }
+
+    [Fact]
+    public async Task ApprovalFormIsPrefilledFromTheMicrosoftNameAndRequiresAGender()
+    {
+        // Arrange
+        var person = new FakePerson(Guid.NewGuid().ToString("D"), "Nora Newcomer", $"nora.{Guid.NewGuid():N}@example.com");
+        await using var personContext = await fixture.NewContextAsync();
+        var personPage = await personContext.NewPageAsync();
+        await SignInAsPersonAsync(personPage, person);
+        await Expect(new AccessStatusPage(personPage).Pending).ToBeVisibleAsync();
+
+        await using var adminContext = await fixture.NewContextAsync();
+        var adminPage = await adminContext.NewPageAsync();
+        await SignInAsAdministratorAsync(adminPage);
+        var requests = new AccessRequestsPage(adminPage);
+
+        // Act
+        await requests.GotoAsync();
+
+        // Assert
+        await Expect(requests.FirstNameInput(person.UserName)).ToHaveValueAsync("Nora");
+        await Expect(requests.LastNameInput(person.UserName)).ToHaveValueAsync("Newcomer");
+        await Expect(requests.Pending(person.UserName).GetByTestId("gender")).ToHaveValueAsync(string.Empty);
+    }
+
+    [Fact]
+    public async Task ApprovedPersonIsIdentifiedByNameRoleAndCompanyWithTheIdNumberMasked()
+    {
+        // Arrange
+        var person = FakePerson.CreateUnknown();
+        await using var personContext = await fixture.NewContextAsync();
+        var personPage = await personContext.NewPageAsync();
+        await SignInAsPersonAsync(personPage, person);
+        await Expect(new AccessStatusPage(personPage).Pending).ToBeVisibleAsync();
+
+        await using var adminContext = await fixture.NewContextAsync();
+        var adminPage = await adminContext.NewPageAsync();
+        await SignInAsAdministratorAsync(adminPage);
+        var requests = new AccessRequestsPage(adminPage);
+        await requests.GotoAsync();
+        await requests.FirstNameInput(person.UserName).FillAsync("Nora");
+        await requests.LastNameInput(person.UserName).FillAsync("Newcomer");
+        await requests.ApproveAsync(person.UserName, AdministratorRole, "female", "1990-01-01", "19900101-1234");
+        await Expect(requests.Message).ToHaveTextAsync("Access approved.");
+
+        // Act
+        await using var returningContext = await fixture.NewContextAsync();
+        var returningPage = await returningContext.NewPageAsync();
+        await SignInAsPersonAsync(returningPage, person);
+        var dashboard = new DashboardPage(returningPage);
+        var profile = new ProfilePage(returningPage);
+        await Expect(dashboard.Heading).ToBeVisibleAsync();
+
+        // Assert
+        await Expect(dashboard.CurrentUser).ToHaveTextAsync("Nora Newcomer");
+        await Expect(dashboard.CurrentUserDetail).ToContainTextAsync("Test AB");
+        await profile.NavLink.ClickAsync();
+        await Expect(profile.Heading).ToBeVisibleAsync();
+        await Expect(profile.Name).ToHaveTextAsync("Nora Newcomer");
+        await Expect(profile.Provider).ToHaveTextAsync("Microsoft");
+        await Expect(profile.Company).ToHaveTextAsync("Test AB");
+        await Expect(profile.Gender).ToHaveTextAsync("Female");
+        await Expect(profile.DateOfBirth).ToHaveTextAsync("1990-01-01");
+        await Expect(profile.PersonalId).ToHaveTextAsync("19900101-****");
+        (await returningPage.ContentAsync()).ShouldNotContain("199001011234");
+    }
+
+    [Fact]
+    public async Task ApprovingWithAMalformedIdNumberKeepsTheRequestPendingAndShowsTheError()
+    {
+        // Arrange
+        var person = FakePerson.CreateUnknown();
+        await using var personContext = await fixture.NewContextAsync();
+        var personPage = await personContext.NewPageAsync();
+        await SignInAsPersonAsync(personPage, person);
+        await Expect(new AccessStatusPage(personPage).Pending).ToBeVisibleAsync();
+
+        await using var adminContext = await fixture.NewContextAsync();
+        var adminPage = await adminContext.NewPageAsync();
+        await SignInAsAdministratorAsync(adminPage);
+        var requests = new AccessRequestsPage(adminPage);
+        await requests.GotoAsync();
+
+        // Act
+        await requests.ApproveAsync(person.UserName, AdministratorRole, "male", null, "123");
+
+        // Assert
+        await Expect(requests.Error).ToBeVisibleAsync();
+        await Expect(requests.Pending(person.UserName)).ToBeVisibleAsync();
     }
 }

@@ -10,7 +10,8 @@ namespace Dotnetstore.JournalSystem.Api.Organization.Users;
 internal sealed class UserService(
     IOrganizationUnitOfWork organizationUnitOfWork,
     IHashHandler hashHandler,
-    IEntraUserProvisioner entraProvisioner) : IUserService
+    IEntraUserProvisioner entraProvisioner,
+    IPersonalIdentityNumberProtector identityNumbers) : IUserService
 {
     async Task<IEnumerable<UserResponse>> IUserService.GetAllAsync(CancellationToken cancellationToken)
     {
@@ -19,7 +20,7 @@ internal sealed class UserService(
             .GetAllAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return items.Select(x => x.ToUserResponse());
+        return items.Select(x => x.ToUserResponse(identityNumbers.Mask(x.SocialSecurityNumber, x.Id)));
     }
 
     async ValueTask<Result<UserResponse>> IUserService.GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -30,7 +31,7 @@ internal sealed class UserService(
             .ConfigureAwait(false);
 
         return user is not null ?
-            Result<UserResponse>.Success(user.ToUserResponse()) :
+            Result<UserResponse>.Success(user.ToUserResponse(identityNumbers.Mask(user.SocialSecurityNumber, user.Id))) :
             Result<UserResponse>.NotFound();
     }
 
@@ -77,6 +78,7 @@ internal sealed class UserService(
         var user = UserBuilder
             .Create()
             .WithCreateValues(request, passwordHash, externalId, userId)
+            .SetPersonalIdentityNumber(request.SocialSecurityNumber, identityNumbers)
             .Build();
 
         await organizationUnitOfWork
@@ -90,7 +92,7 @@ internal sealed class UserService(
 
         if (result > 0)
         {
-            return Result<UserResponse>.Success(user.ToUserResponse() with { TemporaryPassword = temporaryPassword });
+            return Result<UserResponse>.Success(user.ToUserResponse(identityNumbers.Mask(user.SocialSecurityNumber, user.Id)) with { TemporaryPassword = temporaryPassword });
         }
 
         if (externalId is not null)
@@ -136,10 +138,16 @@ internal sealed class UserService(
             }
         }
 
-        var userToUpdate = UserBuilder
+        var updateBuilder = UserBuilder
             .Update()
-            .WithUpdateValues(existing, request, userId)
-            .Build();
+            .WithUpdateValues(existing, request, userId);
+
+        if (request.SocialSecurityNumber is { } personalIdentityNumber)
+        {
+            updateBuilder.SetPersonalIdentityNumber(personalIdentityNumber, identityNumbers);
+        }
+
+        var userToUpdate = updateBuilder.Build();
 
         organizationUnitOfWork
             .Users
@@ -154,8 +162,34 @@ internal sealed class UserService(
             .ConfigureAwait(false);
 
         return result > 0 ?
-            Result<UserResponse>.Success(userToUpdate.ToUserResponse()) :
+            Result<UserResponse>.Success(userToUpdate.ToUserResponse(identityNumbers.Mask(userToUpdate.SocialSecurityNumber, userToUpdate.Id))) :
             Result<UserResponse>.Error("Failed to update the user.");
+    }
+
+    async ValueTask<Result<MyProfileResponse>> IUserService.GetProfileAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var user = await organizationUnitOfWork
+            .Users
+            .GetByIdAsync(userId, cancellationToken)
+            .ConfigureAwait(false);
+        if (user is null)
+        {
+            return Result<MyProfileResponse>.NotFound();
+        }
+
+        var company = await organizationUnitOfWork
+            .OwnCompanies
+            .GetByIdAsync(user.OwnCompanyId, cancellationToken)
+            .ConfigureAwait(false);
+        var role = await organizationUnitOfWork
+            .Roles
+            .GetByIdAsync(user.RoleId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return Result<MyProfileResponse>.Success(user.ToMyProfileResponse(
+            company?.Name ?? string.Empty,
+            role?.Name ?? string.Empty,
+            identityNumbers.Mask(user.SocialSecurityNumber, user.Id)));
     }
 
     async ValueTask<Result> IUserService.DeleteAsync(Guid id, CancellationToken cancellationToken)

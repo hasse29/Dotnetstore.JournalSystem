@@ -18,6 +18,7 @@ internal static class UserRequestValidator
 
         ValidateNames(errors, request.FirstName, request.MiddleName, request.LastName);
         ValidateIds(errors, request.OwnCompanyId, request.RoleId);
+        PersonDetailsValidator.Validate(errors, request.DateOfBirth, request.SocialSecurityNumber);
 
         if (string.IsNullOrWhiteSpace(request.Username))
         {
@@ -65,11 +66,12 @@ internal static class UserRequestValidator
 
         ValidateNames(errors, request.FirstName, request.MiddleName, request.LastName);
         ValidateIds(errors, request.OwnCompanyId, request.RoleId);
+        PersonDetailsValidator.Validate(errors, request.DateOfBirth, request.SocialSecurityNumber);
 
         return errors;
     }
 
-    private static void ValidateNames(
+    internal static void ValidateNames(
         Dictionary<string, string[]> errors,
         string firstName,
         string? middleName,

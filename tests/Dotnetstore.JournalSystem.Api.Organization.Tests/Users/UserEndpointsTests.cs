@@ -32,7 +32,8 @@ public sealed class UserEndpointsTests
                 ("/api/organization/users/{id:guid}", "GET"),
                 ("/api/organization/users", "POST"),
                 ("/api/organization/users/{id:guid}", "PUT"),
-                ("/api/organization/users/{id:guid}", "DELETE")
+                ("/api/organization/users/{id:guid}", "DELETE"),
+                ("/api/organization/users/me", "GET")
             ],
             ignoreOrder: true);
     }

@@ -103,7 +103,7 @@ public sealed class AccessRequestClientTests
         var role = Guid.NewGuid();
 
         // Act
-        var result = await client.ApproveAsync(Id, new ApproveAccessRequestRequest(company, role), TestContext.Current.CancellationToken);
+        var result = await client.ApproveAsync(Id, new ApproveAccessRequestRequest(company, role, "Anna", null, "Svensson", false), TestContext.Current.CancellationToken);
 
         // Assert
         result.Value.ShouldNotBeNull().Status.ShouldBe(AccessRequestStatus.Approved);
@@ -154,7 +154,7 @@ public sealed class AccessRequestClientTests
         using var __ = handler;
 
         // Act
-        var result = await client.ApproveAsync(Id, new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid()), TestContext.Current.CancellationToken);
+        var result = await client.ApproveAsync(Id, new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid(), "Anna", null, "Svensson", false), TestContext.Current.CancellationToken);
 
         // Assert
         result.IsConflict.ShouldBeTrue();

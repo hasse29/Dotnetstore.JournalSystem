@@ -1,4 +1,5 @@
 using Dotnetstore.BaseModel.Configurations;
+using Dotnetstore.JournalSystem.Api.SharedKernel.Security;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -16,6 +17,10 @@ internal sealed class UserConfiguration : PersonIdentityConfiguration<User>
         builder
             .ToTable(nameof(User), DataSchemeConstants.SchemeName)
             .HasKey(x => x.Id);
+
+        builder
+            .Property(x => x.SocialSecurityNumber)
+            .HasMaxLength(FieldEncryption.EncryptedMaxLength(DataSchemeConstants.PersonalIdentityNumberMaxLength));
 
         builder
             .Property(x => x.AuthProvider)

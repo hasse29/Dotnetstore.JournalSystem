@@ -1,4 +1,4 @@
-using Dotnetstore.JournalSystem.Api.Contact.Security;
+using Dotnetstore.JournalSystem.Api.SharedKernel.Security;
 using Dotnetstore.Security.Handlers;
 
 namespace Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;

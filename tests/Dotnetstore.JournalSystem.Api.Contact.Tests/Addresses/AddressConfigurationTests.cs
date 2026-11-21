@@ -1,4 +1,4 @@
-using Dotnetstore.JournalSystem.Api.Contact.Security;
+using Dotnetstore.JournalSystem.Api.SharedKernel.Security;
 using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.EntityFrameworkCore;

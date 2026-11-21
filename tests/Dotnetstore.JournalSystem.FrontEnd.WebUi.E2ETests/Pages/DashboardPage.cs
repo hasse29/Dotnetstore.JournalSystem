@@ -8,6 +8,8 @@ internal sealed class DashboardPage(IPage page)
 
     public ILocator CurrentUser => page.GetByTestId("current-user");
 
+    public ILocator CurrentUserDetail => page.GetByTestId("current-user-detail");
+
     public ILocator WelcomeName => page.GetByTestId("welcome-name");
 
     public ILocator LogoutButton => page.GetByTestId("logout");

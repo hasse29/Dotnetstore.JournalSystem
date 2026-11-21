@@ -16,13 +16,33 @@ internal sealed class AccessRequestsPage(IPage page)
 
     public ILocator Pending(string username) => page.GetByTestId($"request-{username}");
 
+    public ILocator FirstNameInput(string username) => Pending(username).GetByTestId("first-name");
+
+    public ILocator LastNameInput(string username) => Pending(username).GetByTestId("last-name");
+
     public ILocator Decided(string username) => page.GetByTestId($"decided-{username}");
 
     public async Task GotoAsync() => await page.GotoAsync("/Admin/AccessRequests");
 
-    public async Task ApproveAsync(string username, string roleName)
+    public async Task ApproveAsync(
+        string username,
+        string roleName,
+        string gender = "female",
+        string? dateOfBirth = null,
+        string? personalId = null)
     {
         var row = Pending(username);
+        await row.GetByTestId("gender").SelectOptionAsync(new SelectOptionValue { Value = gender });
+        if (dateOfBirth is not null)
+        {
+            await row.GetByTestId("date-of-birth").FillAsync(dateOfBirth);
+        }
+
+        if (personalId is not null)
+        {
+            await row.GetByTestId("personal-id").FillAsync(personalId);
+        }
+
         await row.GetByTestId("role-select").SelectOptionAsync(new SelectOptionValue { Label = roleName });
         await row.GetByTestId("approve").ClickAsync();
     }

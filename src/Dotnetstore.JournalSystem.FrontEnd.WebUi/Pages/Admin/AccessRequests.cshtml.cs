@@ -15,6 +15,9 @@ public sealed class AccessRequestsModel(
     IRoleClient roles,
     IOwnCompanyClient ownCompanies) : PageModel
 {
+    internal const string GenderMale = "male";
+    internal const string GenderFemale = "female";
+
     public IReadOnlyList<AccessRequestResponse> Pending { get; private set; } = [];
 
     public IReadOnlyList<AccessRequestResponse> Decided { get; private set; } = [];
@@ -79,16 +82,41 @@ public sealed class AccessRequestsModel(
         return Page();
     }
 
-    public async Task<IActionResult> OnPostApproveAsync(Guid id, Guid? ownCompanyId, Guid? roleId, CancellationToken cancellationToken)
+    public async Task<IActionResult> OnPostApproveAsync(Guid id, ApprovalInput input, CancellationToken cancellationToken)
     {
-        if (ownCompanyId is null || roleId is null)
+        ArgumentNullException.ThrowIfNull(input);
+
+        if (input.OwnCompanyId is null || input.RoleId is null || string.IsNullOrWhiteSpace(input.FirstName) ||
+            string.IsNullOrWhiteSpace(input.LastName) || input.Gender is not (GenderMale or GenderFemale))
         {
-            ErrorMessage = "Choose a role and a company before approving.";
+            ErrorMessage = "Fill in first name, last name, gender, company and role before approving.";
             return RedirectToPage();
         }
 
+        DateOnly? dateOfBirth = null;
+        if (!string.IsNullOrWhiteSpace(input.DateOfBirth))
+        {
+            if (!DateOnly.TryParseExact(input.DateOfBirth, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            {
+                ErrorMessage = "Date of birth must be a valid date.";
+                return RedirectToPage();
+            }
+
+            dateOfBirth = parsed;
+        }
+
+        var request = new ApproveAccessRequestRequest(
+            input.OwnCompanyId.Value,
+            input.RoleId.Value,
+            input.FirstName.Trim(),
+            string.IsNullOrWhiteSpace(input.MiddleName) ? null : input.MiddleName.Trim(),
+            input.LastName.Trim(),
+            input.Gender == GenderMale,
+            dateOfBirth,
+            string.IsNullOrWhiteSpace(input.SocialSecurityNumber) ? null : input.SocialSecurityNumber.Trim());
+
         return await DecideAsync(
-                () => requests.ApproveAsync(id, new ApproveAccessRequestRequest(ownCompanyId.Value, roleId.Value), cancellationToken),
+                () => requests.ApproveAsync(id, request, cancellationToken),
                 "Access approved.")
             .ConfigureAwait(false);
     }
@@ -139,4 +167,23 @@ public sealed class AccessRequestsModel(
 
         return RedirectToPage();
     }
+}
+
+public sealed class ApprovalInput
+{
+    public Guid? OwnCompanyId { get; set; }
+
+    public Guid? RoleId { get; set; }
+
+    public string? FirstName { get; set; }
+
+    public string? MiddleName { get; set; }
+
+    public string? LastName { get; set; }
+
+    public string? Gender { get; set; }
+
+    public string? DateOfBirth { get; set; }
+
+    public string? SocialSecurityNumber { get; set; }
 }

@@ -1,9 +1,9 @@
 using System.Security.Cryptography;
-using Dotnetstore.JournalSystem.Api.Contact.Security;
-using Dotnetstore.JournalSystem.Api.Contact.Tests.Fixtures;
+using Dotnetstore.JournalSystem.Api.SharedKernel.Security;
+using Dotnetstore.JournalSystem.Api.SharedKernel.Tests.Fixtures;
 using Shouldly;
 
-namespace Dotnetstore.JournalSystem.Api.Contact.Tests.Security;
+namespace Dotnetstore.JournalSystem.Api.SharedKernel.Tests.Security;
 
 public sealed class FieldEncryptionTests
 {

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Organization.Authentication;
+using Dotnetstore.JournalSystem.Api.Organization.Users;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Dotnetstore.JournalSystem.Shared.Requests.Organization;
 using Dotnetstore.JournalSystem.Shared.Responses.Organization;
@@ -179,6 +180,9 @@ internal static class AccessRequestEndpoints
         {
             errors[nameof(request.RoleId)] = ["A role is required."];
         }
+
+        UserRequestValidator.ValidateNames(errors, request.FirstName, request.MiddleName, request.LastName);
+        PersonDetailsValidator.Validate(errors, request.DateOfBirth, request.SocialSecurityNumber);
 
         return errors;
     }

@@ -114,8 +114,9 @@ Signing in with Microsoft only proves who someone is. Anyone from your tenant ca
 
 1. A person signs in with Microsoft for the first time. The web UI sends them to a "Waiting for approval" page and an access
    request is recorded for them (name and username come from their Microsoft token).
-2. An administrator opens **Access requests** in the sidebar, picks a **role** and an **own company**, and presses Approve.
-   That creates their user account, linked to their Microsoft identity, in one step.
+2. An administrator opens **Access requests** in the sidebar and fills in who the person is: first, middle and last name (prefilled
+   from the Microsoft name, editable), gender, optionally date of birth and personal ID number, plus a **role** and an **own
+   company**. Approve then creates their user account, linked to their Microsoft identity, in one step.
 3. The person signs in again (or reloads) and lands on the dashboard.
 
 Until then the API gives them no role, so every data endpoint refuses them, and the web UI keeps them on the status page.
@@ -125,6 +126,14 @@ Until then the API gives them no role, so every data endpoint refuses them, and 
 - Each person has one request. Deleting their user account also deletes their request, so they can apply again from scratch.
 - Users an administrator creates directly (the bootstrap administrator, or Create user) count as approved and never need a request.
 - Only administrators can list or decide requests. The people who sign in with a password never see this page.
+
+### Who is signed in
+
+The top bar shows the signed-in person's full name with role and company, and **My profile** shows the same details read-only.
+This works the same for password and Microsoft sign-in, because both are looked up through `GET /api/organization/users/me`.
+
+The personal ID number is write-only: it is encrypted at rest (same `Encryption` keys as the Contact module, bound to the user
+record) and the API only ever returns a masked form such as `19900101-****`. It is never shown in lists or in the UI.
 
 Endpoints: `POST/GET /api/organization/access-requests/me` (any signed-in Microsoft user) and, for administrators,
 `GET /api/organization/access-requests?status=`, `POST .../{id}/approve`, `.../reject`, `.../reopen`.

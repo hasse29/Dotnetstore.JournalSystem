@@ -8,6 +8,8 @@ internal static class AccessRequestMappers
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        var (firstName, lastName) = SuggestedName.Split(request.DisplayName, request.Username);
+
         return new AccessRequestResponse(
             request.Id,
             request.DisplayName,
@@ -15,6 +17,8 @@ internal static class AccessRequestMappers
             request.Status,
             request.RequestedAt,
             request.DecidedAt,
-            request.DecisionNote);
+            request.DecisionNote,
+            firstName,
+            lastName);
     }
 }

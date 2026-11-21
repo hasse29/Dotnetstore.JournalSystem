@@ -1,0 +1,41 @@
+@page
+@using Dotnetstore.JournalSystem.Shared.Constants
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Profile.IndexModel
+@{
+    ViewData["Title"] = "My profile";
+}
+
+<div class="page-header">
+    <h1>My profile</h1>
+    <p>Who the system knows you as. Ask an administrator if something is wrong.</p>
+</div>
+
+@if (Model.Profile is null)
+{
+    <div class="alert alert-danger" role="alert" data-testid="profile-unavailable">
+        Your profile could not be loaded right now.
+    </div>
+}
+else
+{
+    var profile = Model.Profile;
+    <section class="card" aria-labelledby="profile-heading">
+        <h2 id="profile-heading" data-testid="profile-name">@profile.FullName</h2>
+        <dl class="details">
+            <dt>Username</dt>
+            <dd data-testid="profile-username">@profile.Username</dd>
+            <dt>Sign-in</dt>
+            <dd data-testid="profile-provider">@(profile.AuthProvider == AuthProvider.Entra ? "Microsoft" : "Password")</dd>
+            <dt>Company</dt>
+            <dd data-testid="profile-company">@profile.OwnCompanyName</dd>
+            <dt>Role</dt>
+            <dd data-testid="profile-role">@profile.RoleName</dd>
+            <dt>Gender</dt>
+            <dd data-testid="profile-gender">@(profile.IsMale ? "Male" : "Female")</dd>
+            <dt>Date of birth</dt>
+            <dd data-testid="profile-dob">@(profile.DateOfBirth?.ToString("yyyy-MM-dd") ?? "–")</dd>
+            <dt>Personal ID number</dt>
+            <dd data-testid="profile-personal-id">@(profile.SocialSecurityNumberMasked ?? "–")</dd>
+        </dl>
+    </section>
+}

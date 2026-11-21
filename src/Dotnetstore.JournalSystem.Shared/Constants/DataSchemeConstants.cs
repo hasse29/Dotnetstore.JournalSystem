@@ -17,6 +17,7 @@ public static class DataSchemeConstants
     public const int UserExternalIdMaxLength = 100;
     public const int UserPasswordMinLength = 12;
     public const int UserPasswordMaxLength = 128;
+    public const int PersonalIdentityNumberMaxLength = 12;
 
     public const int AccessRequestDisplayNameMaxLength = 200;
     public const int AccessRequestDecisionNoteMaxLength = 500;
