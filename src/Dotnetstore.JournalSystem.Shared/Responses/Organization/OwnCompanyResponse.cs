@@ -7,4 +7,5 @@ public sealed record OwnCompanyResponse(
     Uri? LogoUrl,
     Uri? WebsiteUrl,
     string? CorporateNumber,
-    string? TaxId);
+    string? TaxId,
+    bool IsSystem);

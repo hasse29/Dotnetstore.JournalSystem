@@ -218,3 +218,19 @@ body.admin { display: flex; min-height: 100vh; }
 .badge { display: inline-block; padding: .1rem .55rem; border-radius: 999px; font-size: .8rem; font-weight: 600; }
 .badge-approved { background: var(--success-bg); color: var(--success-text); }
 .badge-rejected { background: var(--danger-bg); color: var(--danger-text); }
+
+.page-header-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.actions-col { width: 1%; white-space: nowrap; }
+.row-actions { display: flex; gap: .5rem; align-items: center; }
+.row-actions form { margin: 0; }
+.btn-danger { color: var(--danger-text); border-color: var(--danger-text); }
+.btn-danger:hover { background: var(--danger-bg); }
+
+.modal { width: min(36rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); padding: 0; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); color: var(--text); box-shadow: 0 20px 50px rgba(0, 0, 0, .3); }
+.modal::backdrop { background: rgba(10, 15, 27, .55); }
+.modal form { display: flex; flex-direction: column; max-height: calc(100vh - 2rem); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
+.modal-header h2 { margin: 0; font-size: 1.15rem; }
+.modal-body { padding: 1.25rem; overflow-y: auto; }
+.modal-body .form-grid { grid-template-columns: 1fr; gap: .85rem; }
+.modal-footer { display: flex; justify-content: flex-end; gap: .5rem; padding: 1rem 1.25rem; border-top: 1px solid var(--border); }

@@ -1,13 +1,31 @@
 @page
+@using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication
 @model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies.IndexModel
 @{
     ViewData["Title"] = "Own companies";
+    var canEdit = AccessGate.IsAdministratorOrUnknown(User);
 }
 
-<div class="page-header">
-    <h1>Own companies</h1>
-    <p>The companies users can belong to.</p>
+<div class="page-header page-header-row">
+    <div>
+        <h1>Own companies</h1>
+        <p>The companies users can belong to.</p>
+    </div>
+    @if (canEdit && !Model.Unavailable)
+    {
+        <button type="button" class="btn btn-primary" data-dialog-open="company-create-dialog" data-testid="company-add">Add company</button>
+    }
 </div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success" role="status" data-testid="companies-message">@Model.Message</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert" data-testid="companies-error">@Model.ErrorMessage</div>
+}
 
 @if (Model.Unavailable)
 {
@@ -27,13 +45,19 @@ else
         {
             <table class="table" data-testid="companies-table">
                 <thead>
-                    <tr><th>Name</th><th>Description</th><th>Corporate number</th><th>Tax ID</th><th>Website</th></tr>
+                    <tr><th>Name</th><th>Description</th><th>Corporate number</th><th>Tax ID</th><th>Website</th>@if (canEdit) { <th class="actions-col"><span class="visually-hidden">Actions</span></th> }</tr>
                 </thead>
                 <tbody>
                     @foreach (var company in Model.Companies)
                     {
                         <tr data-testid="company-@company.Name">
-                            <td>@company.Name</td>
+                            <td>
+                                <strong>@company.Name</strong>
+                                @if (company.IsSystem)
+                                {
+                                    <span class="badge badge-approved" data-testid="company-system">System</span>
+                                }
+                            </td>
                             <td>@company.Description</td>
                             <td>@company.CorporateNumber</td>
                             <td>@company.TaxId</td>
@@ -43,10 +67,58 @@ else
                                     <a href="@company.WebsiteUrl" rel="noopener noreferrer">@company.WebsiteUrl.Host</a>
                                 }
                             </td>
+                            @if (canEdit)
+                            {
+                                <td class="actions-col">
+                                    <div class="row-actions">
+                                        <button type="button" class="btn btn-secondary" data-dialog-open="company-edit-@company.Id" data-testid="company-edit">Edit</button>
+                                        @if (!company.IsSystem)
+                                        {
+                                            <form method="post" asp-page-handler="Delete" asp-route-id="@company.Id" data-confirm="Delete @company.Name? This cannot be undone.">
+                                                <button type="submit" class="btn btn-secondary btn-danger" data-testid="company-delete">Delete</button>
+                                            </form>
+                                        }
+                                    </div>
+                                    <dialog class="modal" id="company-edit-@company.Id" aria-labelledby="company-edit-title-@company.Id">
+                                        <form method="post" asp-page-handler="Update" asp-route-id="@company.Id">
+                                            <div class="modal-header">
+                                                <h2 id="company-edit-title-@company.Id">Edit @company.Name</h2>
+                                                <button type="button" class="icon-button" data-dialog-close aria-label="Close">✕</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <partial name="_CompanyFields" model="company" />
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+                                                <button type="submit" class="btn btn-primary" data-testid="company-save">Save</button>
+                                            </div>
+                                        </form>
+                                    </dialog>
+                                </td>
+                            }
                         </tr>
                     }
                 </tbody>
             </table>
         }
     </section>
+
+    @if (canEdit)
+    {
+        <dialog class="modal" id="company-create-dialog" aria-labelledby="company-create-title">
+            <form method="post" asp-page-handler="Create" data-testid="company-create-form">
+                <div class="modal-header">
+                    <h2 id="company-create-title">Add a company</h2>
+                    <button type="button" class="icon-button" data-dialog-close aria-label="Close">✕</button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_CompanyFields" model="(Dotnetstore.JournalSystem.Shared.Responses.Organization.OwnCompanyResponse?)null" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-testid="company-create">Add company</button>
+                </div>
+            </form>
+        </dialog>
+    }
 }

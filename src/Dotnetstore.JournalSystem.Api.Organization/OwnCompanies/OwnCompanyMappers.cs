@@ -13,6 +13,7 @@ internal static class OwnCompanyMappers
             ownCompany.LogoUrl,
             ownCompany.WebsiteUrl,
             ownCompany.CorporateNumber,
-            ownCompany.TaxId);
+            ownCompany.TaxId,
+            ownCompany.IsSystem);
     }
 }

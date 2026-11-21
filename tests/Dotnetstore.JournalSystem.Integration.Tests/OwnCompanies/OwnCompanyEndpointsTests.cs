@@ -33,10 +33,11 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     }
 
     [Fact]
-    public async Task GetAllReturnsEmptyListWhenNoCompaniesExist()
+    public async Task GetAllReturnsOnlyTheSystemCompanyWhenNoOthersExist()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url(), TestContext.Current.CancellationToken);
@@ -44,14 +45,15 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        items.ShouldNotBeNull().ShouldBeEmpty();
+        items.ShouldNotBeNull().ShouldHaveSingleItem().IsSystem.ShouldBeTrue();
     }
 
     [Fact]
     public async Task GetAllReturnsAllCreatedCompanies()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
         await CreateCompanyAsync(host.Client, "A");
         await CreateCompanyAsync(host.Client, "B");
 
@@ -61,14 +63,15 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        items.ShouldNotBeNull().Select(x => x.Name).ShouldBe(["A", "B"], ignoreOrder: true);
+        items.ShouldNotBeNull().Where(x => !x.IsSystem).Select(x => x.Name).ShouldBe(["A", "B"], ignoreOrder: true);
     }
 
     [Fact]
     public async Task GetByIdReturnsCompany()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
         var created = await CreateCompanyAsync(host.Client);
 
         // Act
@@ -84,7 +87,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url($"/{Guid.NewGuid()}"), TestContext.Current.CancellationToken);
@@ -97,7 +101,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForRouteThatIsNotAGuid()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url("/not-a-guid"), TestContext.Current.CancellationToken);
@@ -110,7 +115,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsCreatedWithLocationAndBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(), TestContext.Current.CancellationToken);
@@ -129,7 +135,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task CreatedCompanyCanBeFetchedAtLocationHeader()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
         using var created = await host.Client.PostAsJsonAsync(Url(), CreateRequest(), TestContext.Current.CancellationToken);
 
         // Act
@@ -145,7 +152,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemForMissingName(string name)
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(name), TestContext.Current.CancellationToken);
@@ -160,7 +168,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemAndStoresNothingForTooLongName()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(new string('x', 101)), TestContext.Current.CancellationToken);
@@ -168,14 +177,15 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-        items.ShouldNotBeNull().ShouldBeEmpty();
+        items.ShouldNotBeNull().ShouldHaveSingleItem().IsSystem.ShouldBeTrue();
     }
 
     [Fact]
     public async Task CreateReturnsBadRequestForEmptyBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
         using var content = new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -189,7 +199,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForMalformedJson()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
         using var content = new StringContent("{ not json", System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -203,7 +214,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsUpdatedCompany()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
         var created = await CreateCompanyAsync(host.Client);
 
         // Act
@@ -222,7 +234,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PutAsJsonAsync(Url($"/{Guid.NewGuid()}"), CreateRequest(), TestContext.Current.CancellationToken);
@@ -235,7 +248,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsValidationProblemAndKeepsStoredValuesForInvalidRequest()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
         var created = await CreateCompanyAsync(host.Client, "Original AB");
 
         // Act
@@ -251,7 +265,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNoContentAndRemovesCompany()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
         var created = await CreateCompanyAsync(host.Client);
 
         // Act
@@ -267,7 +282,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNotFoundAndKeepsDataForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
         await CreateCompanyAsync(host.Client);
 
         // Act
@@ -276,14 +292,73 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        items.ShouldNotBeNull().ShouldHaveSingleItem();
+        items.ShouldNotBeNull().Length.ShouldBe(2);
+    }
+
+    [Fact]
+    public async Task DeleteReturnsConflictForTheSystemCompanyAndKeepsIt()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
+        var all = await host.Client.GetFromJsonAsync<OwnCompanyResponse[]>(Url(), TestContext.Current.CancellationToken);
+        var system = all.ShouldNotBeNull().Single(x => x.IsSystem);
+
+        // Act
+        using var response = await host.Client.DeleteAsync(Url($"/{system.Id}"), TestContext.Current.CancellationToken);
+        using var afterwards = await host.Client.GetAsync(Url($"/{system.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        afterwards.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task DeleteReturnsConflictWhileTheCompanyStillHasUsers()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
+        var company = await CreateCompanyAsync(host.Client, "Busy AB");
+        using var role = await host.Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Organization.Roles.Create, UriKind.Relative),
+            new EditRoleRequest("Nurse", "Description"),
+            TestContext.Current.CancellationToken);
+        var roleId = (await role.Content.ReadFromJsonAsync<RoleResponse>(TestContext.Current.CancellationToken))!.Id;
+        using var user = await host.Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Organization.Users.Create, UriKind.Relative),
+            new CreateUserRequest("Anna", null, "Svensson", "nurse@example.com", company.Id, roleId, AuthProvider.Local, "a-long-enough-password"),
+            TestContext.Current.CancellationToken);
+        user.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act
+        using var response = await host.Client.DeleteAsync(Url($"/{company.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task EndpointsRequireSignIn()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+
+        // Act
+        using var read = await host.Client.GetAsync(Url(), TestContext.Current.CancellationToken);
+        using var write = await host.Client.PostAsJsonAsync(Url(), CreateRequest(), TestContext.Current.CancellationToken);
+
+        // Assert
+        read.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        write.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task UnsupportedMethodReturnsMethodNotAllowed()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url($"/{Guid.NewGuid()}"), CreateRequest(), TestContext.Current.CancellationToken);

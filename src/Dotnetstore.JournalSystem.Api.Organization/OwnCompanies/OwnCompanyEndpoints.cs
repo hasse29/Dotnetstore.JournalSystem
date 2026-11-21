@@ -1,4 +1,5 @@
 using Ardalis.Result;
+using Dotnetstore.JournalSystem.Api.Organization.Authentication;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Dotnetstore.JournalSystem.Shared.Requests.Organization;
 using Dotnetstore.JournalSystem.Shared.Responses.Organization;
@@ -17,19 +18,25 @@ internal static class OwnCompanyEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var group = app
+        var reads = app
             .MapGroup(string.Empty)
-            .WithTags("Own companies");
+            .WithTags("Own companies")
+            .RequireAuthorization(AuthPolicies.Authenticated);
 
-        group
+        reads
             .MapGet(ApiEndpoints.Organization.OwnCompanies.GetAll, GetAllAsync)
             .WithName("GetOwnCompanies")
             .WithSummary("Gets all own companies.");
 
-        group
+        reads
             .MapGet(ApiEndpoints.Organization.OwnCompanies.GetById, GetByIdAsync)
             .WithName(GetByIdName)
             .WithSummary("Gets an own company by id.");
+
+        var group = app
+            .MapGroup(string.Empty)
+            .WithTags("Own companies")
+            .RequireAuthorization(AuthPolicies.Administrator);
 
         group
             .MapPost(ApiEndpoints.Organization.OwnCompanies.Create, CreateAsync)
@@ -121,7 +128,7 @@ internal static class OwnCompanyEndpoints
         };
     }
 
-    private static async Task<Results<NoContent, NotFound, ProblemHttpResult>> DeleteAsync(
+    private static async Task<Results<NoContent, NotFound, Conflict<string>, ProblemHttpResult>> DeleteAsync(
         Guid id,
         IOwnCompanyService service,
         CancellationToken cancellationToken)
@@ -134,6 +141,7 @@ internal static class OwnCompanyEndpoints
         {
             ResultStatus.Ok => TypedResults.NoContent(),
             ResultStatus.NotFound => TypedResults.NotFound(),
+            ResultStatus.Conflict => TypedResults.Conflict(result.Errors.FirstOrDefault() ?? "Conflict."),
             _ => TypedResults.Problem()
         };
     }

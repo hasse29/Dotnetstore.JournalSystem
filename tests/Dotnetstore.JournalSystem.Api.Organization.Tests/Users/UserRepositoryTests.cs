@@ -38,6 +38,34 @@ public sealed class UserRepositoryTests : IDisposable
     }
 
     [Fact]
+    public async Task ExistsInOwnCompanyIsTrueWhenAUserBelongsToIt()
+    {
+        // Arrange
+        var companyId = Guid.NewGuid();
+        _database.Context.Users.Add(UserTestData.Create(Guid.NewGuid(), ownCompanyId: companyId));
+        await _database.Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var exists = await _repository.ExistsInOwnCompanyAsync(companyId, TestContext.Current.CancellationToken);
+
+        // Assert
+        exists.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ExistsInOwnCompanyIsFalseWhenNoUserBelongsToIt()
+    {
+        // Arrange
+        await SeedAsync();
+
+        // Act
+        var exists = await _repository.ExistsInOwnCompanyAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        exists.ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task GetByUsernameFindsExistingUser()
     {
         // Arrange
