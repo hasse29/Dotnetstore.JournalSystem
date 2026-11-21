@@ -25,6 +25,20 @@ public sealed class OwnCompanyMappersTests
         response.WebsiteUrl.ShouldBe(website);
         response.CorporateNumber.ShouldBe("556677-8899");
         response.TaxId.ShouldBe("SE556677889901");
+        response.IsSystem.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void ToOwnCompanyResponseMarksSystemCompanies()
+    {
+        // Arrange
+        var company = OwnCompanyTestData.Create(Guid.NewGuid(), "System AB", isSystem: true);
+
+        // Act
+        var response = company.ToOwnCompanyResponse();
+
+        // Assert
+        response.IsSystem.ShouldBeTrue();
     }
 
     [Fact]

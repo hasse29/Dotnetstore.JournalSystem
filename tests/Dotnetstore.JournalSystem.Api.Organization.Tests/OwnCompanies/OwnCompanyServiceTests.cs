@@ -7,6 +7,7 @@ using Dotnetstore.JournalSystem.Api.Organization.Users;
 using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
+using Dotnetstore.JournalSystem.Api.Organization.Tests.Users;
 using Dotnetstore.JournalSystem.Shared.Requests.Organization;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -227,6 +228,43 @@ public sealed class OwnCompanyServiceTests : IDisposable
 
         // Assert
         result.Status.ShouldBe(ResultStatus.NotFound);
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncRefusesSystemCompaniesAndKeepsThem()
+    {
+        // Arrange
+        IOwnCompanyService service = _service;
+        var id = Guid.NewGuid();
+        _context.OwnCompanies.Add(OwnCompanyTestData.Create(id, "System AB", isSystem: true));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        result.Errors.ShouldContain("System companies cannot be deleted.");
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncRefusesCompaniesThatStillHaveUsers()
+    {
+        // Arrange
+        IOwnCompanyService service = _service;
+        var id = await SeedAsync();
+        _context.Users.Add(UserTestData.Create(Guid.NewGuid(), ownCompanyId: id));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
         (await CountStoredAsync()).ShouldBe(1);
     }
 }

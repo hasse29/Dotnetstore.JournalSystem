@@ -31,7 +31,8 @@ internal static class UserTestData
         string username = "anna@example.com",
         AuthProvider authProvider = AuthProvider.Local,
         string? externalId = null,
-        bool isSystem = false)
+        bool isSystem = false,
+        Guid? ownCompanyId = null)
     {
         return new User(
             id,
@@ -41,7 +42,7 @@ internal static class UserTestData
             username,
             "hash",
             "stamp",
-            Guid.NewGuid(),
+            ownCompanyId ?? Guid.NewGuid(),
             Guid.NewGuid(),
             authProvider,
             externalId,

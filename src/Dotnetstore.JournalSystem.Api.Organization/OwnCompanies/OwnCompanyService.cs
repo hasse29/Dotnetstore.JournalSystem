@@ -97,6 +97,21 @@ internal sealed class OwnCompanyService(
             return Result.NotFound();
         }
 
+        if (existing.IsSystem)
+        {
+            return Result.Conflict("System companies cannot be deleted.");
+        }
+
+        var hasUsers = await organizationUnitOfWork
+            .Users
+            .ExistsInOwnCompanyAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (hasUsers)
+        {
+            return Result.Conflict("The company still has users. Move or delete them first.");
+        }
+
         await organizationUnitOfWork
             .OwnCompanies
             .DeleteAsync(id, cancellationToken)
