@@ -1,0 +1,22 @@
+@using Dotnetstore.JournalSystem.Shared.Constants
+@model Dotnetstore.JournalSystem.Shared.Responses.Organization.OwnCompanyResponse?
+<div class="form-grid">
+    <label>Name
+        <input name="Name" value="@Model?.Name" required maxlength="@DataSchemeConstants.OwnCompanyNameMaxLength" data-testid="company-name" />
+    </label>
+    <label>Description
+        <input name="Description" value="@Model?.Description" maxlength="@DataSchemeConstants.OwnCompanyDescriptionMaxLength" data-testid="company-description" />
+    </label>
+    <label>Corporate number
+        <input name="CorporateNumber" value="@Model?.CorporateNumber" maxlength="@DataSchemeConstants.OwnCompanyCorporateNumberMaxLength" data-testid="company-corporate-number" />
+    </label>
+    <label>Tax ID
+        <input name="TaxId" value="@Model?.TaxId" maxlength="@DataSchemeConstants.OwnCompanyTaxIdMaxLength" data-testid="company-tax-id" />
+    </label>
+    <label>Website
+        <input name="WebsiteUrl" type="url" value="@Model?.WebsiteUrl" placeholder="https://" data-testid="company-website" />
+    </label>
+    <label>Logo address
+        <input name="LogoUrl" type="url" value="@Model?.LogoUrl" placeholder="https://" data-testid="company-logo" />
+    </label>
+</div>
