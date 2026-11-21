@@ -4,6 +4,7 @@ using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.Organization.Seeding;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
+using Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
 using Dotnetstore.JournalSystem.Api.Organization.Users;
 using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Dotnetstore.Security.Extensions;
@@ -37,6 +38,9 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddSecurity();
         builder.Services.AddTokens(options => builder.Configuration.GetSection(TokensConfigurationSection).Bind(options));
 
+        builder.Services.TryAddSingleton(TimeProvider.System);
+        builder.Services.AddScoped<IAccessRequestRepository, AccessRequestRepository>();
+        builder.Services.AddScoped<IAccessRequestService, AccessRequestService>();
         builder.Services.AddScoped<IOwnCompanyRepository, OwnCompanyRepository>();
         builder.Services.AddScoped<IOrganizationUnitOfWork, OrganizationUnitOfWork>();
         builder.Services.AddScoped<IOwnCompanyService, OwnCompanyService>();
@@ -65,6 +69,7 @@ public static class HostApplicationBuilderExtensions
         ArgumentNullException.ThrowIfNull(app);
 
         return app
+            .MapAccessRequestEndpoints()
             .MapAuthEndpoints()
             .MapOwnCompanyEndpoints()
             .MapRoleEndpoints()

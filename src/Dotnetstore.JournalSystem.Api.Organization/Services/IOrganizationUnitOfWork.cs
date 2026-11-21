@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.Organization.Users;
@@ -7,6 +8,7 @@ namespace Dotnetstore.JournalSystem.Api.Organization.Services;
 
 internal interface IOrganizationUnitOfWork
 {
+    IAccessRequestRepository AccessRequests { get; }
     IOwnCompanyRepository OwnCompanies { get; }
     IRoleRepository Roles { get; }
     IUserRepository Users { get; }

@@ -1,0 +1,39 @@
+@page
+@using Dotnetstore.JournalSystem.Shared.Constants
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Access.StatusModel
+@{
+    Layout = "_LoginLayout";
+    ViewData["Title"] = "Access";
+}
+
+@if (Model.Unavailable)
+{
+    <h1 class="auth-title">Please try again</h1>
+    <div class="alert alert-danger" role="alert" data-testid="access-unavailable">
+        We could not check your access request right now.
+    </div>
+    <a class="btn btn-secondary btn-block" asp-page="/Access/Status" data-testid="access-retry">Try again</a>
+}
+else if (Model.State == AccessRequestStatus.Rejected)
+{
+    <h1 class="auth-title" data-testid="access-rejected">Access was not granted</h1>
+    <p class="auth-subtitle">An administrator has declined your request.</p>
+    @if (!string.IsNullOrWhiteSpace(Model.DecisionNote))
+    {
+        <div class="alert alert-danger" role="alert" data-testid="access-note">@Model.DecisionNote</div>
+    }
+    <p class="muted">If you think this is a mistake, contact your administrator.</p>
+}
+else
+{
+    <h1 class="auth-title" data-testid="access-pending">Waiting for approval</h1>
+    <p class="auth-subtitle">
+        Your request for access has been sent to an administrator. You will be able to use the system as soon as it
+        is approved.
+    </p>
+    <p class="muted">You can close this page and sign in again later.</p>
+}
+
+<form method="post" asp-page="/Account/Logout" class="auth-footer">
+    <button type="submit" class="btn btn-secondary btn-block" data-testid="access-logout">Sign out</button>
+</form>

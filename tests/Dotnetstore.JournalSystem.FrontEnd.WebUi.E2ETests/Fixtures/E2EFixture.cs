@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Dotnetstore.Security.Handlers;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Dotnetstore.JournalSystem.Api.Contact.Extensions;
@@ -65,7 +67,7 @@ public sealed class E2EFixture : IAsyncLifetime
         await _api.Services.InitializeContactDatabaseAsync(CancellationToken.None);
         await SeedBootstrapAdminAsync(_api);
 
-        _idp = await FakeIdentityProvider.StartAsync(MintAdminAccessTokenAsync);
+        _idp = await FakeIdentityProvider.StartAsync(MintAdminAccessTokenAsync, MintPersonAccessTokenAsync);
         _webUi = await StartWebUiAsync(_api, _idp);
         WebUiAddress = _webUi.Services
             .GetRequiredService<IServer>()
@@ -107,6 +109,16 @@ public sealed class E2EFixture : IAsyncLifetime
         }
 
         await _sql.DisposeAsync();
+    }
+
+    // Entra access tokens carry the person's object id and no application claims; the API validates this one as its own token.
+    private Task<string> MintPersonAccessTokenAsync(FakePerson person)
+    {
+        var tokenHandler = _api!.Services.GetRequiredService<ITokenHandler>();
+        var token = tokenHandler.CreateAccessToken(
+            person.ObjectId,
+            [new Claim("oid", person.ObjectId), new Claim("name", person.DisplayName), new Claim("preferred_username", person.UserName)]);
+        return Task.FromResult(token.Value);
     }
 
     private async Task<string> MintAdminAccessTokenAsync()

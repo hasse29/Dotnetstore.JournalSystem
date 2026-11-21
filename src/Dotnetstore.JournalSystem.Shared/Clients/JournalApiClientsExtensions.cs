@@ -33,6 +33,7 @@ public static class JournalApiClientsExtensions
         AddClient<IOwnCompanyClient, OwnCompanyClient>(services);
         AddClient<IRoleClient, RoleClient>(services);
         AddClient<IUserClient, UserClient>(services);
+        AddClient<IAccessRequestClient, AccessRequestClient>(services);
         AddClient<IWorkGroupClient, WorkGroupClient>(services);
         AddClient<IAddressTypeClient, AddressTypeClient>(services);
         AddClient<IPhoneNumberTypeClient, PhoneNumberTypeClient>(services);

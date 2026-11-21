@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
@@ -33,7 +34,7 @@ public sealed class OrganizationUnitOfWorkTests : IDisposable
         _roleRepository = new RoleRepository(_context);
         _workGroupRepository = new WorkGroupRepository(_context);
         _userRepository = new UserRepository(_context);
-        _unitOfWork = new OrganizationUnitOfWork(_context, _repository, _roleRepository, _userRepository, _workGroupRepository);
+        _unitOfWork = new OrganizationUnitOfWork(_context, new AccessRequestRepository(_context), _repository, _roleRepository, _userRepository, _workGroupRepository);
     }
 
     public void Dispose()

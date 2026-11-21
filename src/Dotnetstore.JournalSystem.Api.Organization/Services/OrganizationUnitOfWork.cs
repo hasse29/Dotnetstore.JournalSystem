@@ -1,4 +1,5 @@
-﻿using Dotnetstore.JournalSystem.Api.Organization.Data;
+﻿using Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
+using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.Organization.Users;
@@ -9,6 +10,7 @@ namespace Dotnetstore.JournalSystem.Api.Organization.Services;
 
 internal sealed class OrganizationUnitOfWork(
     OrganizationDataContext context,
+    IAccessRequestRepository accessRequestRepository,
     IOwnCompanyRepository ownCompanyRepository,
     IRoleRepository roleRepository,
     IUserRepository userRepository,
@@ -17,6 +19,7 @@ internal sealed class OrganizationUnitOfWork(
     private IDbContextTransaction? _objTransaction;
     private bool _disposed;
 
+    IAccessRequestRepository IOrganizationUnitOfWork.AccessRequests => accessRequestRepository;
     IOwnCompanyRepository IOrganizationUnitOfWork.OwnCompanies => ownCompanyRepository;
     IRoleRepository IOrganizationUnitOfWork.Roles => roleRepository;
     IUserRepository IOrganizationUnitOfWork.Users => userRepository;

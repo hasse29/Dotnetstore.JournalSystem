@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+@using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -20,6 +21,16 @@
                        asp-page="/Dashboard/Index" data-testid="nav-dashboard">Dashboard</a>
                 </li>
             </ul>
+            @if (AccessGate.IsAdministratorOrUnknown(User))
+            {
+                <p class="nav-heading">Administration</p>
+                <ul class="nav-list">
+                    <li>
+                        <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Admin/AccessRequests" ? "active" : null)"
+                           asp-page="/Admin/AccessRequests" data-testid="nav-access-requests">Access requests</a>
+                    </li>
+                </ul>
+            }
         </nav>
     </aside>
 

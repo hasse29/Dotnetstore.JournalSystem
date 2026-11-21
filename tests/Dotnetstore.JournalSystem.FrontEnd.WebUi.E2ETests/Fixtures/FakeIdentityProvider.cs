@@ -33,12 +33,14 @@ internal sealed class FakeIdentityProvider : IAsyncDisposable
     private readonly RSA _rsa = RSA.Create(2048);
     private readonly RsaSecurityKey _signingKey;
     private readonly Func<Task<string>> _accessTokenFactory;
+    private readonly Func<FakePerson, Task<string>> _personAccessTokenFactory;
     private WebApplication? _app;
     private string _baseAddress = string.Empty;
 
-    private FakeIdentityProvider(Func<Task<string>> accessTokenFactory)
+    private FakeIdentityProvider(Func<Task<string>> accessTokenFactory, Func<FakePerson, Task<string>> personAccessTokenFactory)
     {
         _accessTokenFactory = accessTokenFactory;
+        _personAccessTokenFactory = personAccessTokenFactory;
         _signingKey = new RsaSecurityKey(_rsa) { KeyId = "e2e-key" };
     }
 
@@ -57,9 +59,14 @@ internal sealed class FakeIdentityProvider : IAsyncDisposable
     /// <summary>When set, the next token call returns this access token instead of a valid API token.</summary>
     internal string? NextAccessToken { get; set; }
 
-    internal static async Task<FakeIdentityProvider> StartAsync(Func<Task<string>> accessTokenFactory)
+    /// <summary>When set, the next sign-in is for this person (one the API has never seen) instead of the default Entra user.</summary>
+    internal FakePerson? NextPerson { get; set; }
+
+    internal static async Task<FakeIdentityProvider> StartAsync(
+        Func<Task<string>> accessTokenFactory,
+        Func<FakePerson, Task<string>> personAccessTokenFactory)
     {
-        var provider = new FakeIdentityProvider(accessTokenFactory);
+        var provider = new FakeIdentityProvider(accessTokenFactory, personAccessTokenFactory);
         await provider.RunAsync();
         return provider;
     }
@@ -120,12 +127,16 @@ internal sealed class FakeIdentityProvider : IAsyncDisposable
             return Results.Redirect($"{redirectUri}?error={Uri.EscapeDataString(error)}&error_description=denied&state={Uri.EscapeDataString(state)}");
         }
 
+        var person = NextPerson;
+        NextPerson = null;
+
         var code = Guid.NewGuid().ToString("N");
         _codes[code] = new PendingCode(
             request.Query["nonce"].ToString(),
             request.Query["code_challenge"].ToString(),
             redirectUri,
-            request.Query["client_id"].ToString());
+            request.Query["client_id"].ToString(),
+            person);
 
         return Results.Redirect($"{redirectUri}?code={code}&state={Uri.EscapeDataString(state)}");
     }
@@ -154,9 +165,9 @@ internal sealed class FakeIdentityProvider : IAsyncDisposable
             Claims = new Dictionary<string, object>
             {
                 ["sub"] = "fake-subject",
-                ["oid"] = ObjectId,
-                ["name"] = DisplayName,
-                ["preferred_username"] = UserName,
+                ["oid"] = pending.Person?.ObjectId ?? ObjectId,
+                ["name"] = pending.Person?.DisplayName ?? DisplayName,
+                ["preferred_username"] = pending.Person?.UserName ?? UserName,
                 ["nonce"] = pending.Nonce
             },
             SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.RsaSha256)
@@ -166,7 +177,7 @@ internal sealed class FakeIdentityProvider : IAsyncDisposable
         {
             token_type = "Bearer",
             expires_in = 3600,
-            access_token = TakeAccessToken() ?? await _accessTokenFactory(),
+            access_token = TakeAccessToken() ?? (pending.Person is { } person ? await _personAccessTokenFactory(person) : await _accessTokenFactory()),
             id_token = idToken
         });
     }
@@ -174,5 +185,5 @@ internal sealed class FakeIdentityProvider : IAsyncDisposable
     private static string ChallengeFor(string verifier) =>
         Base64UrlEncoder.Encode(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
 
-    private sealed record PendingCode(string Nonce, string CodeChallenge, string RedirectUri, string ClientId);
+    private sealed record PendingCode(string Nonce, string CodeChallenge, string RedirectUri, string ClientId, FakePerson? Person);
 }

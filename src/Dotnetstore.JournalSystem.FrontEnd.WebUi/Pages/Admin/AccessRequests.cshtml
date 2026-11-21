@@ -1,0 +1,125 @@
+@page
+@using Dotnetstore.JournalSystem.Shared.Constants
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Admin.AccessRequestsModel
+@{
+    ViewData["Title"] = "Access requests";
+}
+
+<div class="page-header">
+    <h1>Access requests</h1>
+    <p>People who signed in with Microsoft and are waiting to be let in.</p>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success" role="status" data-testid="access-message">@Model.Message</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert" data-testid="access-error">@Model.ErrorMessage</div>
+}
+
+@if (Model.Forbidden)
+{
+    <div class="alert alert-danger" role="alert" data-testid="access-forbidden">
+        Only administrators can decide access requests.
+    </div>
+}
+else if (Model.Unavailable)
+{
+    <div class="alert alert-danger" role="alert" data-testid="api-unavailable">
+        The API could not be reached. Access requests are not available right now.
+    </div>
+}
+else
+{
+    <section class="card" aria-labelledby="pending-heading">
+        <h2 id="pending-heading">Waiting for a decision</h2>
+        @if (Model.Pending.Count == 0)
+        {
+            <p class="muted" data-testid="pending-empty">No one is waiting for access.</p>
+        }
+        else
+        {
+            <ul class="request-list" data-testid="pending-list">
+                @foreach (var request in Model.Pending)
+                {
+                    <li class="request" data-testid="request-@request.Username">
+                        <div class="request-who">
+                            <strong>@request.DisplayName</strong>
+                            <span class="muted">@request.Username</span>
+                            <span class="muted">Requested @request.RequestedAt.ToString("yyyy-MM-dd HH:mm") UTC</span>
+                        </div>
+
+                        <form method="post" asp-page-handler="Approve" asp-route-id="@request.Id" class="request-approve">
+                            <label class="visually-hidden" for="role-@request.Id">Role</label>
+                            <select id="role-@request.Id" name="roleId" required data-testid="role-select">
+                                <option value="">Role…</option>
+                                @foreach (var role in Model.Roles)
+                                {
+                                    <option value="@role.Value">@role.Text</option>
+                                }
+                            </select>
+                            <label class="visually-hidden" for="company-@request.Id">Company</label>
+                            <select id="company-@request.Id" name="ownCompanyId" required data-testid="company-select">
+                                @if (Model.Companies.Count != 1)
+                                {
+                                    <option value="">Company…</option>
+                                }
+                                @foreach (var company in Model.Companies)
+                                {
+                                    <option value="@company.Value">@company.Text</option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-primary" data-testid="approve">Approve</button>
+                        </form>
+
+                        <form method="post" asp-page-handler="Reject" asp-route-id="@request.Id" class="request-reject">
+                            <label class="visually-hidden" for="note-@request.Id">Reason (optional)</label>
+                            <input id="note-@request.Id" name="note" maxlength="@DataSchemeConstants.AccessRequestDecisionNoteMaxLength"
+                                   placeholder="Reason (optional)" data-testid="reject-note" />
+                            <button type="submit" class="btn btn-secondary" data-testid="reject">Reject</button>
+                        </form>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    <section class="card" aria-labelledby="decided-heading">
+        <h2 id="decided-heading">Decided</h2>
+        @if (Model.Decided.Count == 0)
+        {
+            <p class="muted" data-testid="decided-empty">Nothing has been decided yet.</p>
+        }
+        else
+        {
+            <table class="table" data-testid="decided-table">
+                <thead>
+                    <tr><th>Name</th><th>Username</th><th>Decision</th><th>Decided (UTC)</th><th>Note</th><th></th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var request in Model.Decided)
+                    {
+                        <tr data-testid="decided-@request.Username">
+                            <td>@request.DisplayName</td>
+                            <td>@request.Username</td>
+                            <td><span class="badge badge-@request.Status.ToString().ToLowerInvariant()">@request.Status</span></td>
+                            <td>@request.DecidedAt?.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@request.DecisionNote</td>
+                            <td>
+                                @if (request.Status == AccessRequestStatus.Rejected)
+                                {
+                                    <form method="post" asp-page-handler="Reopen" asp-route-id="@request.Id">
+                                        <button type="submit" class="btn btn-secondary" data-testid="reopen">Reopen</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+}

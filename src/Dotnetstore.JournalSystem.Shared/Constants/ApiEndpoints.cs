@@ -46,6 +46,17 @@ public static class ApiEndpoints
             public const string Delete = $"{UserBase}/{{id:guid}}";
         }
 
+        public static class AccessRequests
+        {
+            private const string AccessRequestBase = $"{OrganizationBase}/access-requests";
+
+            public const string GetAll = AccessRequestBase;
+            public const string Me = $"{AccessRequestBase}/me";
+            public const string Approve = $"{AccessRequestBase}/{{id:guid}}/approve";
+            public const string Reject = $"{AccessRequestBase}/{{id:guid}}/reject";
+            public const string Reopen = $"{AccessRequestBase}/{{id:guid}}/reopen";
+        }
+
         public static class WorkGroups
         {
             private const string WorkGroupBase = $"{OrganizationBase}/work-groups";

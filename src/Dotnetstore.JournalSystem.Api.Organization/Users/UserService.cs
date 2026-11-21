@@ -195,6 +195,15 @@ internal sealed class UserService(
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
 
+        if (result > 0 && existing.ExternalId is not null)
+        {
+            // Without this the person would stay "approved" forever and could never apply again.
+            await organizationUnitOfWork
+                .AccessRequests
+                .DeleteByExternalIdAsync(existing.ExternalId, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         return result > 0 ?
             Result.Success() :
             Result.Error("Failed to delete the user.");

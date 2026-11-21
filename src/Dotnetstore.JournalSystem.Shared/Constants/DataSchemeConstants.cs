@@ -18,6 +18,9 @@ public static class DataSchemeConstants
     public const int UserPasswordMinLength = 12;
     public const int UserPasswordMaxLength = 128;
 
+    public const int AccessRequestDisplayNameMaxLength = 200;
+    public const int AccessRequestDecisionNoteMaxLength = 500;
+
     public const int WorkGroupNameMaxLength = 100;
     public const int WorkGroupDescriptionMaxLength = 500;
 
