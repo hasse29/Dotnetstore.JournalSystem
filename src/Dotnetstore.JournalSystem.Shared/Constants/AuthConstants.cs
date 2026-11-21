@@ -10,6 +10,7 @@ public static class AuthClaimTypes
 public static class AuthPolicies
 {
     public const string Administrator = "Administrator";
+    public const string Authenticated = "Authenticated";
 }
 
 public static class RoleNames

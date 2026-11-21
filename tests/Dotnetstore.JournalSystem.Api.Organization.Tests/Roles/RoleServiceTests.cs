@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
 using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
@@ -27,7 +28,7 @@ public sealed class RoleServiceTests : IDisposable
 
         _context = new OrganizationDataContext(_options);
         _context.Database.EnsureCreated();
-        _unitOfWork = new OrganizationUnitOfWork(_context, new OwnCompanyRepository(_context), new RoleRepository(_context), new UserRepository(_context), new WorkGroupRepository(_context));
+        _unitOfWork = new OrganizationUnitOfWork(_context, new AccessRequestRepository(_context), new OwnCompanyRepository(_context), new RoleRepository(_context), new UserRepository(_context), new WorkGroupRepository(_context));
         _service = new RoleService(_unitOfWork);
     }
 

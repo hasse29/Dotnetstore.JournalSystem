@@ -106,8 +106,28 @@ The browser tests (Playwright) run the whole sign-in against a small fake OpenID
 redirect, the code exchange with PKCE, id-token validation, the cookie, the dashboard, a cancelled sign-in, sign-out and
 open-redirect protection. Real Entra ID, consent and MFA are not exercised and must be tried by hand once.
 
-Known limits: signing out clears the UI session only (the Microsoft session stays), there is no silent token refresh, and
-a Microsoft user who is not in the journal system's user list can reach the dashboard shell but gets no data from the API.
+Known limits: signing out clears the UI session only (the Microsoft session stays) and there is no silent token refresh.
+
+## 7. Access requests: nobody gets in without approval
+
+Signing in with Microsoft only proves who someone is. Anyone from your tenant can do that, so it does not let them in.
+
+1. A person signs in with Microsoft for the first time. The web UI sends them to a "Waiting for approval" page and an access
+   request is recorded for them (name and username come from their Microsoft token).
+2. An administrator opens **Access requests** in the sidebar, picks a **role** and an **own company**, and presses Approve.
+   That creates their user account, linked to their Microsoft identity, in one step.
+3. The person signs in again (or reloads) and lands on the dashboard.
+
+Until then the API gives them no role, so every data endpoint refuses them, and the web UI keeps them on the status page.
+
+- **Reject** records an optional reason, which the person sees. A rejected person cannot simply ask again; an administrator
+  must **Reopen** the request first.
+- Each person has one request. Deleting their user account also deletes their request, so they can apply again from scratch.
+- Users an administrator creates directly (the bootstrap administrator, or Create user) count as approved and never need a request.
+- Only administrators can list or decide requests. The people who sign in with a password never see this page.
+
+Endpoints: `POST/GET /api/organization/access-requests/me` (any signed-in Microsoft user) and, for administrators,
+`GET /api/organization/access-requests?status=`, `POST .../{id}/approve`, `.../reject`, `.../reopen`.
 
 ## How it fits together
 

@@ -1,0 +1,8 @@
+namespace Dotnetstore.JournalSystem.Shared.Constants;
+
+public enum AccessRequestStatus
+{
+    Pending = 0,
+    Approved = 1,
+    Rejected = 2
+}

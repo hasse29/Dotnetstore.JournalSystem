@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
 using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
@@ -40,6 +41,7 @@ public sealed class UserServiceTests : IDisposable
         _context.Database.EnsureCreated();
         _unitOfWork = new OrganizationUnitOfWork(
             _context,
+            new AccessRequestRepository(_context),
             new OwnCompanyRepository(_context),
             new RoleRepository(_context),
             new UserRepository(_context),
@@ -265,6 +267,43 @@ public sealed class UserServiceTests : IDisposable
         result.Status.ShouldBe(ResultStatus.Error);
         _context.ChangeTracker.Clear();
         (await _context.Users.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken)).FirstName.ShouldBe("Anna");
+    }
+
+    [Fact]
+    public async Task DeleteAsyncAlsoClearsTheEntraUsersAccessRequestSoTheyCanApplyAgain()
+    {
+        // Arrange
+        IUserService service = _service;
+        _entra.NextObjectId = "oid-77";
+        var id = await SeedAsync("bo@example.com", AuthProvider.Entra);
+        _context.AccessRequests.Add(AccessRequest.Create("oid-77", "Bo Berg", "bo@example.com", DateTime.UtcNow));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        (await _context.AccessRequests.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(0);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncLeavesOtherPeoplesAccessRequestsAlone()
+    {
+        // Arrange
+        IUserService service = _service;
+        _entra.NextObjectId = "oid-78";
+        var id = await SeedAsync("bo@example.com", AuthProvider.Entra);
+        _context.AccessRequests.Add(AccessRequest.Create("oid-other", "Cia Ek", "cia@example.com", DateTime.UtcNow));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        (await _context.AccessRequests.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
     }
 
     [Fact]

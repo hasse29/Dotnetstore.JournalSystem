@@ -7,6 +7,7 @@ using static Microsoft.Playwright.Assertions;
 namespace Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests.Login;
 
 // These tests share the fake identity provider's one-shot error switch, so they live in one class and run in order.
+[Collection(MicrosoftSignInSerial.Name)]
 public sealed class MicrosoftSignInTests(E2EFixture fixture)
 {
     [Fact]

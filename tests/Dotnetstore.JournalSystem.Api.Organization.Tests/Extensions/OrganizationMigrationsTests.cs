@@ -38,9 +38,11 @@ public sealed class OrganizationMigrationsTests(SqlServerFixture fixture)
         var context = scope.ServiceProvider.GetRequiredService<OrganizationDataContext>();
         (await context.Users.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(0);
         var applied = await context.Database
-            .SqlQuery<string>($"SELECT MigrationId AS [Value] FROM [Organization].[__EFMigrationsHistory]")
+            .SqlQuery<string>($"SELECT MigrationId AS [Value] FROM [Organization].[__EFMigrationsHistory] ORDER BY MigrationId")
             .ToListAsync(TestContext.Current.CancellationToken);
-        applied.ShouldHaveSingleItem().ShouldEndWith("_InitialCreate");
+        applied.Count.ShouldBe(2);
+        applied[0].ShouldEndWith("_InitialCreate");
+        applied[1].ShouldEndWith("_AddAccessRequests");
         await DeleteDatabaseAsync(provider);
     }
 

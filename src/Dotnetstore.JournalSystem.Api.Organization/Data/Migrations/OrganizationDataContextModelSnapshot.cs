@@ -16,7 +16,7 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261120211106_InitialCreate";
+    public override string LastMigrationId => "20261121095954_AddAccessRequests";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -26,6 +26,53 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
             .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
         SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+        modelBuilder.Entity("Dotnetstore.JournalSystem.Api.Organization.AccessRequests.AccessRequest", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTime?>("DecidedAt")
+                    .HasColumnType("datetime2");
+
+                b.Property<Guid?>("DecidedBy")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("DecisionNote")
+                    .HasMaxLength(500)
+                    .HasColumnType("nvarchar(500)");
+
+                b.Property<string>("DisplayName")
+                    .IsRequired()
+                    .HasMaxLength(200)
+                    .HasColumnType("nvarchar(200)");
+
+                b.Property<string>("ExternalId")
+                    .IsRequired()
+                    .HasMaxLength(100)
+                    .HasColumnType("nvarchar(100)");
+
+                b.Property<DateTime>("RequestedAt")
+                    .HasColumnType("datetime2");
+
+                b.Property<int>("Status")
+                    .HasColumnType("int");
+
+                b.Property<string>("Username")
+                    .IsRequired()
+                    .HasMaxLength(256)
+                    .HasColumnType("nvarchar(256)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("ExternalId")
+                    .IsUnique();
+
+                b.HasIndex("Status");
+
+                b.ToTable("AccessRequest", "Organization");
+            });
 
         modelBuilder.Entity("Dotnetstore.JournalSystem.Api.Organization.OwnCompanies.OwnCompany", b =>
             {

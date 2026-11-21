@@ -50,6 +50,7 @@ internal static class AuthenticationExtensions
 
             builder.Services
                 .AddAuthorizationBuilder()
+                .AddPolicy(AuthPolicies.Authenticated, policy => policy.RequireAuthenticatedUser())
                 .AddPolicy(AuthPolicies.Administrator, policy => policy
                     .RequireAuthenticatedUser()
                     .RequireClaim(AuthClaimTypes.Role, RoleNames.Administrator));

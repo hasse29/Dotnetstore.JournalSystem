@@ -21,6 +21,7 @@ internal static class WebApplicationExtensions
                 options.Conventions.AllowAnonymousToPage("/Error");
                 options.Conventions.AllowAnonymousToPage("/Account/Login");
                 options.Conventions.AllowAnonymousToPage("/Account/ExternalLogin");
+                options.Conventions.ConfigureFilter(new ServiceFilterAttribute(typeof(AccessGateFilter)));
 
                 // Without no-store the browser serves signed-in pages from its cache on Back after sign-out.
                 options.Conventions.ConfigureFilter(new ResponseCacheAttribute
@@ -30,6 +31,7 @@ internal static class WebApplicationExtensions
                 });
             });
 
+        builder.Services.AddScoped<AccessGateFilter>();
         builder.Services.AddJournalWebAuthentication(EntraSignInSettings.FromConfiguration(builder.Configuration));
 
         return builder;

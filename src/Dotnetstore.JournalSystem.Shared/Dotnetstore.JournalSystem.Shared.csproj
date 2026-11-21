@@ -9,4 +9,8 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dotnetstore.JournalSystem.FrontEnd.WebUi.Tests" />
+  </ItemGroup>
+
 </Project>
