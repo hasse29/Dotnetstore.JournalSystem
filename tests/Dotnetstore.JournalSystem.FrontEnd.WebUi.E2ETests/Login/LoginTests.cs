@@ -42,7 +42,7 @@ public sealed class LoginTests(E2EFixture fixture)
         // Assert
         await Expect(page).ToHaveURLAsync(new System.Text.RegularExpressions.Regex("/Dashboard$"));
         await Expect(dashboard.Heading).ToBeVisibleAsync();
-        await Expect(dashboard.CurrentUser).ToHaveTextAsync(E2EFixture.AdminUsername);
+        await Expect(dashboard.CurrentUser).ToHaveTextAsync(E2EFixture.AdminFullName);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Organization.Users;
 using Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.OwnCompanies;
@@ -22,7 +23,7 @@ public sealed class AccessRequestServiceTests : IDisposable
     public AccessRequestServiceTests(SqlServerFixture fixture)
     {
         _database = new OrganizationTestDatabase(fixture);
-        _service = new AccessRequestService(_database.UnitOfWork, TimeProvider.System);
+        _service = new AccessRequestService(_database.UnitOfWork, new PersonalIdentityNumberProtector(TestEncryption.Create()), TimeProvider.System);
 
         _database.Context.OwnCompanies.Add(OwnCompanyTestData.Create(_companyId, "Dotnetstore AB", null, null, null, null, null));
         _database.Context.Roles.Add(RoleTestData.Create(_roleId, "Doctor"));
@@ -32,7 +33,7 @@ public sealed class AccessRequestServiceTests : IDisposable
 
     public void Dispose() => _database.Dispose();
 
-    private ApproveAccessRequestRequest Approval() => new(_companyId, _roleId);
+    private ApproveAccessRequestRequest Approval() => new(_companyId, _roleId, "Anna", null, "Svensson", false);
 
     private async Task<Guid> RequestAsync(EntraIdentity? identity = null)
     {
@@ -171,7 +172,7 @@ public sealed class AccessRequestServiceTests : IDisposable
         user.OwnCompanyId.ShouldBe(_companyId);
         user.Username.ShouldBe("anna@example.com");
         user.PasswordHash.ShouldBeEmpty();
-        user.FirstName.ShouldBe("Anna Maria");
+        user.FirstName.ShouldBe("Anna");
         user.LastName.ShouldBe("Svensson");
         user.CreatedBy.ShouldBe(admin);
     }
@@ -209,7 +210,7 @@ public sealed class AccessRequestServiceTests : IDisposable
         var id = await RequestAsync();
 
         // Act
-        var result = await _service.ApproveAsync(id, new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid()), null, TestContext.Current.CancellationToken);
+        var result = await _service.ApproveAsync(id, new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid(), "Anna", null, "Svensson", false), null, TestContext.Current.CancellationToken);
 
         // Assert
         result.Status.ShouldBe(Ardalis.Result.ResultStatus.Invalid);
@@ -300,29 +301,41 @@ public sealed class AccessRequestServiceTests : IDisposable
         unknown.Status.ShouldBe(Ardalis.Result.ResultStatus.NotFound);
     }
 
-    [Theory]
-    [InlineData("Anna Svensson", "Anna", "Svensson")]
-    [InlineData("Anna Maria Svensson", "Anna Maria", "Svensson")]
-    [InlineData("Madonna", "Madonna", "Madonna")]
-    [InlineData("   ", "fallback@example.com", "fallback@example.com")]
-    public void SplitNameTakesTheLastWordAsTheSurname(string displayName, string first, string last)
+    [Fact]
+    public async Task ApproveStoresTheChosenPersonDetailsWithTheNumberEncrypted()
     {
-        // Arrange & Act
-        var (firstName, lastName) = AccessRequestService.SplitName(displayName, "fallback@example.com");
+        // Arrange
+        var id = await RequestAsync();
+        var request = new ApproveAccessRequestRequest(_companyId, _roleId, "Anna", "Maria", "Svensson", false, new DateOnly(1990, 1, 1), "19900101-1234");
+
+        // Act
+        var result = await _service.ApproveAsync(id, request, null, TestContext.Current.CancellationToken);
 
         // Assert
-        firstName.ShouldBe(first);
-        lastName.ShouldBe(last);
+        result.IsSuccess.ShouldBeTrue();
+        var user = await _database.Context.Users.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
+        user.FirstName.ShouldBe("Anna");
+        user.MiddleName.ShouldBe("Maria");
+        user.LastName.ShouldBe("Svensson");
+        user.IsMale.ShouldBeFalse();
+        user.DateOfBirth.ShouldNotBeNull().ShouldBe(new DateTime(1990, 1, 1));
+        user.SocialSecurityNumber.ShouldNotBeNullOrWhiteSpace();
+        user.SocialSecurityNumber.ShouldNotContain("19900101");
     }
 
     [Fact]
-    public void SplitNameKeepsNamesWithinTheColumnLimit()
+    public async Task ApproveWithoutOptionalDetailsLeavesThemEmpty()
     {
-        // Arrange & Act
-        var (firstName, lastName) = AccessRequestService.SplitName(new string('a', 80) + " " + new string('b', 80), "x");
+        // Arrange
+        var id = await RequestAsync();
+
+        // Act
+        var result = await _service.ApproveAsync(id, Approval(), null, TestContext.Current.CancellationToken);
 
         // Assert
-        firstName.Length.ShouldBe(DataSchemeConstants.UserNameMaxLength);
-        lastName.Length.ShouldBe(DataSchemeConstants.UserNameMaxLength);
+        result.IsSuccess.ShouldBeTrue();
+        var user = await _database.Context.Users.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
+        user.DateOfBirth.ShouldBeNull();
+        user.SocialSecurityNumber.ShouldBeNull();
     }
 }

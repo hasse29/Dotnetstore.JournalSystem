@@ -19,6 +19,16 @@ internal static class UserEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
+        var mine = app
+            .MapGroup(string.Empty)
+            .WithTags("Users")
+            .RequireAuthorization(AuthPolicies.Authenticated);
+
+        mine
+            .MapGet(ApiEndpoints.Organization.Users.Me, GetMyProfileAsync)
+            .WithName("GetMyProfile")
+            .WithSummary("Gets the signed-in user's own profile, with the personal identity number masked.");
+
         var group = app
             .MapGroup(string.Empty)
             .WithTags("Users")
@@ -50,6 +60,29 @@ internal static class UserEndpoints
             .WithSummary("Deletes a user.");
 
         return app;
+    }
+
+    private static async Task<Results<Ok<MyProfileResponse>, NotFound, ProblemHttpResult>> GetMyProfileAsync(
+        ClaimsPrincipal principal,
+        IUserService service,
+        CancellationToken cancellationToken)
+    {
+        var userId = principal.GetUserId();
+        if (userId is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        var result = await service
+            .GetProfileAsync(userId.Value, cancellationToken)
+            .ConfigureAwait(false);
+
+        return result.Status switch
+        {
+            ResultStatus.Ok => TypedResults.Ok(result.Value),
+            ResultStatus.NotFound => TypedResults.NotFound(),
+            _ => TypedResults.Problem()
+        };
     }
 
     private static async Task<Ok<UserResponse[]>> GetAllAsync(

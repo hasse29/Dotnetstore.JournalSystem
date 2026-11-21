@@ -10,6 +10,7 @@ namespace Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
 
 internal sealed class AccessRequestService(
     IOrganizationUnitOfWork organizationUnitOfWork,
+    IPersonalIdentityNumberProtector identityNumbers,
     TimeProvider clock) : IAccessRequestService
 {
     async ValueTask<Result<AccessRequestResponse>> IAccessRequestService.RequestAccessAsync(
@@ -144,14 +145,25 @@ internal sealed class AccessRequestService(
             return Result<AccessRequestResponse>.Conflict("A user with that username or Entra identity already exists.");
         }
 
-        var (firstName, lastName) = SplitName(accessRequest.DisplayName, accessRequest.Username);
         var user = UserBuilder
             .Create()
             .WithCreateValues(
-                new CreateUserRequest(firstName, null, lastName, accessRequest.Username, request.OwnCompanyId, request.RoleId, AuthProvider.Entra, null),
+                new CreateUserRequest(
+                    request.FirstName.Trim(),
+                    string.IsNullOrWhiteSpace(request.MiddleName) ? null : request.MiddleName.Trim(),
+                    request.LastName.Trim(),
+                    accessRequest.Username,
+                    request.OwnCompanyId,
+                    request.RoleId,
+                    AuthProvider.Entra,
+                    null,
+                    request.DateOfBirth,
+                    null,
+                    request.IsMale),
                 string.Empty,
                 accessRequest.ExternalId,
                 decidedBy)
+            .SetPersonalIdentityNumber(request.SocialSecurityNumber, identityNumbers)
             .Build();
 
         await organizationUnitOfWork
@@ -207,23 +219,6 @@ internal sealed class AccessRequestService(
         user.CreatedDate,
         null,
         null);
-
-    internal static (string FirstName, string LastName) SplitName(string displayName, string fallback)
-    {
-        var parts = displayName.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length == 0)
-        {
-            parts = [fallback];
-        }
-
-        var last = parts.Length > 1 ? parts[^1] : parts[0];
-        var first = parts.Length > 1 ? string.Join(' ', parts[..^1]) : parts[0];
-
-        return (Truncate(first), Truncate(last));
-    }
-
-    private static string Truncate(string value) =>
-        value.Length <= DataSchemeConstants.UserNameMaxLength ? value : value[..DataSchemeConstants.UserNameMaxLength];
 
     private async ValueTask<Result<AccessRequestResponse>> DecideAsync(
         Guid id,

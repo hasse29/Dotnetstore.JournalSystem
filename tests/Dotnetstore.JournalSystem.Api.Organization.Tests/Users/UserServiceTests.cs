@@ -49,7 +49,7 @@ public sealed class UserServiceTests : IDisposable
 
         _provider = new ServiceCollection().AddSecurity().BuildServiceProvider();
         _hashHandler = _provider.GetRequiredService<IHashHandler>();
-        _service = new UserService(_unitOfWork, _hashHandler, _entra);
+        _service = new UserService(_unitOfWork, _hashHandler, _entra, new PersonalIdentityNumberProtector(TestEncryption.Create()));
 
         _context.OwnCompanies.Add(OwnCompanyTestData.Create(_ownCompanyId, "Dotnetstore AB", null, null, null, null, null));
         _context.Roles.Add(RoleTestData.Create(_roleId, "Administrator"));
@@ -433,5 +433,81 @@ public sealed class UserServiceTests : IDisposable
             Deleted.Add(externalId);
             return ValueTask.FromResult(Result.Success());
         }
+    }
+
+    [Fact]
+    public async Task UpdateAsyncKeepsThePersonalIdentityNumberWhenNoneIsSent()
+    {
+        // Arrange
+        IUserService service = _service;
+        var created = await service.CreateAsync(
+            CreateRequest() with { SocialSecurityNumber = "19900101-1234", DateOfBirth = new DateOnly(1990, 1, 1) },
+            null,
+            TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+        var before = await _context.Users.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var result = await service.UpdateAsync(created.Value.Id, new EditUserRequest("Bo", null, "Nilsson", _ownCompanyId, _roleId), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        _context.ChangeTracker.Clear();
+        var stored = await _context.Users.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
+        stored.SocialSecurityNumber.ShouldBe(before.SocialSecurityNumber);
+        stored.DateOfBirth.ShouldBe(before.DateOfBirth);
+    }
+
+    [Fact]
+    public async Task UpdateAsyncClearsThePersonalIdentityNumberWhenAnEmptyOneIsSent()
+    {
+        // Arrange
+        IUserService service = _service;
+        var created = await service.CreateAsync(CreateRequest() with { SocialSecurityNumber = "19900101-1234" }, null, TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.UpdateAsync(
+            created.Value.Id,
+            new EditUserRequest("Anna", null, "Svensson", _ownCompanyId, _roleId, SocialSecurityNumber: string.Empty),
+            null,
+            TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        _context.ChangeTracker.Clear();
+        var stored = await _context.Users.AsNoTracking().SingleAsync(TestContext.Current.CancellationToken);
+        stored.SocialSecurityNumber.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetProfileAsyncReturnsTheMaskedNumberCompanyAndRole()
+    {
+        // Arrange
+        IUserService service = _service;
+        var created = await service.CreateAsync(CreateRequest() with { SocialSecurityNumber = "19900101-1234" }, null, TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.GetProfileAsync(created.Value.Id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.SocialSecurityNumberMasked.ShouldBe("19900101-****");
+        result.Value.OwnCompanyName.ShouldBe("Dotnetstore AB");
+        result.Value.RoleName.ShouldBe("Administrator");
+    }
+
+    [Fact]
+    public async Task GetProfileAsyncReturnsNotFoundForAnUnknownUser()
+    {
+        // Arrange
+        IUserService service = _service;
+
+        // Act
+        var result = await service.GetProfileAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(Ardalis.Result.ResultStatus.NotFound);
     }
 }

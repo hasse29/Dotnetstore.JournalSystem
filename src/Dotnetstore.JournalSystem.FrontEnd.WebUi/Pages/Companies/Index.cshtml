@@ -1,0 +1,52 @@
+@page
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies.IndexModel
+@{
+    ViewData["Title"] = "Own companies";
+}
+
+<div class="page-header">
+    <h1>Own companies</h1>
+    <p>The companies users can belong to.</p>
+</div>
+
+@if (Model.Unavailable)
+{
+    <div class="alert alert-danger" role="alert" data-testid="companies-unavailable">
+        The API could not be reached. Companies are not available right now.
+    </div>
+}
+else
+{
+    <section class="card" aria-labelledby="companies-heading">
+        <h2 id="companies-heading">All companies (<span data-testid="companies-count">@Model.Companies.Count</span>)</h2>
+        @if (Model.Companies.Count == 0)
+        {
+            <p class="muted" data-testid="companies-empty">No companies have been added yet.</p>
+        }
+        else
+        {
+            <table class="table" data-testid="companies-table">
+                <thead>
+                    <tr><th>Name</th><th>Description</th><th>Corporate number</th><th>Tax ID</th><th>Website</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var company in Model.Companies)
+                    {
+                        <tr data-testid="company-@company.Name">
+                            <td>@company.Name</td>
+                            <td>@company.Description</td>
+                            <td>@company.CorporateNumber</td>
+                            <td>@company.TaxId</td>
+                            <td>
+                                @if (company.WebsiteUrl is not null && company.WebsiteUrl.Scheme is "http" or "https")
+                                {
+                                    <a href="@company.WebsiteUrl" rel="noopener noreferrer">@company.WebsiteUrl.Host</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+}

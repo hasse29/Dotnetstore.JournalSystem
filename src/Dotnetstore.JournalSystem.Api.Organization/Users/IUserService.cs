@@ -10,5 +10,6 @@ internal interface IUserService
     ValueTask<Result<UserResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     ValueTask<Result<UserResponse>> CreateAsync(CreateUserRequest request, Guid? userId, CancellationToken cancellationToken = default);
     ValueTask<Result<UserResponse>> UpdateAsync(Guid id, EditUserRequest request, Guid? userId, CancellationToken cancellationToken = default);
+    ValueTask<Result<MyProfileResponse>> GetProfileAsync(Guid userId, CancellationToken cancellationToken = default);
     ValueTask<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
 }

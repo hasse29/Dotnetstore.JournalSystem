@@ -16,7 +16,7 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261121095954_AddAccessRequests";
+    public override string LastMigrationId => "20261121103946_AddPersonDetails";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -286,8 +286,8 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
                     .HasColumnType("nvarchar(256)");
 
                 b.Property<string>("SocialSecurityNumber")
-                    .HasMaxLength(50)
-                    .HasColumnType("nvarchar(50)");
+                    .HasMaxLength(124)
+                    .HasColumnType("nvarchar(124)");
 
                 b.Property<string>("Username")
                     .IsRequired()

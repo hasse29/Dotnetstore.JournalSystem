@@ -62,7 +62,7 @@ public sealed class DashboardTests(E2EFixture fixture)
         await using var _ = context;
 
         // Assert
-        await Expect(dashboard.CurrentUser).ToHaveTextAsync(username);
+        await Expect(dashboard.CurrentUser).ToHaveTextAsync(E2EFixture.UserFullName);
         await Expect(dashboard.StatValue("users")).ToHaveTextAsync("–");
         await Expect(dashboard.StatValue("roles")).ToHaveTextAsync(new Regex("^[0-9]+$"));
     }

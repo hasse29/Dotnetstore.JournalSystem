@@ -20,6 +20,8 @@ public sealed class HostApplicationBuilderExtensionsTests
     private static HostApplicationBuilder CreateBuilder(string? connectionString)
     {
         var builder = Host.CreateEmptyApplicationBuilder(new HostApplicationBuilderSettings());
+        builder.Configuration["Encryption:Keys:test"] = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=";
+        builder.Configuration["Encryption:CurrentKeyId"] = "test";
 
         if (connectionString is not null)
         {

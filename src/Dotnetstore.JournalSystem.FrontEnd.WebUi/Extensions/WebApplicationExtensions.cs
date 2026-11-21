@@ -32,6 +32,8 @@ internal static class WebApplicationExtensions
             });
 
         builder.Services.AddScoped<AccessGateFilter>();
+        builder.Services.AddMemoryCache();
+        builder.Services.AddScoped<ICurrentUserProfile, CurrentUserProfile>();
         builder.Services.AddJournalWebAuthentication(EntraSignInSettings.FromConfiguration(builder.Configuration));
 
         return builder;

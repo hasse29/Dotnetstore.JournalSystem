@@ -65,7 +65,7 @@ public sealed class AccessRequestEndpointsTests(SqlServerFixture fixture)
         // Act
         using var approve = await host.Client.PostAsJsonAsync(
             ForId(ApiEndpoints.Organization.AccessRequests.Approve, Guid.NewGuid()),
-            new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid()),
+            new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid(), "Anna", null, "Svensson", false),
             Token);
         using var reject = await host.Client.PostAsJsonAsync(
             ForId(ApiEndpoints.Organization.AccessRequests.Reject, Guid.NewGuid()),
@@ -91,7 +91,7 @@ public sealed class AccessRequestEndpointsTests(SqlServerFixture fixture)
         using var list = await host.Client.GetAsync(Url(ApiEndpoints.Organization.AccessRequests.GetAll), Token);
         using var approve = await host.Client.PostAsJsonAsync(
             ForId(ApiEndpoints.Organization.AccessRequests.Approve, Guid.NewGuid()),
-            new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid()),
+            new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid(), "Anna", null, "Svensson", false),
             Token);
         using var reject = await host.Client.PostAsJsonAsync(
             ForId(ApiEndpoints.Organization.AccessRequests.Reject, Guid.NewGuid()),
@@ -147,7 +147,7 @@ public sealed class AccessRequestEndpointsTests(SqlServerFixture fixture)
         // Act
         using var approve = await host.Client.PostAsJsonAsync(
             ForId(ApiEndpoints.Organization.AccessRequests.Approve, missing),
-            new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid()),
+            new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid(), "Anna", null, "Svensson", false),
             Token);
         using var reject = await host.Client.PostAsJsonAsync(
             ForId(ApiEndpoints.Organization.AccessRequests.Reject, missing),
@@ -171,7 +171,7 @@ public sealed class AccessRequestEndpointsTests(SqlServerFixture fixture)
         // Act
         using var response = await host.Client.PostAsJsonAsync(
             ForId(ApiEndpoints.Organization.AccessRequests.Approve, Guid.NewGuid()),
-            new ApproveAccessRequestRequest(Guid.Empty, Guid.Empty),
+            new ApproveAccessRequestRequest(Guid.Empty, Guid.Empty, "Anna", null, "Svensson", false),
             Token);
 
         // Assert
@@ -179,5 +179,27 @@ public sealed class AccessRequestEndpointsTests(SqlServerFixture fixture)
         var body = await response.Content.ReadAsStringAsync(Token);
         body.ShouldContain(nameof(ApproveAccessRequestRequest.OwnCompanyId));
         body.ShouldContain(nameof(ApproveAccessRequestRequest.RoleId));
+    }
+
+    [Fact]
+    public async Task ApprovingWithoutNamesOrWithABadNumberIsAValidationError()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, Token, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(Token);
+
+        // Act
+        using var response = await host.Client.PostAsJsonAsync(
+            ForId(ApiEndpoints.Organization.AccessRequests.Approve, Guid.NewGuid()),
+            new ApproveAccessRequestRequest(Guid.NewGuid(), Guid.NewGuid(), " ", null, " ", false, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(3), "123"),
+            Token);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadAsStringAsync(Token);
+        body.ShouldContain(nameof(ApproveAccessRequestRequest.FirstName));
+        body.ShouldContain(nameof(ApproveAccessRequestRequest.LastName));
+        body.ShouldContain(nameof(ApproveAccessRequestRequest.DateOfBirth));
+        body.ShouldContain(nameof(ApproveAccessRequestRequest.SocialSecurityNumber));
     }
 }

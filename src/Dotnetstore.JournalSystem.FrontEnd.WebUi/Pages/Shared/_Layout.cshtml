@@ -1,4 +1,8 @@
 @using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication
+@inject ICurrentUserProfile CurrentProfile
+@{
+    var profile = await CurrentProfile.GetAsync(User, Context.RequestAborted);
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,6 +24,14 @@
                     <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Dashboard/Index" ? "active" : null)"
                        asp-page="/Dashboard/Index" data-testid="nav-dashboard">Dashboard</a>
                 </li>
+                <li>
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Profile/Index" ? "active" : null)"
+                       asp-page="/Profile/Index" data-testid="nav-profile">My profile</a>
+                </li>
+                <li>
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Companies/Index" ? "active" : null)"
+                       asp-page="/Companies/Index" data-testid="nav-companies">Own companies</a>
+                </li>
             </ul>
             @if (AccessGate.IsAdministratorOrUnknown(User))
             {
@@ -40,7 +52,13 @@
                 <span aria-hidden="true">☰</span>
             </button>
             <div class="topbar-spacer"></div>
-            <span class="topbar-user" data-testid="current-user">@User.Identity?.Name</span>
+            <a class="topbar-user" asp-page="/Profile/Index" data-testid="current-user-link">
+                <span data-testid="current-user">@(profile?.FullName ?? User.Identity?.Name)</span>
+                @if (profile is not null)
+                {
+                    <span class="topbar-user-detail muted" data-testid="current-user-detail">@profile.RoleName · @profile.OwnCompanyName</span>
+                }
+            </a>
             <form method="post" asp-page="/Account/Logout">
                 <button type="submit" class="btn btn-secondary" data-testid="logout">Sign out</button>
             </form>

@@ -12,6 +12,9 @@ internal sealed class UserBuilder :
     private string _firstName = string.Empty;
     private string? _middleName;
     private string _lastName = string.Empty;
+    private DateTime? _dateOfBirth;
+    private string? _socialSecurityNumber;
+    private bool _isMale;
     private string _username = string.Empty;
     private string _passwordHash = string.Empty;
     private string _securityStamp = string.Empty;
@@ -56,6 +59,8 @@ internal sealed class UserBuilder :
         SetFirstName(request.FirstName);
         SetMiddleName(request.MiddleName);
         SetLastName(request.LastName);
+        SetDateOfBirth(request.DateOfBirth);
+        _isMale = request.IsMale ?? false;
         SetUsername(request.Username);
         SetPasswordHash(passwordHash);
         SetSecurityStamp(Guid.NewGuid().ToString("N"));
@@ -75,6 +80,16 @@ internal sealed class UserBuilder :
         SetFirstName(request.FirstName);
         SetMiddleName(request.MiddleName);
         SetLastName(request.LastName);
+        if (request.DateOfBirth is { } dateOfBirth)
+        {
+            SetDateOfBirth(dateOfBirth);
+        }
+
+        if (request.IsMale is { } isMale)
+        {
+            _isMale = isMale;
+        }
+
         SetOwnCompanyId(request.OwnCompanyId);
         SetRoleId(request.RoleId);
         SetLastUpdatedDate(DateTime.UtcNow);
@@ -88,6 +103,9 @@ internal sealed class UserBuilder :
         SetFirstName(user.FirstName);
         SetMiddleName(user.MiddleName);
         SetLastName(user.LastName);
+        _dateOfBirth = user.DateOfBirth;
+        _socialSecurityNumber = user.SocialSecurityNumber;
+        _isMale = user.IsMale;
         SetUsername(user.Username);
         _passwordHash = user.PasswordHash;
         SetSecurityStamp(user.SecurityStamp);
@@ -144,6 +162,27 @@ internal sealed class UserBuilder :
         Guard.Against.StringTooLong(lastName, DataSchemeConstants.UserNameMaxLength);
 
         _lastName = lastName;
+        return this;
+    }
+
+    internal UserBuilder SetDateOfBirth(DateOnly? dateOfBirth)
+    {
+        _dateOfBirth = dateOfBirth?.ToDateTime(TimeOnly.MinValue, DateTimeKind.Unspecified);
+        return this;
+    }
+
+    // The number is encrypted against this user's id, so the id must be set first.
+    internal UserBuilder SetPersonalIdentityNumber(string? personalIdentityNumber, IPersonalIdentityNumberProtector protector)
+    {
+        ArgumentNullException.ThrowIfNull(protector);
+
+        _socialSecurityNumber = protector.Protect(personalIdentityNumber, _id);
+        return this;
+    }
+
+    internal UserBuilder SetIsMale(bool isMale)
+    {
+        _isMale = isMale;
         return this;
     }
 
@@ -283,7 +322,12 @@ internal sealed class UserBuilder :
             _deletedBy,
             _isDeleted,
             _isSystem,
-            _isGdpr);
+            _isGdpr)
+        {
+            DateOfBirth = _dateOfBirth,
+            SocialSecurityNumber = _socialSecurityNumber,
+            IsMale = _isMale
+        };
     }
 }
 

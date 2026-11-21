@@ -10,4 +10,7 @@ public sealed record CreateUserRequest(
     Guid OwnCompanyId,
     Guid RoleId,
     AuthProvider AuthProvider,
-    string? Password);
+    string? Password,
+    DateOnly? DateOfBirth = null,
+    string? SocialSecurityNumber = null,
+    bool? IsMale = null);

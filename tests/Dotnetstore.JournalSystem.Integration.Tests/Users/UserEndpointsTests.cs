@@ -225,4 +225,90 @@ public sealed class UserEndpointsTests(SqlServerFixture fixture)
         updated!.FirstName.ShouldBe("Bo");
         updated.Username.ShouldBe("nurse@example.com");
     }
+
+    [Fact]
+    public async Task MyProfileWithoutATokenReturnsUnauthorized()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, Token, withBootstrapAdmin: true);
+
+        // Act
+        using var response = await host.Client.GetAsync(UsersUrl("/me"), Token);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task MyProfileReturnsTheSignedInUserWithTheNumberMaskedAndNeverInFull()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, Token, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(Token);
+        var (ownCompanyId, administratorRoleId) = await GetReferencesAsync(host.Client);
+        var companies = await host.Client.GetFromJsonAsync<OwnCompanyResponse[]>(new Uri(ApiEndpoints.Organization.OwnCompanies.GetAll, UriKind.Relative), Token);
+        var request = CreateRequest(ownCompanyId, administratorRoleId) with
+        {
+            DateOfBirth = new DateOnly(1990, 1, 1),
+            SocialSecurityNumber = "19900101-1234",
+            IsMale = false
+        };
+        using var created = await host.Client.PostAsJsonAsync(UsersUrl(), request, Token);
+        created.StatusCode.ShouldBe(HttpStatusCode.Created);
+        using var login = await host.Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Auth.Login, UriKind.Relative),
+            new LoginRequest(request.Username, UserPassword),
+            Token);
+        var token = await login.Content.ReadFromJsonAsync<LoginResponse>(Token);
+        host.Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token!.AccessToken);
+
+        // Act
+        using var response = await host.Client.GetAsync(UsersUrl("/me"), Token);
+        var body = await response.Content.ReadAsStringAsync(Token);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        body.ShouldContain("19900101-****");
+        body.ShouldNotContain("199001011234");
+        body.ShouldContain("Anna");
+        body.ShouldContain(companies!.Single().Name);
+        body.ShouldContain(RoleNames.Administrator);
+    }
+
+    [Fact]
+    public async Task AdministratorListsNeverContainTheFullPersonalIdentityNumber()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, Token, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(Token);
+        var (ownCompanyId, administratorRoleId) = await GetReferencesAsync(host.Client);
+        var request = CreateRequest(ownCompanyId, administratorRoleId) with { SocialSecurityNumber = "19900101-1234" };
+        using var created = await host.Client.PostAsJsonAsync(UsersUrl(), request, Token);
+        created.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        // Act
+        var all = await host.Client.GetStringAsync(UsersUrl(), Token);
+
+        // Assert
+        all.ShouldContain("19900101-****");
+        all.ShouldNotContain("199001011234");
+        all.ShouldNotContain("19900101-1234");
+    }
+
+    [Fact]
+    public async Task CreatingAUserWithAMalformedPersonalIdentityNumberIsRejected()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, Token, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(Token);
+        var (ownCompanyId, administratorRoleId) = await GetReferencesAsync(host.Client);
+        var request = CreateRequest(ownCompanyId, administratorRoleId) with { SocialSecurityNumber = "123" };
+
+        // Act
+        using var response = await host.Client.PostAsJsonAsync(UsersUrl(), request, Token);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync(Token)).ShouldContain("SocialSecurityNumber");
+    }
 }

@@ -42,7 +42,7 @@ public sealed class MicrosoftSignInTests(E2EFixture fixture)
         // Assert
         await Expect(page).ToHaveURLAsync(new Regex("/Dashboard$"));
         await Expect(dashboard.Heading).ToBeVisibleAsync();
-        await Expect(dashboard.CurrentUser).ToHaveTextAsync(FakeIdentityProvider.UserName);
+        await Expect(dashboard.CurrentUser).ToHaveTextAsync(E2EFixture.AdminFullName);
         await Expect(dashboard.StatValue("roles")).ToHaveTextAsync(new Regex("^[0-9]+$"));
     }
 
@@ -178,6 +178,6 @@ public sealed class MicrosoftSignInTests(E2EFixture fixture)
         await login.SignInAsync(E2EFixture.AdminUsername, E2EFixture.AdminPassword);
 
         // Assert
-        await Expect(dashboard.CurrentUser).ToHaveTextAsync(E2EFixture.AdminUsername);
+        await Expect(dashboard.CurrentUser).ToHaveTextAsync(E2EFixture.AdminFullName);
     }
 }

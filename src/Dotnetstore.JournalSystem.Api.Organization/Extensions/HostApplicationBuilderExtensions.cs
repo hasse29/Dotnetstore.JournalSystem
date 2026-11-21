@@ -21,6 +21,8 @@ namespace Dotnetstore.JournalSystem.Api.Organization.Extensions;
 
 public static class HostApplicationBuilderExtensions
 {
+    public const string EncryptionConfigurationSection = "Encryption";
+
     public const string DatabaseConnectionName = "journalsystem";
     public const string EntraEnabledConfigurationKey = "Authentication:Entra:Enabled";
     public const string LoginRateLimitPolicy = "login";
@@ -36,6 +38,7 @@ public static class HostApplicationBuilderExtensions
             configureDbContextOptions: options => options.UseSqlServer(OrganizationDataContext.ConfigureSqlServer));
 
         builder.Services.AddSecurity();
+        builder.Services.AddEncryption(options => builder.Configuration.GetSection(EncryptionConfigurationSection).Bind(options));
         builder.Services.AddTokens(options => builder.Configuration.GetSection(TokensConfigurationSection).Bind(options));
 
         builder.Services.TryAddSingleton(TimeProvider.System);
@@ -48,6 +51,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IRoleService, RoleService>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IPersonalIdentityNumberProtector, PersonalIdentityNumberProtector>();
         builder.Services.TryAddSingleton(TimeProvider.System);
         builder.Services.AddScoped<IAuthService, AuthService>();
         builder.Services.AddScoped<IClaimsTransformation, EntraUserClaimsTransformation>();
