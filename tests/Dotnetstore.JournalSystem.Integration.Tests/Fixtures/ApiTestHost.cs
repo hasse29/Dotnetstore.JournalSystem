@@ -48,6 +48,7 @@ internal sealed class ApiTestHost : IAsyncDisposable
             settings["Bootstrap:Admin:Password"] = AdminPassword;
         }
 
+        await TestDatabase.ProvisionAsync(connectionString, cancellationToken);
         var factory = TestHost.Create("Production", settings);
         await factory.Services.InitializeOrganizationDatabaseAsync(cancellationToken);
         await factory.Services.InitializeContactDatabaseAsync(cancellationToken);

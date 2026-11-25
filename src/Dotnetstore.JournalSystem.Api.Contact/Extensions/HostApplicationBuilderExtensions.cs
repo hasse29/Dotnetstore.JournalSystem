@@ -1,5 +1,6 @@
 using Dotnetstore.JournalSystem.Api.Contact.Addresses;
 using Dotnetstore.JournalSystem.Api.Contact.AddressTypes;
+using Dotnetstore.JournalSystem.Api.Contact.Consumers;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddressTypes;
 using Dotnetstore.JournalSystem.Api.Contact.EmailAddresses;
 using Dotnetstore.JournalSystem.Api.Contact.PhoneNumbers;
@@ -37,6 +38,7 @@ public static class HostApplicationBuilderExtensions
 
         builder.Services.AddScoped<IAddressTypeRepository, AddressTypeRepository>();
         builder.Services.AddScoped<IContactUnitOfWork, ContactUnitOfWork>();
+        builder.Services.AddScoped<IOwnCompanyContactCleanup, OwnCompanyContactCleanup>();
         builder.Services.AddScoped<IAddressTypeService, AddressTypeService>();
         builder.Services.AddScoped<IAddressRepository, AddressRepository>();
         builder.Services.AddScoped<IAddressService, AddressService>();

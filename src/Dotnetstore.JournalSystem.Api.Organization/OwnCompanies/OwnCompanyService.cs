@@ -6,7 +6,8 @@ using Dotnetstore.JournalSystem.Shared.Responses.Organization;
 namespace Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
 
 internal sealed class OwnCompanyService(
-    IOrganizationUnitOfWork organizationUnitOfWork) : IOwnCompanyService
+    IOrganizationUnitOfWork organizationUnitOfWork,
+    IOwnCompanyDeletionOutbox deletionOutbox) : IOwnCompanyService
 {
     async Task<IEnumerable<OwnCompanyResponse>> IOwnCompanyService.GetAllAsync(CancellationToken cancellationToken)
     {
@@ -136,17 +137,10 @@ internal sealed class OwnCompanyService(
             return Result.Conflict("The company still has users. Move or delete them first.");
         }
 
-        await organizationUnitOfWork
-            .OwnCompanies
-            .DeleteAsync(id, cancellationToken)
+        await deletionOutbox
+            .DeleteAndPublishAsync(id, cancellationToken)
             .ConfigureAwait(false);
 
-        var result = await organizationUnitOfWork
-            .SaveChangesAsync(cancellationToken)
-            .ConfigureAwait(false);
-
-        return result > 0 ?
-            Result.Success() :
-            Result.Error("Failed to delete the own company.");
+        return Result.Success();
     }
 }
