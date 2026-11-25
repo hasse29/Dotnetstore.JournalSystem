@@ -15,10 +15,10 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
 
     private static Uri Url(string path = "") => new(BasePath + path, UriKind.Relative);
 
-    private static EditRoleRequest CreateRequest(string name = "Administrator") =>
+    private static EditRoleRequest CreateRequest(string name = "Doctor") =>
         new(name, "Description");
 
-    private static async Task<RoleResponse> CreateRoleAsync(HttpClient client, string name = "Administrator")
+    private static async Task<RoleResponse> CreateRoleAsync(HttpClient client, string name = "Doctor")
     {
         using var response = await client.PostAsJsonAsync(Url(), CreateRequest(name), TestContext.Current.CancellationToken);
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
@@ -33,10 +33,10 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     }
 
     [Fact]
-    public async Task GetAllReturnsEmptyListWhenNoRolesExist()
+    public async Task GetAllReturnsOnlyTheAdministratorRoleWhenNoRolesAreCreated()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url(), TestContext.Current.CancellationToken);
@@ -44,14 +44,14 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        items.ShouldNotBeNull().ShouldBeEmpty();
+        items.ShouldNotBeNull().ShouldHaveSingleItem().Name.ShouldBe(RoleNames.Administrator);
     }
 
     [Fact]
     public async Task GetAllReturnsAllCreatedRoles()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         await CreateRoleAsync(host.Client, "A");
         await CreateRoleAsync(host.Client, "B");
 
@@ -61,14 +61,14 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        items.ShouldNotBeNull().Select(x => x.Name).ShouldBe(["A", "B"], ignoreOrder: true);
+        items.ShouldNotBeNull().Select(x => x.Name).ShouldBe([RoleNames.Administrator, "A", "B"], ignoreOrder: true);
     }
 
     [Fact]
     public async Task GetByIdReturnsRole()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateRoleAsync(host.Client);
 
         // Act
@@ -84,7 +84,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url($"/{Guid.NewGuid()}"), TestContext.Current.CancellationToken);
@@ -97,7 +97,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForRouteThatIsNotAGuid()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url("/not-a-guid"), TestContext.Current.CancellationToken);
@@ -110,7 +110,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsCreatedWithLocationAndBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(), TestContext.Current.CancellationToken);
@@ -120,7 +120,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.Created);
         role.ShouldNotBeNull();
         role.Id.ShouldNotBe(Guid.Empty);
-        role.Name.ShouldBe("Administrator");
+        role.Name.ShouldBe("Doctor");
         role.Description.ShouldBe("Description");
         response.Headers.Location.ShouldNotBeNull().AbsolutePath.ShouldEndWith($"{BasePath}/{role.Id}");
     }
@@ -129,7 +129,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task CreatedRoleCanBeFetchedAtLocationHeader()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var created = await host.Client.PostAsJsonAsync(Url(), CreateRequest(), TestContext.Current.CancellationToken);
 
         // Act
@@ -145,7 +145,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemForMissingName(string name)
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(name), TestContext.Current.CancellationToken);
@@ -160,7 +160,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemAndStoresNothingForTooLongName()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(new string('x', 101)), TestContext.Current.CancellationToken);
@@ -168,14 +168,14 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
-        items.ShouldNotBeNull().ShouldBeEmpty();
+        items.ShouldNotBeNull().ShouldHaveSingleItem().Name.ShouldBe(RoleNames.Administrator);
     }
 
     [Fact]
     public async Task CreateReturnsBadRequestForEmptyBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -189,7 +189,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForMalformedJson()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent("{ not json", System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -203,7 +203,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsUpdatedRole()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateRoleAsync(host.Client);
 
         // Act
@@ -222,7 +222,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PutAsJsonAsync(Url($"/{Guid.NewGuid()}"), CreateRequest(), TestContext.Current.CancellationToken);
@@ -235,7 +235,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsValidationProblemAndKeepsStoredValuesForInvalidRequest()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateRoleAsync(host.Client, "Original");
 
         // Act
@@ -251,7 +251,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNoContentAndRemovesRole()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateRoleAsync(host.Client);
 
         // Act
@@ -267,7 +267,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNotFoundAndKeepsDataForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         await CreateRoleAsync(host.Client);
 
         // Act
@@ -276,14 +276,74 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        items.ShouldNotBeNull().ShouldHaveSingleItem();
+        items.ShouldNotBeNull().Select(x => x.Name).ShouldBe([RoleNames.Administrator, "Doctor"], ignoreOrder: true);
+    }
+
+    [Theory]
+    [InlineData("GET", "")]
+    [InlineData("GET", "/{id}")]
+    [InlineData("POST", "")]
+    [InlineData("PUT", "/{id}")]
+    [InlineData("DELETE", "/{id}")]
+    public async Task AnonymousCallersAreUnauthorized(string method, string path)
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        using var request = new HttpRequestMessage(new HttpMethod(method), Url(path.Replace("{id}", Guid.NewGuid().ToString(), StringComparison.Ordinal)));
+        request.Content = JsonContent.Create(CreateRequest());
+
+        // Act
+        using var response = await host.Client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task NonAdministratorsCanReadRoles()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
+        var created = await CreateRoleAsync(host.Client, "Readable");
+        await host.SignInAsNewNonAdminAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        using var all = await host.Client.GetAsync(Url(), TestContext.Current.CancellationToken);
+        using var one = await host.Client.GetAsync(Url($"/{created.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        all.StatusCode.ShouldBe(HttpStatusCode.OK);
+        one.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task NonAdministratorsCannotChangeRoles()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
+        var created = await CreateRoleAsync(host.Client, "Original");
+        await host.SignInAsNewNonAdminAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        using var create = await host.Client.PostAsJsonAsync(Url(), CreateRequest("Sneaky"), TestContext.Current.CancellationToken);
+        using var update = await host.Client.PutAsJsonAsync(Url($"/{created.Id}"), CreateRequest("Renamed"), TestContext.Current.CancellationToken);
+        using var delete = await host.Client.DeleteAsync(Url($"/{created.Id}"), TestContext.Current.CancellationToken);
+        var items = await host.Client.GetFromJsonAsync<RoleResponse[]>(Url(), TestContext.Current.CancellationToken);
+
+        // Assert
+        create.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        update.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        delete.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        var names = items.ShouldNotBeNull().Select(x => x.Name).ToArray();
+        names.ShouldContain("Original");
+        names.ShouldNotContain("Sneaky");
     }
 
     [Fact]
     public async Task UnsupportedMethodReturnsMethodNotAllowed()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url($"/{Guid.NewGuid()}"), CreateRequest(), TestContext.Current.CancellationToken);

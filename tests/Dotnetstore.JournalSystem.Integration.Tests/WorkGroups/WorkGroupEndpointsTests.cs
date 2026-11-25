@@ -36,7 +36,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task GetAllReturnsEmptyListWhenNoWorkGroupsExist()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url(), TestContext.Current.CancellationToken);
@@ -51,7 +51,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task GetAllReturnsAllCreatedWorkGroups()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         await CreateWorkGroupAsync(host.Client, "A");
         await CreateWorkGroupAsync(host.Client, "B");
 
@@ -68,7 +68,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsWorkGroup()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateWorkGroupAsync(host.Client);
 
         // Act
@@ -84,7 +84,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url($"/{Guid.NewGuid()}"), TestContext.Current.CancellationToken);
@@ -97,7 +97,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForRouteThatIsNotAGuid()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url("/not-a-guid"), TestContext.Current.CancellationToken);
@@ -110,7 +110,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsCreatedWithLocationAndBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(), TestContext.Current.CancellationToken);
@@ -129,7 +129,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task CreatedWorkGroupCanBeFetchedAtLocationHeader()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var created = await host.Client.PostAsJsonAsync(Url(), CreateRequest(), TestContext.Current.CancellationToken);
 
         // Act
@@ -145,7 +145,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemForMissingName(string name)
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(name), TestContext.Current.CancellationToken);
@@ -160,7 +160,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemAndStoresNothingForTooLongName()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(new string('x', 101)), TestContext.Current.CancellationToken);
@@ -175,7 +175,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForEmptyBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -189,7 +189,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForMalformedJson()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent("{ not json", System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -203,7 +203,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsUpdatedWorkGroup()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateWorkGroupAsync(host.Client);
 
         // Act
@@ -222,7 +222,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PutAsJsonAsync(Url($"/{Guid.NewGuid()}"), CreateRequest(), TestContext.Current.CancellationToken);
@@ -235,7 +235,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsValidationProblemAndKeepsStoredValuesForInvalidRequest()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateWorkGroupAsync(host.Client, "Original");
 
         // Act
@@ -251,7 +251,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNoContentAndRemovesWorkGroup()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateWorkGroupAsync(host.Client);
 
         // Act
@@ -267,7 +267,7 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNotFoundAndKeepsDataForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         await CreateWorkGroupAsync(host.Client);
 
         // Act
@@ -279,11 +279,71 @@ public sealed class WorkGroupEndpointsTests(SqlServerFixture fixture)
         items.ShouldNotBeNull().ShouldHaveSingleItem();
     }
 
+    [Theory]
+    [InlineData("GET", "")]
+    [InlineData("GET", "/{id}")]
+    [InlineData("POST", "")]
+    [InlineData("PUT", "/{id}")]
+    [InlineData("DELETE", "/{id}")]
+    public async Task AnonymousCallersAreUnauthorized(string method, string path)
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        using var request = new HttpRequestMessage(new HttpMethod(method), Url(path.Replace("{id}", Guid.NewGuid().ToString(), StringComparison.Ordinal)));
+        request.Content = JsonContent.Create(CreateRequest());
+
+        // Act
+        using var response = await host.Client.SendAsync(request, TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task NonAdministratorsCanReadWorkGroups()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
+        var created = await CreateWorkGroupAsync(host.Client, "Readable");
+        await host.SignInAsNewNonAdminAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        using var all = await host.Client.GetAsync(Url(), TestContext.Current.CancellationToken);
+        using var one = await host.Client.GetAsync(Url($"/{created.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        all.StatusCode.ShouldBe(HttpStatusCode.OK);
+        one.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task NonAdministratorsCannotChangeWorkGroups()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
+        var created = await CreateWorkGroupAsync(host.Client, "Original");
+        await host.SignInAsNewNonAdminAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        using var create = await host.Client.PostAsJsonAsync(Url(), CreateRequest("Sneaky"), TestContext.Current.CancellationToken);
+        using var update = await host.Client.PutAsJsonAsync(Url($"/{created.Id}"), CreateRequest("Renamed"), TestContext.Current.CancellationToken);
+        using var delete = await host.Client.DeleteAsync(Url($"/{created.Id}"), TestContext.Current.CancellationToken);
+        var items = await host.Client.GetFromJsonAsync<WorkGroupResponse[]>(Url(), TestContext.Current.CancellationToken);
+
+        // Assert
+        create.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        update.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        delete.StatusCode.ShouldBe(HttpStatusCode.Forbidden);
+        var names = items.ShouldNotBeNull().Select(x => x.Name).ToArray();
+        names.ShouldContain("Original");
+        names.ShouldNotContain("Sneaky");
+    }
+
     [Fact]
     public async Task UnsupportedMethodReturnsMethodNotAllowed()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url($"/{Guid.NewGuid()}"), CreateRequest(), TestContext.Current.CancellationToken);
