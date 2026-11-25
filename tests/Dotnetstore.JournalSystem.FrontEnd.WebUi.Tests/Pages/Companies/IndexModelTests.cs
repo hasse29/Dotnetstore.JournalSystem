@@ -10,8 +10,51 @@ namespace Dotnetstore.JournalSystem.FrontEnd.WebUi.Tests.Pages.Companies;
 
 public sealed class IndexModelTests
 {
+    private static OwnCompanyResponse Company(string name, bool isSystem = false) =>
+        new(Guid.NewGuid(), name, null, null, null, null, null, isSystem);
+
+    private static ApiResult<OwnCompanyResponse> Saved(HttpStatusCode status) =>
+        ApiResult.Create<OwnCompanyResponse>(status, status == HttpStatusCode.OK ? Company("Saved AB") : null);
+
     private static ApiResult Conflict(string detail) =>
         ApiResult.Create(HttpStatusCode.Conflict, new ApiProblem(null, detail, new Dictionary<string, string[]>()));
+
+    private sealed class FakeOwnCompanyClient : IOwnCompanyClient
+    {
+        public Func<Task<ApiResult<IReadOnlyList<OwnCompanyResponse>>>> List { get; init; } =
+            () => Task.FromResult(ApiResult.Create<IReadOnlyList<OwnCompanyResponse>>(HttpStatusCode.OK, []));
+
+        public Func<ApiResult<OwnCompanyResponse>> Write { get; init; } = () => Saved(HttpStatusCode.OK);
+
+        public Func<ApiResult> Remove { get; init; } = () => ApiResult.Create(HttpStatusCode.NoContent);
+
+        public EditOwnCompanyRequest? Sent { get; private set; }
+
+        public Guid? DeletedId { get; private set; }
+
+        public Task<ApiResult<IReadOnlyList<OwnCompanyResponse>>> GetAllAsync(CancellationToken cancellationToken = default) => List();
+
+        public Task<ApiResult<OwnCompanyResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<ApiResult<OwnCompanyResponse>> CreateAsync(EditOwnCompanyRequest request, CancellationToken cancellationToken = default)
+        {
+            Sent = request;
+            return Task.FromResult(Write());
+        }
+
+        public Task<ApiResult<OwnCompanyResponse>> UpdateAsync(Guid id, EditOwnCompanyRequest request, CancellationToken cancellationToken = default)
+        {
+            Sent = request;
+            return Task.FromResult(Write());
+        }
+
+        public Task<ApiResult> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        {
+            DeletedId = id;
+            return Task.FromResult(Remove());
+        }
+    }
 
     private static FakeOwnCompanyClient Listing(HttpStatusCode status, params OwnCompanyResponse[] companies) =>
         new() { List = () => Task.FromResult(ApiResult.Create<IReadOnlyList<OwnCompanyResponse>>(status, companies)) };
@@ -20,7 +63,7 @@ public sealed class IndexModelTests
     public async Task ListsAllCompaniesSortedByName()
     {
         // Arrange
-        var model = new IndexModel(Listing(HttpStatusCode.OK, FakeOwnCompanyClient.Company("Zeta AB"), FakeOwnCompanyClient.Company("alpha AB"), FakeOwnCompanyClient.Company("Beta AB")));
+        var model = new IndexModel(Listing(HttpStatusCode.OK, Company("Zeta AB"), Company("alpha AB"), Company("Beta AB")));
 
         // Act
         var result = await model.OnGetAsync(TestContext.Current.CancellationToken);
@@ -167,13 +210,13 @@ public sealed class IndexModelTests
     public async Task UpdateReportsACompanyThatNoLongerExists()
     {
         // Arrange
-        var model = new IndexModel(new FakeOwnCompanyClient { Write = () => FakeOwnCompanyClient.Saved(HttpStatusCode.NotFound) });
+        var model = new IndexModel(new FakeOwnCompanyClient { Write = () => Saved(HttpStatusCode.NotFound) });
 
         // Act
         await model.OnPostUpdateAsync(Guid.NewGuid(), new CompanyInput { Name = "Renamed AB" }, TestContext.Current.CancellationToken);
 
         // Assert
-        model.ErrorMessage.ShouldBe("That item no longer exists.");
+        model.ErrorMessage.ShouldBe("That company no longer exists.");
     }
 
     [Fact]

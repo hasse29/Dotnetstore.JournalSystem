@@ -9,8 +9,4 @@ public sealed record OwnCompanyResponse(
     Uri? WebsiteUrl,
     string? CorporateNumber,
     string? TaxId,
-    bool IsSystem,
-    DateTime? CreatedDate = null,
-    string? CreatedByName = null,
-    DateTime? LastUpdatedDate = null,
-    string? LastUpdatedByName = null);
+    bool IsSystem);
