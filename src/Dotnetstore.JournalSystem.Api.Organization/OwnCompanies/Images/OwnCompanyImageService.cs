@@ -171,7 +171,9 @@ internal sealed class OwnCompanyImageService(
 
     private static string CleanFileName(string? fileName)
     {
-        var name = Path.GetFileName(fileName?.Trim());
+        // Not Path.GetFileName: on Linux it keeps a Windows client's directories, as '\' is no separator there.
+        var path = fileName?.Trim() ?? string.Empty;
+        var name = path[(path.LastIndexOfAny(['/', '\\']) + 1)..];
 
         if (string.IsNullOrEmpty(name))
         {

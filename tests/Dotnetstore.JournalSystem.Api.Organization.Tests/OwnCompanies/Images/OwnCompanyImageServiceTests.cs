@@ -59,6 +59,24 @@ public sealed class OwnCompanyImageServiceTests : IDisposable
         stored.Content.ShouldBe(Png);
     }
 
+    [Theory]
+    [InlineData(@"C:\pictures\logo.png", "logo.png")]
+    [InlineData("/home/anna/logo.png", "logo.png")]
+    [InlineData(@"..\../logo.png", "logo.png")]
+    [InlineData("pictures/", "image")]
+    [InlineData("   ", "image")]
+    public async Task SetLogoKeepsOnlyTheFileNameOnEveryPlatform(string fileName, string expected)
+    {
+        // Arrange
+        var companyId = await SeedCompanyAsync();
+
+        // Act
+        var result = await _service.SetLogoAsync(companyId, fileName, Png, null, Token);
+
+        // Assert
+        result.Value.FileName.ShouldBe(expected);
+    }
+
     [Fact]
     public async Task SetLogoReplacesTheExistingLogo()
     {
