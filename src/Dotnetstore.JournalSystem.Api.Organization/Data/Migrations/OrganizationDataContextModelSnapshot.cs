@@ -16,7 +16,7 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261121103946_AddPersonDetails";
+    public override string LastMigrationId => "20261125085829_AddOwnCompanyImages";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -72,6 +72,51 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
                 b.HasIndex("Status");
 
                 b.ToTable("AccessRequest", "Organization");
+            });
+
+        modelBuilder.Entity("Dotnetstore.JournalSystem.Api.Organization.OwnCompanies.Images.OwnCompanyImage", b =>
+            {
+                b.Property<Guid>("Id")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<byte[]>("Content")
+                    .IsRequired()
+                    .HasColumnType("varbinary(max)");
+
+                b.Property<string>("ContentType")
+                    .IsRequired()
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
+
+                b.Property<Guid?>("CreatedBy")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<DateTime>("CreatedDate")
+                    .HasColumnType("datetime2");
+
+                b.Property<string>("FileName")
+                    .IsRequired()
+                    .HasMaxLength(255)
+                    .HasColumnType("nvarchar(255)");
+
+                b.Property<bool>("IsLogo")
+                    .HasColumnType("bit");
+
+                b.Property<Guid>("OwnCompanyId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<int>("SizeBytes")
+                    .HasColumnType("int");
+
+                b.HasKey("Id");
+
+                b.HasIndex(new[] { "OwnCompanyId" }, "IX_OwnCompanyImage_Logo")
+                    .IsUnique()
+                    .HasFilter("[IsLogo] = 1");
+
+                b.HasIndex(new[] { "OwnCompanyId" }, "IX_OwnCompanyImage_OwnCompanyId");
+
+                b.ToTable("OwnCompanyImage", "Organization");
             });
 
         modelBuilder.Entity("Dotnetstore.JournalSystem.Api.Organization.OwnCompanies.OwnCompany", b =>
@@ -358,6 +403,15 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
                 b.HasKey("Id");
 
                 b.ToTable("WorkGroup", "Organization");
+            });
+
+        modelBuilder.Entity("Dotnetstore.JournalSystem.Api.Organization.OwnCompanies.Images.OwnCompanyImage", b =>
+            {
+                b.HasOne("Dotnetstore.JournalSystem.Api.Organization.OwnCompanies.OwnCompany", null)
+                    .WithMany()
+                    .HasForeignKey("OwnCompanyId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
             });
 #pragma warning restore 612, 618
     }

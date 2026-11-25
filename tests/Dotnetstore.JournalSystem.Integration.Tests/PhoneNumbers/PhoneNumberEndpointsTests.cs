@@ -46,7 +46,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task GetAllReturnsEmptyListWhenNoPhoneNumbersExist()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url(), TestContext.Current.CancellationToken);
@@ -61,7 +61,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task GetAllReturnsAllCreatedPhoneNumbers()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreatePhoneNumberTypeAsync(host.Client);
         await CreatePhoneNumberAsync(host.Client, typeId, "+46 70 000 00 01");
         await CreatePhoneNumberAsync(host.Client, typeId, "+46 70 000 00 02");
@@ -79,7 +79,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsPhoneNumber()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreatePhoneNumberAsync(host.Client, await CreatePhoneNumberTypeAsync(host.Client));
 
         // Act
@@ -95,7 +95,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url($"/{Guid.NewGuid()}"), TestContext.Current.CancellationToken);
@@ -108,7 +108,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForRouteThatIsNotAGuid()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url("/not-a-guid"), TestContext.Current.CancellationToken);
@@ -121,7 +121,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsCreatedWithLocationAndBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreatePhoneNumberTypeAsync(host.Client);
 
         // Act
@@ -142,7 +142,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task CreatedPhoneNumberCanBeFetchedAtLocationHeader()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var created = await host.Client.PostAsJsonAsync(Url(), CreateRequest(await CreatePhoneNumberTypeAsync(host.Client)), TestContext.Current.CancellationToken);
 
         // Act
@@ -160,7 +160,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemForMissingOrInvalidAddress(string number)
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(Guid.NewGuid(), number), TestContext.Current.CancellationToken);
@@ -175,7 +175,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemAndStoresNothingForTooLongNumber()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreatePhoneNumberTypeAsync(host.Client);
 
         // Act
@@ -191,7 +191,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemForEmptyReferenceIds()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var request = new EditPhoneNumberRequest(Guid.Empty, Guid.Empty, "+46 70 123 45 67");
 
         // Act
@@ -208,7 +208,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemAndStoresNothingForUnknownPhoneNumberType()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(Guid.NewGuid()), TestContext.Current.CancellationToken);
@@ -225,7 +225,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForEmptyBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -239,7 +239,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForMalformedJson()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent("{ not json", System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -253,7 +253,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsUpdatedPhoneNumber()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreatePhoneNumberTypeAsync(host.Client);
         var created = await CreatePhoneNumberAsync(host.Client, typeId);
 
@@ -273,7 +273,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreatePhoneNumberTypeAsync(host.Client);
 
         // Act
@@ -287,7 +287,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsValidationProblemAndKeepsStoredValuesForInvalidRequest()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreatePhoneNumberTypeAsync(host.Client);
         var created = await CreatePhoneNumberAsync(host.Client, typeId, "+46 70 444 44 44");
 
@@ -304,7 +304,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsValidationProblemAndKeepsStoredValuesForUnknownPhoneNumberType()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreatePhoneNumberAsync(host.Client, await CreatePhoneNumberTypeAsync(host.Client), "+46 70 444 44 44");
 
         // Act
@@ -320,7 +320,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNoContentAndRemovesPhoneNumber()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreatePhoneNumberAsync(host.Client, await CreatePhoneNumberTypeAsync(host.Client));
 
         // Act
@@ -336,7 +336,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNotFoundAndKeepsDataForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         await CreatePhoneNumberAsync(host.Client, await CreatePhoneNumberTypeAsync(host.Client));
 
         // Act
@@ -352,7 +352,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task UnsupportedMethodReturnsMethodNotAllowed()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url($"/{Guid.NewGuid()}"), CreateRequest(Guid.NewGuid()), TestContext.Current.CancellationToken);
@@ -365,7 +365,7 @@ public sealed class PhoneNumberEndpointsTests(SqlServerFixture fixture)
     public async Task CreateStoresTheNumberEncryptedAndStillReturnsPlainText()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreatePhoneNumberTypeAsync(host.Client);
 
         // Act

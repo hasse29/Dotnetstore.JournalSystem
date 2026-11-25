@@ -1,0 +1,39 @@
+@page "{id:guid}"
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies.DetailsModel
+@{
+    var company = Model.Company;
+    ViewData["Title"] = company?.Name ?? "Own company";
+}
+
+<p><a asp-page="/Companies/Index" data-testid="company-back">← All companies</a></p>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success" role="status" data-testid="company-message">@Model.Message</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert" data-testid="company-error">@Model.ErrorMessage</div>
+}
+
+@if (company is null)
+{
+    <div class="alert alert-danger" role="alert" data-testid="company-unavailable">
+        The API could not be reached. The company is not available right now.
+    </div>
+}
+else
+{
+    <partial name="_CompanyHeader" model="Model" />
+    <partial name="_CompanyDetails" model="Model" />
+    <partial name="_CompanyPhotos" model="Model" />
+    <partial name="_CompanyAddresses" model="Model" />
+    <partial name="_CompanyEmails" model="Model" />
+    <partial name="_CompanyPhones" model="Model" />
+    @if (Model.CanEdit)
+    {
+        <partial name="_CompanyUsers" model="Model" />
+    }
+    <partial name="_CompanyAudit" model="company" />
+}

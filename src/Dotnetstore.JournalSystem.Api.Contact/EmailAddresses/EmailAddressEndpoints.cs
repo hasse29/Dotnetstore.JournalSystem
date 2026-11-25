@@ -17,19 +17,25 @@ internal static class EmailAddressEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var group = app
+        var reads = app
             .MapGroup(string.Empty)
-            .WithTags("Email addresses");
+            .WithTags("Email addresses")
+            .RequireAuthorization(AuthPolicies.Authenticated);
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.EmailAddresses.GetAll, GetAllAsync)
             .WithName("GetEmailAddresses")
             .WithSummary("Gets all email addresses.");
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.EmailAddresses.GetById, GetByIdAsync)
             .WithName(GetByIdName)
             .WithSummary("Gets an email address by id.");
+
+        var group = app
+            .MapGroup(string.Empty)
+            .WithTags("Email addresses")
+            .RequireAuthorization(AuthPolicies.Administrator);
 
         group
             .MapPost(ApiEndpoints.Contact.EmailAddresses.Create, CreateAsync)
@@ -50,12 +56,13 @@ internal static class EmailAddressEndpoints
     }
 
     private static async Task<Ok<EmailAddressResponse[]>> GetAllAsync(
+        Guid? objectId,
         IEmailAddressService service,
         CancellationToken cancellationToken)
     {
-        var items = await service
-            .GetAllAsync(cancellationToken)
-            .ConfigureAwait(false);
+        var items = objectId is { } id
+            ? await service.GetByObjectIdAsync(id, cancellationToken).ConfigureAwait(false)
+            : await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
 
         return TypedResults.Ok(items.ToArray());
     }

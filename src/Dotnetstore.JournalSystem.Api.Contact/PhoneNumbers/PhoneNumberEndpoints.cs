@@ -17,19 +17,25 @@ internal static class PhoneNumberEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var group = app
+        var reads = app
             .MapGroup(string.Empty)
-            .WithTags("Phone numbers");
+            .WithTags("Phone numbers")
+            .RequireAuthorization(AuthPolicies.Authenticated);
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.PhoneNumbers.GetAll, GetAllAsync)
             .WithName("GetPhoneNumbers")
             .WithSummary("Gets all phone numbers.");
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.PhoneNumbers.GetById, GetByIdAsync)
             .WithName(GetByIdName)
             .WithSummary("Gets a phone number by id.");
+
+        var group = app
+            .MapGroup(string.Empty)
+            .WithTags("Phone numbers")
+            .RequireAuthorization(AuthPolicies.Administrator);
 
         group
             .MapPost(ApiEndpoints.Contact.PhoneNumbers.Create, CreateAsync)
@@ -50,12 +56,13 @@ internal static class PhoneNumberEndpoints
     }
 
     private static async Task<Ok<PhoneNumberResponse[]>> GetAllAsync(
+        Guid? objectId,
         IPhoneNumberService service,
         CancellationToken cancellationToken)
     {
-        var items = await service
-            .GetAllAsync(cancellationToken)
-            .ConfigureAwait(false);
+        var items = objectId is { } id
+            ? await service.GetByObjectIdAsync(id, cancellationToken).ConfigureAwait(false)
+            : await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
 
         return TypedResults.Ok(items.ToArray());
     }

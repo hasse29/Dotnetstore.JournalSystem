@@ -17,19 +17,25 @@ internal static class AddressEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var group = app
+        var reads = app
             .MapGroup(string.Empty)
-            .WithTags("Addresses");
+            .WithTags("Addresses")
+            .RequireAuthorization(AuthPolicies.Authenticated);
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.Addresses.GetAll, GetAllAsync)
             .WithName("GetAddresses")
             .WithSummary("Gets all addresses.");
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.Addresses.GetById, GetByIdAsync)
             .WithName(GetByIdName)
             .WithSummary("Gets an address by id.");
+
+        var group = app
+            .MapGroup(string.Empty)
+            .WithTags("Addresses")
+            .RequireAuthorization(AuthPolicies.Administrator);
 
         group
             .MapPost(ApiEndpoints.Contact.Addresses.Create, CreateAsync)
@@ -50,12 +56,13 @@ internal static class AddressEndpoints
     }
 
     private static async Task<Ok<AddressResponse[]>> GetAllAsync(
+        Guid? objectId,
         IAddressService service,
         CancellationToken cancellationToken)
     {
-        var items = await service
-            .GetAllAsync(cancellationToken)
-            .ConfigureAwait(false);
+        var items = objectId is { } id
+            ? await service.GetByObjectIdAsync(id, cancellationToken).ConfigureAwait(false)
+            : await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
 
         return TypedResults.Ok(items.ToArray());
     }

@@ -234,4 +234,36 @@ public sealed class AddressRepositoryTests : IDisposable
         // Assert
         result.ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsOnlyTheRowsOfThatObject()
+    {
+        // Arrange
+        IAddressRepository repository = _repository;
+        var wanted = Guid.NewGuid();
+        await SeedAsync(
+            AddressTestData.Create(Guid.NewGuid(), "Wanted Street 1", objectId: wanted),
+            AddressTestData.Create(Guid.NewGuid(), "Other Street 2", objectId: Guid.NewGuid()));
+
+        // Act
+        var result = await repository.GetByObjectIdAsync(wanted, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldHaveSingleItem().Street1.ShouldBe("Wanted Street 1");
+        _context.ChangeTracker.Entries().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsEmptyForAnObjectWithoutRows()
+    {
+        // Arrange
+        IAddressRepository repository = _repository;
+        await SeedAsync(AddressTestData.Create(Guid.NewGuid(), "Wanted Street 1", objectId: Guid.NewGuid()));
+
+        // Act
+        var result = await repository.GetByObjectIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
 }

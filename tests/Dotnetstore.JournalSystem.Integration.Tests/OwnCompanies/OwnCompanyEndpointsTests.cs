@@ -25,6 +25,10 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
         return (await response.Content.ReadFromJsonAsync<OwnCompanyResponse>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
     }
 
+    // Only a single fetched company carries audit values.
+    private static OwnCompanyResponse WithoutAudit(OwnCompanyResponse company) =>
+        company with { CreatedDate = null, CreatedByName = null, LastUpdatedDate = null, LastUpdatedByName = null };
+
     private static async Task<JsonElement> ReadErrorsAsync(HttpResponseMessage response)
     {
         var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
@@ -80,7 +84,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        company.ShouldBe(created);
+        WithoutAudit(company.ShouldNotBeNull()).ShouldBe(created);
+        company.CreatedDate.ShouldNotBeNull();
     }
 
     [Fact]
@@ -227,7 +232,8 @@ public sealed class OwnCompanyEndpointsTests(SqlServerFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         updated.ShouldNotBeNull().Id.ShouldBe(created.Id);
         updated.Name.ShouldBe("Renamed AB");
-        fetched.ShouldBe(updated);
+        WithoutAudit(fetched.ShouldNotBeNull()).ShouldBe(updated);
+        fetched.LastUpdatedByName.ShouldBe("System Administrator");
     }
 
     [Fact]

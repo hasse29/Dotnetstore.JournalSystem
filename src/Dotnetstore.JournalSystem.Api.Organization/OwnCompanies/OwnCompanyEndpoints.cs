@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Ardalis.Result;
 using Dotnetstore.JournalSystem.Api.Organization.Authentication;
 using Dotnetstore.JournalSystem.Shared.Constants;
@@ -86,6 +87,7 @@ internal static class OwnCompanyEndpoints
 
     private static async Task<Results<CreatedAtRoute<OwnCompanyResponse>, ValidationProblem, ProblemHttpResult>> CreateAsync(
         EditOwnCompanyRequest? request,
+        ClaimsPrincipal principal,
         IOwnCompanyService service,
         CancellationToken cancellationToken)
     {
@@ -96,7 +98,7 @@ internal static class OwnCompanyEndpoints
         }
 
         var result = await service
-            .CreateAsync(request!, null, cancellationToken)
+            .CreateAsync(request!, principal.GetUserId(), cancellationToken)
             .ConfigureAwait(false);
 
         return result.IsSuccess
@@ -107,6 +109,7 @@ internal static class OwnCompanyEndpoints
     private static async Task<Results<Ok<OwnCompanyResponse>, NotFound, ValidationProblem, ProblemHttpResult>> UpdateAsync(
         Guid id,
         EditOwnCompanyRequest? request,
+        ClaimsPrincipal principal,
         IOwnCompanyService service,
         CancellationToken cancellationToken)
     {
@@ -117,7 +120,7 @@ internal static class OwnCompanyEndpoints
         }
 
         var result = await service
-            .UpdateAsync(id, request!, null, cancellationToken)
+            .UpdateAsync(id, request!, principal.GetUserId(), cancellationToken)
             .ConfigureAwait(false);
 
         return result.Status switch

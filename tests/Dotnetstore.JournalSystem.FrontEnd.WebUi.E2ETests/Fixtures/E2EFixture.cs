@@ -162,7 +162,7 @@ public sealed class E2EFixture : IAsyncLifetime
 
         using var userResponse = await client.PostAsJsonAsync(
             new Uri(ApiEndpoints.Organization.Users.Create, UriKind.Relative),
-            new CreateUserRequest("Test", null, "Person", username, companies![0].Id, role.Id, AuthProvider.Local, UserPassword));
+            new CreateUserRequest("Test", null, "Person", username, companies!.Single(x => x.Name == "Test AB").Id, role.Id, AuthProvider.Local, UserPassword));
         userResponse.EnsureSuccessStatusCode();
 
         return username;
@@ -238,11 +238,14 @@ public sealed class E2EFixture : IAsyncLifetime
     private static async Task SeedBootstrapAdminAsync(WebApplicationFactory<Host.Program> api)
     {
         var seedPath = Path.Combine(Path.GetTempPath(), $"journalsystem-seed-{Guid.NewGuid():N}.json");
-        await File.WriteAllTextAsync(seedPath, """{"ownCompanies":[{"name":"Test AB"}]}""");
+        await File.WriteAllTextAsync(
+            seedPath,
+            """{"ownCompanies":[{"name":"Test AB"}],"addressTypes":[{"name":"Work"}],"emailAddressTypes":[{"name":"Work"}],"phoneNumberTypes":[{"name":"Work"}]}""");
 
         try
         {
             await api.Services.SeedOrganizationDataAsync([seedPath], CancellationToken.None);
+            await api.Services.SeedContactDataAsync([seedPath], CancellationToken.None);
         }
         finally
         {

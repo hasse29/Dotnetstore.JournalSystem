@@ -20,6 +20,16 @@ internal sealed class PhoneNumberService(
         return items.Select(x => x.Decrypt(encryption).ToPhoneNumberResponse());
     }
 
+    async Task<IEnumerable<PhoneNumberResponse>> IPhoneNumberService.GetByObjectIdAsync(Guid objectId, CancellationToken cancellationToken)
+    {
+        var items = await contactUnitOfWork
+            .PhoneNumbers
+            .GetByObjectIdAsync(objectId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return items.Select(x => x.Decrypt(encryption).ToPhoneNumberResponse());
+    }
+
     async ValueTask<Result<PhoneNumberResponse>> IPhoneNumberService.GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var phoneNumber = await contactUnitOfWork

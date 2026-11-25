@@ -1,0 +1,51 @@
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies.DetailsModel
+@{
+    var company = Model.Company!;
+}
+
+<section class="card" aria-labelledby="details-heading">
+    <div class="card-header">
+        <h2 id="details-heading">Details</h2>
+        @if (Model.CanEdit)
+        {
+            <div class="row-actions">
+                <button type="button" class="btn btn-secondary" data-dialog-open="company-edit-dialog" data-testid="company-edit">Edit</button>
+                @if (!company.IsSystem)
+                {
+                    <form method="post" asp-page="/Companies/Details" asp-page-handler="Delete" asp-route-id="@company.Id" data-confirm="Delete @company.Name? This cannot be undone.">
+                        <button type="submit" class="btn btn-secondary btn-danger" data-testid="company-delete">Delete</button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+    <dl class="details">
+        <dt>Description</dt>
+        <dd data-testid="details-description">@(company.Description ?? "–")</dd>
+        <dt>Corporate number</dt>
+        <dd data-testid="details-corporate-number">@(company.CorporateNumber ?? "–")</dd>
+        <dt>Tax ID</dt>
+        <dd data-testid="details-tax-id">@(company.TaxId ?? "–")</dd>
+        <dt>Website</dt>
+        <dd data-testid="details-website">@(company.WebsiteUrl?.ToString() ?? "–")</dd>
+    </dl>
+</section>
+
+@if (Model.CanEdit)
+{
+    <dialog class="modal" id="company-edit-dialog" aria-labelledby="company-edit-title">
+        <form method="post" asp-page="/Companies/Details" asp-page-handler="Update" asp-route-id="@company.Id">
+            <div class="modal-header">
+                <h2 id="company-edit-title">Edit @company.Name</h2>
+                <button type="button" class="icon-button" data-dialog-close aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <partial name="_CompanyFields" model="company" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+                <button type="submit" class="btn btn-primary" data-testid="company-save">Save</button>
+            </div>
+        </form>
+    </dialog>
+}

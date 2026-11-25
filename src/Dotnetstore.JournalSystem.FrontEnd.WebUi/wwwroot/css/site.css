@@ -234,3 +234,21 @@ body.admin { display: flex; min-height: 100vh; }
 .modal-body { padding: 1.25rem; overflow-y: auto; }
 .modal-body .form-grid { grid-template-columns: 1fr; gap: .85rem; }
 .modal-footer { display: flex; justify-content: flex-end; gap: .5rem; padding: 1rem 1.25rem; border-top: 1px solid var(--border); }
+
+/* Company details */
+.company-header { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: flex-start; margin-bottom: 1.5rem; }
+.company-logo { width: 96px; height: 96px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+.company-logo img { width: 100%; height: 100%; object-fit: contain; }
+.company-logo-placeholder { font-size: 2.5rem; font-weight: 700; color: var(--muted); }
+.company-title { flex: 1 1 14rem; min-width: 0; }
+.card-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; margin-bottom: .75rem; }
+.card-header h2 { margin: 0; }
+.upload { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 0; }
+.photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.photo { display: flex; flex-direction: column; gap: .5rem; }
+.photo img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border: 1px solid var(--border); border-radius: 8px; }
+.photo span { font-size: .85rem; overflow-wrap: anywhere; }
+.photo form { margin: 0; }
+.modal-body select, .modal-body input:not([type=file]) { padding: .5rem .6rem; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+/* A closed dialog between two cards must not remove the gap between them. */
+.card + .modal + .card { margin-top: 1.5rem; }

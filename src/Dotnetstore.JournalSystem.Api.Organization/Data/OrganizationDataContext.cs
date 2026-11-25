@@ -1,5 +1,6 @@
 ﻿using Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
+using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies.Images;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.Organization.Users;
 using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
@@ -18,6 +19,7 @@ internal sealed class OrganizationDataContext(DbContextOptions<OrganizationDataC
 
     public DbSet<AccessRequest> AccessRequests { get; set; }
     public DbSet<OwnCompany> OwnCompanies { get; set; }
+    public DbSet<OwnCompanyImage> OwnCompanyImages { get; set; }
     public DbSet<Role> Roles { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<WorkGroup> WorkGroups { get; set; }

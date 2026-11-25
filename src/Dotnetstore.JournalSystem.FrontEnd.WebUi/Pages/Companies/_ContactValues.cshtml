@@ -1,0 +1,60 @@
+@using Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies
+@model ContactValueSection
+@{
+    var company = Model.Page.Company!;
+    var canEdit = Model.Page.CanEdit;
+    var canAdd = canEdit && Model.Items is not null && Model.Types.Count > 0;
+}
+
+<section class="card" aria-labelledby="@Model.Key-heading" data-testid="@Model.Key-section">
+    <div class="card-header">
+        <h2 id="@Model.Key-heading">@Model.Title</h2>
+        @if (canAdd)
+        {
+            <button type="button" class="btn btn-secondary" data-dialog-open="@Model.Key-new" data-testid="@Model.Key-add">Add @Model.Noun</button>
+        }
+    </div>
+
+    @if (Model.Items is null)
+    {
+        <p class="muted" data-testid="@Model.Key-unavailable">This list could not be loaded right now.</p>
+    }
+    else if (Model.Items.Count == 0)
+    {
+        <p class="muted" data-testid="@Model.Key-empty">Nothing added yet.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th>Type</th><th>@Model.Label</th>@if (canEdit) { <th class="actions-col"><span class="visually-hidden">Actions</span></th> }</tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr data-testid="@Model.Key-row">
+                        <td>@(Model.Types.FirstOrDefault(x => x.Id == item.TypeId)?.Name ?? "Unknown")</td>
+                        <td>@item.Value</td>
+                        @if (canEdit)
+                        {
+                            <td class="actions-col">
+                                <div class="row-actions">
+                                    <button type="button" class="btn btn-secondary" data-dialog-open="@Model.Key-@item.Id" data-testid="@Model.Key-edit">Edit</button>
+                                    <form method="post" asp-page="/Companies/Details" asp-page-handler="@Model.DeleteHandler" asp-route-id="@company.Id" asp-route-contactId="@item.Id" data-confirm="Delete @item.Value?">
+                                        <button type="submit" class="btn btn-secondary btn-danger" data-testid="@Model.Key-delete">Delete</button>
+                                    </form>
+                                </div>
+                                <partial name="_ContactValueDialog" model="(Model, item)" />
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (canAdd)
+    {
+        <partial name="_ContactValueDialog" model="(Model, (ContactValueRow?)null)" />
+    }
+</section>

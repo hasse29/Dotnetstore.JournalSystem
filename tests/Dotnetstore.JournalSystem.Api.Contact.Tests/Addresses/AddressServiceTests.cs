@@ -274,4 +274,38 @@ public sealed class AddressServiceTests : IDisposable
         result.Status.ShouldBe(ResultStatus.NotFound);
         (await CountStoredAsync()).ShouldBe(1);
     }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsOnlyThatObjectsRowsDecrypted()
+    {
+        // Arrange
+        IAddressService service = _service;
+        var wanted = Guid.NewGuid();
+        await service.CreateAsync(CreateRequest("Wanted Street 1") with { ObjectId = wanted }, null, TestContext.Current.CancellationToken);
+        await service.CreateAsync(CreateRequest("Other Street 2") with { ObjectId = Guid.NewGuid() }, null, TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.GetByObjectIdAsync(wanted, TestContext.Current.CancellationToken);
+
+        // Assert
+        var item = result.ShouldHaveSingleItem();
+        item.ObjectId.ShouldBe(wanted);
+        item.Street1.ShouldBe("Wanted Street 1");
+    }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsEmptyForAnObjectWithoutRows()
+    {
+        // Arrange
+        IAddressService service = _service;
+        await service.CreateAsync(CreateRequest("Wanted Street 1") with { ObjectId = Guid.NewGuid() }, null, TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.GetByObjectIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
 }

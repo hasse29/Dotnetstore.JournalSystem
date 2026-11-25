@@ -29,7 +29,7 @@
                        asp-page="/Profile/Index" data-testid="nav-profile">My profile</a>
                 </li>
                 <li>
-                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Companies/Index" ? "active" : null)"
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Companies/", StringComparison.Ordinal) == true ? "active" : null)"
                        asp-page="/Companies/Index" data-testid="nav-companies">Own companies</a>
                 </li>
             </ul>

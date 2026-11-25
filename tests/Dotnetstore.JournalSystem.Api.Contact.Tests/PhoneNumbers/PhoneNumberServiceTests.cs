@@ -280,4 +280,38 @@ public sealed class PhoneNumberServiceTests : IDisposable
         result.Status.ShouldBe(ResultStatus.NotFound);
         (await CountStoredAsync()).ShouldBe(1);
     }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsOnlyThatObjectsRowsDecrypted()
+    {
+        // Arrange
+        IPhoneNumberService service = _service;
+        var wanted = Guid.NewGuid();
+        await service.CreateAsync(CreateRequest("+46 70 111 11 11") with { ObjectId = wanted }, null, TestContext.Current.CancellationToken);
+        await service.CreateAsync(CreateRequest("+46 70 222 22 22") with { ObjectId = Guid.NewGuid() }, null, TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.GetByObjectIdAsync(wanted, TestContext.Current.CancellationToken);
+
+        // Assert
+        var item = result.ShouldHaveSingleItem();
+        item.ObjectId.ShouldBe(wanted);
+        item.Number.ShouldBe("+46 70 111 11 11");
+    }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsEmptyForAnObjectWithoutRows()
+    {
+        // Arrange
+        IPhoneNumberService service = _service;
+        await service.CreateAsync(CreateRequest("+46 70 111 11 11") with { ObjectId = Guid.NewGuid() }, null, TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.GetByObjectIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
 }

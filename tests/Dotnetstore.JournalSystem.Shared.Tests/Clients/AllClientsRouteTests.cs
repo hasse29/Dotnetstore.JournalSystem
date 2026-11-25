@@ -51,6 +51,60 @@ public sealed class AllClientsRouteTests
     }
 
     [Fact]
+    public async Task ContactClientsAskForOneObjectsItems()
+    {
+        // Arrange
+        using var handler = new StubHandler(_ => StubHandler.Json(HttpStatusCode.OK, "[]"));
+        await using var provider = ClientsTestHost.Build(handler);
+        var objectId = Guid.NewGuid();
+        var ct = TestContext.Current.CancellationToken;
+
+        // Act
+        await provider.GetRequiredService<IAddressClient>().GetByObjectIdAsync(objectId, ct);
+        await provider.GetRequiredService<IEmailAddressClient>().GetByObjectIdAsync(objectId, ct);
+        await provider.GetRequiredService<IPhoneNumberClient>().GetByObjectIdAsync(objectId, ct);
+
+        // Assert
+        handler.Requests.Select(x => x.RequestUri!.PathAndQuery).ShouldBe(
+        [
+            $"/api/contact/addresses?objectId={objectId}",
+            $"/api/contact/email-addresses?objectId={objectId}",
+            $"/api/contact/phone-numbers?objectId={objectId}"
+        ]);
+    }
+
+    [Fact]
+    public async Task OwnCompanyClientCallsTheImageRoutes()
+    {
+        // Arrange
+        using var handler = new StubHandler(_ => StubHandler.Empty(HttpStatusCode.NoContent));
+        await using var provider = ClientsTestHost.Build(handler);
+        var client = provider.GetRequiredService<IOwnCompanyClient>();
+        var id = Guid.NewGuid();
+        var imageId = Guid.NewGuid();
+        var file = new FileUpload("a.png", new byte[] { 1 });
+        var ct = TestContext.Current.CancellationToken;
+        var company = $"/api/organization/own-companies/{id}";
+
+        // Act
+        await client.GetImagesAsync(id, ct);
+        await client.GetImageContentAsync(id, imageId, ct);
+        await client.SetLogoAsync(id, file, ct);
+        await client.AddPhotoAsync(id, imageId, file, ct);
+        await client.DeleteImageAsync(id, imageId, ct);
+
+        // Assert
+        handler.Requests.Select(x => (x.Method, x.RequestUri!.AbsolutePath)).ShouldBe(
+        [
+            (HttpMethod.Get, $"{company}/images"),
+            (HttpMethod.Get, $"{company}/images/{imageId}"),
+            (HttpMethod.Put, $"{company}/logo"),
+            (HttpMethod.Put, $"{company}/photos/{imageId}"),
+            (HttpMethod.Delete, $"{company}/images/{imageId}")
+        ]);
+    }
+
+    [Fact]
     public async Task LoginPostsToTheLoginRoute()
     {
         // Arrange

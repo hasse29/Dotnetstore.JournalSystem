@@ -17,19 +17,25 @@ internal static class EmailAddressTypeEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var group = app
+        var reads = app
             .MapGroup(string.Empty)
-            .WithTags("Email address types");
+            .WithTags("Email address types")
+            .RequireAuthorization(AuthPolicies.Authenticated);
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.EmailAddressTypes.GetAll, GetAllAsync)
             .WithName("GetEmailAddressTypes")
             .WithSummary("Gets all email address types.");
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.EmailAddressTypes.GetById, GetByIdAsync)
             .WithName(GetByIdName)
             .WithSummary("Gets an email address type by id.");
+
+        var group = app
+            .MapGroup(string.Empty)
+            .WithTags("Email address types")
+            .RequireAuthorization(AuthPolicies.Administrator);
 
         group
             .MapPost(ApiEndpoints.Contact.EmailAddressTypes.Create, CreateAsync)

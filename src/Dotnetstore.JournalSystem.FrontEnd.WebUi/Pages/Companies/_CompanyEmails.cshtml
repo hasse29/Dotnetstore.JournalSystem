@@ -1,0 +1,19 @@
+@using Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies
+@using Dotnetstore.JournalSystem.Shared.Constants
+@model DetailsModel
+@{
+    var section = new ContactValueSection(
+        Model,
+        Model.EmailAddresses?.Select(x => new ContactValueRow(x.Id, x.EmailAddressTypeId, x.Address)).ToList(),
+        Model.EmailAddressTypes,
+        Key: "email",
+        Title: "Email addresses",
+        Noun: "email address",
+        Label: "Address",
+        InputType: "email",
+        MaxLength: DataSchemeConstants.EmailAddressMaxLength,
+        SaveHandler: "SaveEmail",
+        DeleteHandler: "DeleteEmail");
+}
+
+<partial name="_ContactValues" model="section" />

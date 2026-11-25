@@ -22,6 +22,10 @@ public static class ApiEndpoints
             public const string Create = OwnCompanyBase;
             public const string Update = $"{OwnCompanyBase}/{{id:guid}}";
             public const string Delete = $"{OwnCompanyBase}/{{id:guid}}";
+            public const string Images = $"{OwnCompanyBase}/{{id:guid}}/images";
+            public const string ImageById = $"{OwnCompanyBase}/{{id:guid}}/images/{{imageId:guid}}";
+            public const string Logo = $"{OwnCompanyBase}/{{id:guid}}/logo";
+            public const string Photo = $"{OwnCompanyBase}/{{id:guid}}/photos/{{imageId:guid}}";
         }
 
         public static class Roles

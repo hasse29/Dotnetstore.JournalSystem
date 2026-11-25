@@ -62,6 +62,46 @@ internal sealed class ApiTestHost : IAsyncDisposable
         return new ApiTestHost(factory, client, connectionString);
     }
 
+    internal static async Task<ApiTestHost> CreateSignedInAsync(
+        SqlServerFixture fixture,
+        CancellationToken cancellationToken)
+    {
+        var host = await CreateAsync(fixture, cancellationToken, withBootstrapAdmin: true);
+        await host.SignInAsAdminAsync(cancellationToken);
+        return host;
+    }
+
+    /// <summary>Creates a user without the administrator role and signs in as them. Requires an administrator session.</summary>
+    internal async Task SignInAsNewNonAdminAsync(CancellationToken cancellationToken)
+    {
+        const string username = "nurse@example.com";
+        const string password = "a-long-enough-password";
+
+        var companies = await Client.GetFromJsonAsync<OwnCompanyResponse[]>(
+            new Uri(ApiEndpoints.Organization.OwnCompanies.GetAll, UriKind.Relative),
+            cancellationToken);
+        using var role = await Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Organization.Roles.Create, UriKind.Relative),
+            new EditRoleRequest("Nurse", "Description"),
+            cancellationToken);
+        role.EnsureSuccessStatusCode();
+        var roleId = (await role.Content.ReadFromJsonAsync<RoleResponse>(cancellationToken))!.Id;
+        using var user = await Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Organization.Users.Create, UriKind.Relative),
+            new CreateUserRequest("Test", null, "Nurse", username, companies![0].Id, roleId, AuthProvider.Local, password),
+            cancellationToken);
+        user.EnsureSuccessStatusCode();
+
+        using var response = await Client.PostAsJsonAsync(
+            new Uri(ApiEndpoints.Auth.Login, UriKind.Relative),
+            new LoginRequest(username, password),
+            cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var login = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login!.AccessToken);
+    }
+
     internal ServiceProvider CreateApiClients(IAccessTokenProvider? tokenProvider = null)
     {
         var configuration = new ConfigurationBuilder()

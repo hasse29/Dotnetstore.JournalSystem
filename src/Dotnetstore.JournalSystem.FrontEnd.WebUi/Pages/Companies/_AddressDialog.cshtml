@@ -1,0 +1,56 @@
+@using Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies
+@using Dotnetstore.JournalSystem.Shared.Constants
+@using Dotnetstore.JournalSystem.Shared.Responses.Contact
+@model (DetailsModel Page, AddressResponse? Address)
+@{
+    var company = Model.Page.Company!;
+    var address = Model.Address;
+    var dialogId = address is null ? "address-new" : $"address-{address.Id}";
+    var title = address is null ? "Add an address" : "Edit address";
+}
+
+<dialog class="modal" id="@dialogId" aria-labelledby="@dialogId-title">
+    <form method="post" asp-page="/Companies/Details" asp-page-handler="SaveAddress" asp-route-id="@company.Id" asp-route-contactId="@address?.Id">
+        <div class="modal-header">
+            <h2 id="@dialogId-title">@title</h2>
+            <button type="button" class="icon-button" data-dialog-close aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid">
+                <label>Type
+                    <select name="TypeId" required data-testid="address-type">
+                        @foreach (var type in Model.Page.AddressTypes)
+                        {
+                            <option value="@type.Id" selected="@(type.Id == address?.AddressTypeId)">@type.Name</option>
+                        }
+                    </select>
+                </label>
+                <label>c/o
+                    <input name="CO" value="@address?.CO" maxlength="@DataSchemeConstants.AddressCOMaxLength" />
+                </label>
+                <label>Street
+                    <input name="Street1" value="@address?.Street1" required maxlength="@DataSchemeConstants.AddressStreetMaxLength" data-testid="address-street" />
+                </label>
+                <label>Street, second line
+                    <input name="Street2" value="@address?.Street2" maxlength="@DataSchemeConstants.AddressStreetMaxLength" />
+                </label>
+                <label>Postal code
+                    <input name="PostalCode" value="@address?.PostalCode" required maxlength="@DataSchemeConstants.AddressPostalCodeMaxLength" data-testid="address-postal-code" />
+                </label>
+                <label>City
+                    <input name="City" value="@address?.City" required maxlength="@DataSchemeConstants.AddressCityMaxLength" data-testid="address-city" />
+                </label>
+                <label>State or county
+                    <input name="State" value="@address?.State" maxlength="@DataSchemeConstants.AddressStateMaxLength" />
+                </label>
+                <label>Country
+                    <input name="Country" value="@address?.Country" required maxlength="@DataSchemeConstants.AddressCountryMaxLength" data-testid="address-country" />
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+            <button type="submit" class="btn btn-primary" data-testid="address-save">Save</button>
+        </div>
+    </form>
+</dialog>

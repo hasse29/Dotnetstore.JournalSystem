@@ -1,0 +1,19 @@
+@using Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies
+@using Dotnetstore.JournalSystem.Shared.Constants
+@model DetailsModel
+@{
+    var section = new ContactValueSection(
+        Model,
+        Model.PhoneNumbers?.Select(x => new ContactValueRow(x.Id, x.PhoneNumberTypeId, x.Number)).ToList(),
+        Model.PhoneNumberTypes,
+        Key: "phone",
+        Title: "Phone numbers",
+        Noun: "phone number",
+        Label: "Number",
+        InputType: "tel",
+        MaxLength: DataSchemeConstants.PhoneNumberMaxLength,
+        SaveHandler: "SavePhone",
+        DeleteHandler: "DeletePhone");
+}
+
+<partial name="_ContactValues" model="section" />

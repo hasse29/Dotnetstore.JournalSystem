@@ -280,4 +280,38 @@ public sealed class EmailAddressServiceTests : IDisposable
         result.Status.ShouldBe(ResultStatus.NotFound);
         (await CountStoredAsync()).ShouldBe(1);
     }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsOnlyThatObjectsRowsDecrypted()
+    {
+        // Arrange
+        IEmailAddressService service = _service;
+        var wanted = Guid.NewGuid();
+        await service.CreateAsync(CreateRequest("wanted@example.com") with { ObjectId = wanted }, null, TestContext.Current.CancellationToken);
+        await service.CreateAsync(CreateRequest("other@example.com") with { ObjectId = Guid.NewGuid() }, null, TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.GetByObjectIdAsync(wanted, TestContext.Current.CancellationToken);
+
+        // Assert
+        var item = result.ShouldHaveSingleItem();
+        item.ObjectId.ShouldBe(wanted);
+        item.Address.ShouldBe("wanted@example.com");
+    }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsEmptyForAnObjectWithoutRows()
+    {
+        // Arrange
+        IEmailAddressService service = _service;
+        await service.CreateAsync(CreateRequest("wanted@example.com") with { ObjectId = Guid.NewGuid() }, null, TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.GetByObjectIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
 }

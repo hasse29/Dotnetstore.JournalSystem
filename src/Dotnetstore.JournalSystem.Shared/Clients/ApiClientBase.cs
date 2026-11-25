@@ -46,6 +46,50 @@ internal abstract class ApiClientBase(HttpClient http)
         return ApiResult.Create(response.StatusCode, problem);
     }
 
+    protected async Task<ApiResult<T>> UploadAsync<T>(
+        HttpMethod method,
+        Uri uri,
+        string fieldName,
+        FileUpload file,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(method, uri);
+        var form = new MultipartFormDataContent();
+        request.Content = form;
+
+        // The form owns its parts, and the request owns the form.
+#pragma warning disable CA2000
+        form.Add(new ReadOnlyMemoryContent(file.Content), fieldName, file.FileName);
+#pragma warning restore CA2000
+
+        using var response = await http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var problem = await ReadProblemAsync(response, cancellationToken).ConfigureAwait(false);
+            return ApiResult.Create<T>(response.StatusCode, default, problem);
+        }
+
+        var value = await ReadValueAsync<T>(response, cancellationToken).ConfigureAwait(false);
+        return ApiResult.Create(response.StatusCode, value);
+    }
+
+    protected async Task<ApiResult<ApiFile>> DownloadAsync(Uri uri, CancellationToken cancellationToken)
+    {
+        using var response = await SendCoreAsync(HttpMethod.Get, uri, null, cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var problem = await ReadProblemAsync(response, cancellationToken).ConfigureAwait(false);
+            return ApiResult.Create<ApiFile>(response.StatusCode, default, problem);
+        }
+
+        var bytes = await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+
+        return ApiResult.Create(response.StatusCode, new ApiFile(bytes, contentType));
+    }
+
     private async Task<HttpResponseMessage> SendCoreAsync(
         HttpMethod method,
         Uri uri,

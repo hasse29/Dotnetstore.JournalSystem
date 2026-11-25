@@ -11,9 +11,12 @@ internal abstract class CrudClientBase<TCreateRequest, TUpdateRequest, TResponse
     where TUpdateRequest : class
     where TResponse : class
 {
-    public async Task<ApiResult<IReadOnlyList<TResponse>>> GetAllAsync(CancellationToken cancellationToken = default)
+    public Task<ApiResult<IReadOnlyList<TResponse>>> GetAllAsync(CancellationToken cancellationToken = default) =>
+        GetListAsync(BuildUri(getAll), cancellationToken);
+
+    protected async Task<ApiResult<IReadOnlyList<TResponse>>> GetListAsync(Uri uri, CancellationToken cancellationToken)
     {
-        var result = await SendAsync<List<TResponse>>(HttpMethod.Get, BuildUri(getAll), null, cancellationToken)
+        var result = await SendAsync<List<TResponse>>(HttpMethod.Get, uri, null, cancellationToken)
             .ConfigureAwait(false);
 
         return ApiResult.Create<IReadOnlyList<TResponse>>(result.StatusCode, result.Value, result.Problem);

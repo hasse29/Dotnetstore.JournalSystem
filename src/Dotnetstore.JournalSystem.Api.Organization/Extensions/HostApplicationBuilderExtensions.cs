@@ -1,6 +1,7 @@
 using Dotnetstore.JournalSystem.Api.Organization.Authentication;
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
+using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies.Images;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.Organization.Seeding;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
@@ -47,6 +48,8 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IOwnCompanyRepository, OwnCompanyRepository>();
         builder.Services.AddScoped<IOrganizationUnitOfWork, OrganizationUnitOfWork>();
         builder.Services.AddScoped<IOwnCompanyService, OwnCompanyService>();
+        builder.Services.AddScoped<IOwnCompanyImageRepository, OwnCompanyImageRepository>();
+        builder.Services.AddScoped<IOwnCompanyImageService, OwnCompanyImageService>();
         builder.Services.AddScoped<IRoleRepository, RoleRepository>();
         builder.Services.AddScoped<IRoleService, RoleService>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -76,6 +79,7 @@ public static class HostApplicationBuilderExtensions
             .MapAccessRequestEndpoints()
             .MapAuthEndpoints()
             .MapOwnCompanyEndpoints()
+            .MapOwnCompanyImageEndpoints()
             .MapRoleEndpoints()
             .MapUserEndpoints()
             .MapWorkGroupEndpoints();
