@@ -52,7 +52,7 @@ else
                     {
                         <tr data-testid="company-@company.Name">
                             <td>
-                                <strong>@company.Name</strong>
+                                <a asp-page="/Companies/Details" asp-route-id="@company.Id" data-testid="company-open"><strong>@company.Name</strong></a>
                                 @if (company.IsSystem)
                                 {
                                     <span class="badge badge-approved" data-testid="company-system">System</span>
