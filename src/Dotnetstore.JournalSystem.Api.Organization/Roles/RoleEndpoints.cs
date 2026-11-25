@@ -17,19 +17,25 @@ internal static class RoleEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var group = app
+        var reads = app
             .MapGroup(string.Empty)
-            .WithTags("Roles");
+            .WithTags("Roles")
+            .RequireAuthorization(AuthPolicies.Authenticated);
 
-        group
+        reads
             .MapGet(ApiEndpoints.Organization.Roles.GetAll, GetAllAsync)
             .WithName("GetRoles")
             .WithSummary("Gets all roles.");
 
-        group
+        reads
             .MapGet(ApiEndpoints.Organization.Roles.GetById, GetByIdAsync)
             .WithName(GetByIdName)
             .WithSummary("Gets a role by id.");
+
+        var group = app
+            .MapGroup(string.Empty)
+            .WithTags("Roles")
+            .RequireAuthorization(AuthPolicies.Administrator);
 
         group
             .MapPost(ApiEndpoints.Organization.Roles.Create, CreateAsync)

@@ -17,19 +17,25 @@ internal static class WorkGroupEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var group = app
+        var reads = app
             .MapGroup(string.Empty)
-            .WithTags("Work groups");
+            .WithTags("Work groups")
+            .RequireAuthorization(AuthPolicies.Authenticated);
 
-        group
+        reads
             .MapGet(ApiEndpoints.Organization.WorkGroups.GetAll, GetAllAsync)
             .WithName("GetWorkGroups")
             .WithSummary("Gets all work groups.");
 
-        group
+        reads
             .MapGet(ApiEndpoints.Organization.WorkGroups.GetById, GetByIdAsync)
             .WithName(GetByIdName)
             .WithSummary("Gets a work group by id.");
+
+        var group = app
+            .MapGroup(string.Empty)
+            .WithTags("Work groups")
+            .RequireAuthorization(AuthPolicies.Administrator);
 
         group
             .MapPost(ApiEndpoints.Organization.WorkGroups.Create, CreateAsync)

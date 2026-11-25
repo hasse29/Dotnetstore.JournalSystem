@@ -21,12 +21,21 @@ public sealed class JournalApiClientsTests(SqlServerFixture fixture)
             ValueTask.FromResult(Token);
     }
 
+    private static async Task SignInAsAdminAsync(IServiceProvider provider, MutableTokenProvider tokens)
+    {
+        var login = await provider.GetRequiredService<IAuthClient>()
+            .LoginAsync(new LoginRequest(ApiTestHost.AdminUsername, ApiTestHost.AdminPassword), Token);
+        tokens.Token = login.Value.ShouldNotBeNull().AccessToken;
+    }
+
     [Fact]
     public async Task RoleClientRunsTheFullCrudCycleAgainstTheHost()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, Token);
-        await using var provider = host.CreateApiClients();
+        await using var host = await ApiTestHost.CreateAsync(fixture, Token, withBootstrapAdmin: true);
+        var tokens = new MutableTokenProvider();
+        await using var provider = host.CreateApiClients(tokens);
+        await SignInAsAdminAsync(provider, tokens);
         var roles = provider.GetRequiredService<IRoleClient>();
 
         // Act
@@ -51,8 +60,10 @@ public sealed class JournalApiClientsTests(SqlServerFixture fixture)
     public async Task InvalidRequestComesBackAsFieldErrors()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, Token);
-        await using var provider = host.CreateApiClients();
+        await using var host = await ApiTestHost.CreateAsync(fixture, Token, withBootstrapAdmin: true);
+        var tokens = new MutableTokenProvider();
+        await using var provider = host.CreateApiClients(tokens);
+        await SignInAsAdminAsync(provider, tokens);
         var roles = provider.GetRequiredService<IRoleClient>();
 
         // Act
@@ -61,6 +72,21 @@ public sealed class JournalApiClientsTests(SqlServerFixture fixture)
         // Assert
         result.IsValidationError.ShouldBeTrue();
         result.Problem.Errors.ShouldNotBeEmpty();
+    }
+
+    [Fact]
+    public async Task RoleCallWithoutATokenIsUnauthorized()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateAsync(fixture, Token);
+        await using var provider = host.CreateApiClients();
+        var roles = provider.GetRequiredService<IRoleClient>();
+
+        // Act
+        var result = await roles.CreateAsync(new EditRoleRequest("Nurse", "Cares"), Token);
+
+        // Assert
+        result.IsUnauthorized.ShouldBeTrue();
     }
 
     [Fact]
