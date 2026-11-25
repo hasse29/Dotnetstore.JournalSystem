@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Claims;
+using Dotnetstore.Security.Handlers;
 using Dotnetstore.JournalSystem.Api.Contact.Extensions;
 using Dotnetstore.JournalSystem.Api.Organization.Extensions;
 using OrganizationExtensions = Dotnetstore.JournalSystem.Api.Organization.Extensions.HostApplicationBuilderExtensions;
@@ -39,7 +41,9 @@ internal sealed class ApiTestHost : IAsyncDisposable
         var connectionString = fixture.CreateDatabaseConnectionString();
         var settings = new Dictionary<string, string?>
         {
-            ["ConnectionStrings:" + OrganizationExtensions.DatabaseConnectionName] = connectionString
+            ["ConnectionStrings:" + OrganizationExtensions.DatabaseConnectionName] = connectionString,
+            // Tests that wait for background work poll the API; rate limiting has its own tests.
+            ["RateLimiting:PermitLimit"] = "10000"
         };
 
         if (withBootstrapAdmin)
@@ -101,6 +105,18 @@ internal sealed class ApiTestHost : IAsyncDisposable
 
         var login = await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken);
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", login!.AccessToken);
+    }
+
+    /// <summary>
+    /// Signs in the way a Microsoft account does: a valid token that names the person's object id and carries no
+    /// application claims. Until an administrator approves them they have no account.
+    /// </summary>
+    internal void SignInAsMicrosoftPerson(string objectId)
+    {
+        var token = _factory.Services.GetRequiredService<ITokenHandler>().CreateAccessToken(
+            objectId,
+            [new Claim("oid", objectId), new Claim("name", "Maria Microsoft"), new Claim("preferred_username", "maria@example.com")]);
+        Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Value);
     }
 
     internal ServiceProvider CreateApiClients(IAccessTokenProvider? tokenProvider = null)

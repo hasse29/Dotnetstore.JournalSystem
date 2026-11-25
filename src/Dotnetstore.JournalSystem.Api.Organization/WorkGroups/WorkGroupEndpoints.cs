@@ -20,7 +20,7 @@ internal static class WorkGroupEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Work groups")
-            .RequireAuthorization(AuthPolicies.Authenticated);
+            .RequireAuthorization(AuthPolicies.Approved);
 
         reads
             .MapGet(ApiEndpoints.Organization.WorkGroups.GetAll, GetAllAsync)

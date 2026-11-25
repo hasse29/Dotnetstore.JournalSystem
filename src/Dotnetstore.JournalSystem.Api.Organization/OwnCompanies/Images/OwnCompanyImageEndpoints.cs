@@ -20,7 +20,7 @@ internal static class OwnCompanyImageEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Own company images")
-            .RequireAuthorization(AuthPolicies.Authenticated);
+            .RequireAuthorization(AuthPolicies.Approved);
 
         reads
             .MapGet(ApiEndpoints.Organization.OwnCompanies.Images, GetAllAsync)

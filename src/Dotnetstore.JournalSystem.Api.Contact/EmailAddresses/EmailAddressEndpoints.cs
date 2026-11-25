@@ -20,7 +20,7 @@ internal static class EmailAddressEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Email addresses")
-            .RequireAuthorization(AuthPolicies.Authenticated);
+            .RequireAuthorization(AuthPolicies.Approved);
 
         reads
             .MapGet(ApiEndpoints.Contact.EmailAddresses.GetAll, GetAllAsync)

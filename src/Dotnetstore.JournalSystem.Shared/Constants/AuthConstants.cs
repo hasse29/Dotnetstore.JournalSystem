@@ -10,6 +10,14 @@ public static class AuthClaimTypes
 public static class AuthPolicies
 {
     public const string Administrator = "Administrator";
+
+    /// <summary>
+    /// A signed-in caller who may use the application. A Microsoft sign-in that an administrator has not approved, or
+    /// whose account is locked, is authenticated but has no application account.
+    /// </summary>
+    public const string Approved = "Approved";
+
+    /// <summary>Any valid sign-in, approved or not. Only for what a person needs before they are approved.</summary>
     public const string Authenticated = "Authenticated";
 }
 

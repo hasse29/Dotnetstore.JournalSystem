@@ -20,7 +20,7 @@ internal static class RoleEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Roles")
-            .RequireAuthorization(AuthPolicies.Authenticated);
+            .RequireAuthorization(AuthPolicies.Approved);
 
         reads
             .MapGet(ApiEndpoints.Organization.Roles.GetAll, GetAllAsync)
