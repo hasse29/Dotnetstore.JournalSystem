@@ -1,0 +1,37 @@
+@using Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies
+@model (ContactValueSection Section, ContactValueRow? Item)
+@{
+    var part = Model.Section;
+    var item = Model.Item;
+    var company = part.Page.Company!;
+    var dialogId = item is null ? $"{part.Key}-new" : $"{part.Key}-{item.Id}";
+    var title = item is null ? $"Add {part.Noun}" : $"Edit {part.Noun}";
+}
+
+<dialog class="modal" id="@dialogId" aria-labelledby="@dialogId-title">
+    <form method="post" asp-page="/Companies/Details" asp-page-handler="@part.SaveHandler" asp-route-id="@company.Id" asp-route-contactId="@item?.Id">
+        <div class="modal-header">
+            <h2 id="@dialogId-title">@title</h2>
+            <button type="button" class="icon-button" data-dialog-close aria-label="Close">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid">
+                <label>Type
+                    <select name="TypeId" required data-testid="@part.Key-type">
+                        @foreach (var type in part.Types)
+                        {
+                            <option value="@type.Id" selected="@(type.Id == item?.TypeId)">@type.Name</option>
+                        }
+                    </select>
+                </label>
+                <label>@part.Label
+                    <input name="Value" type="@part.InputType" value="@item?.Value" required maxlength="@part.MaxLength" data-testid="@part.Key-value" />
+                </label>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+            <button type="submit" class="btn btn-primary" data-testid="@part.Key-save">Save</button>
+        </div>
+    </form>
+</dialog>

@@ -46,7 +46,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetAllReturnsEmptyListWhenNoAddressesExist()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url(), TestContext.Current.CancellationToken);
@@ -61,7 +61,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetAllReturnsAllCreatedAddresses()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateAddressTypeAsync(host.Client);
         await CreateAddressAsync(host.Client, typeId, "A");
         await CreateAddressAsync(host.Client, typeId, "B");
@@ -79,7 +79,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsAddress()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateAddressAsync(host.Client, await CreateAddressTypeAsync(host.Client));
 
         // Act
@@ -95,7 +95,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url($"/{Guid.NewGuid()}"), TestContext.Current.CancellationToken);
@@ -108,7 +108,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForRouteThatIsNotAGuid()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url("/not-a-guid"), TestContext.Current.CancellationToken);
@@ -121,7 +121,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsCreatedWithLocationAndBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateAddressTypeAsync(host.Client);
 
         // Act
@@ -144,7 +144,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreatedAddressCanBeFetchedAtLocationHeader()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var created = await host.Client.PostAsJsonAsync(Url(), CreateRequest(await CreateAddressTypeAsync(host.Client)), TestContext.Current.CancellationToken);
 
         // Act
@@ -160,7 +160,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemForMissingStreet1(string street1)
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(Guid.NewGuid(), street1), TestContext.Current.CancellationToken);
@@ -175,7 +175,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemAndStoresNothingForTooLongStreet1()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateAddressTypeAsync(host.Client);
 
         // Act
@@ -191,7 +191,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemForEmptyReferenceIds()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var request = new EditAddressRequest(Guid.Empty, Guid.Empty, null, "Main Street 1", null, "12345", "Stockholm", "Stockholm", "Sweden");
 
         // Act
@@ -208,7 +208,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemAndStoresNothingForUnknownAddressType()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(Guid.NewGuid()), TestContext.Current.CancellationToken);
@@ -225,7 +225,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForEmptyBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -239,7 +239,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForMalformedJson()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent("{ not json", System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -253,7 +253,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsUpdatedAddress()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateAddressTypeAsync(host.Client);
         var created = await CreateAddressAsync(host.Client, typeId);
 
@@ -273,7 +273,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateAddressTypeAsync(host.Client);
 
         // Act
@@ -287,7 +287,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsValidationProblemAndKeepsStoredValuesForInvalidRequest()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateAddressTypeAsync(host.Client);
         var created = await CreateAddressAsync(host.Client, typeId, "Original Street");
 
@@ -304,7 +304,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsValidationProblemAndKeepsStoredValuesForUnknownAddressType()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateAddressAsync(host.Client, await CreateAddressTypeAsync(host.Client), "Original Street");
 
         // Act
@@ -320,7 +320,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNoContentAndRemovesAddress()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateAddressAsync(host.Client, await CreateAddressTypeAsync(host.Client));
 
         // Act
@@ -336,7 +336,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNotFoundAndKeepsDataForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         await CreateAddressAsync(host.Client, await CreateAddressTypeAsync(host.Client));
 
         // Act
@@ -352,7 +352,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task UnsupportedMethodReturnsMethodNotAllowed()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url($"/{Guid.NewGuid()}"), CreateRequest(Guid.NewGuid()), TestContext.Current.CancellationToken);
@@ -365,7 +365,7 @@ public sealed class AddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateStoresTheTextFieldsEncryptedAndStillReturnsPlainText()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateAddressTypeAsync(host.Client);
 
         // Act

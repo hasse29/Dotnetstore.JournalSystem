@@ -44,6 +44,8 @@ internal sealed class AccessRequestsPage(IPage page)
         }
 
         await row.GetByTestId("role-select").SelectOptionAsync(new SelectOptionValue { Label = roleName });
+        // Other tests add companies, so the form cannot be relied on to preselect the only one.
+        await row.GetByTestId("company-select").SelectOptionAsync(new SelectOptionValue { Label = "Test AB" });
         await row.GetByTestId("approve").ClickAsync();
     }
 

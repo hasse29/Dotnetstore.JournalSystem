@@ -17,19 +17,25 @@ internal static class PhoneNumberTypeEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var group = app
+        var reads = app
             .MapGroup(string.Empty)
-            .WithTags("Phone number types");
+            .WithTags("Phone number types")
+            .RequireAuthorization(AuthPolicies.Authenticated);
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.PhoneNumberTypes.GetAll, GetAllAsync)
             .WithName("GetPhoneNumberTypes")
             .WithSummary("Gets all phone number types.");
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.PhoneNumberTypes.GetById, GetByIdAsync)
             .WithName(GetByIdName)
             .WithSummary("Gets an phone number type by id.");
+
+        var group = app
+            .MapGroup(string.Empty)
+            .WithTags("Phone number types")
+            .RequireAuthorization(AuthPolicies.Administrator);
 
         group
             .MapPost(ApiEndpoints.Contact.PhoneNumberTypes.Create, CreateAsync)

@@ -31,7 +31,7 @@
             var dialog = document.getElementById(opener.getAttribute("data-dialog-open"));
             if (dialog && typeof dialog.showModal === "function") {
                 dialog.showModal();
-                var first = dialog.querySelector("input, select, textarea");
+                var first = dialog.querySelector("input:not([type=hidden]), select, textarea");
                 if (first) {
                     first.focus();
                 }
@@ -50,6 +50,19 @@
         if (event.target instanceof HTMLDialogElement && event.target.classList.contains("modal")) {
             event.target.close();
         }
+    });
+
+    // Oversized files are refused here so that they are never uploaded; the server checks the size again.
+    document.addEventListener("change", function (event) {
+        var input = event.target;
+        if (!input.matches || !input.matches("input[type=file][data-max-bytes]")) {
+            return;
+        }
+
+        var file = input.files && input.files[0];
+        var tooLarge = !!file && file.size > Number(input.getAttribute("data-max-bytes"));
+        input.setCustomValidity(tooLarge ? "The file is too large." : "");
+        input.reportValidity();
     });
 
     document.addEventListener("submit", function (event) {

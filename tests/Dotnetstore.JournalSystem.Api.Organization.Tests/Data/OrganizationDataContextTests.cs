@@ -2,6 +2,7 @@ using Dotnetstore.JournalSystem.Api.Organization.AccessRequests;
 using Dotnetstore.BaseModel.Entities;
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies;
+using Dotnetstore.JournalSystem.Api.Organization.OwnCompanies.Images;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.Organization.Users;
 using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
@@ -44,7 +45,7 @@ public sealed class OrganizationDataContextTests
         var entityTypes = context.Model.GetEntityTypes().ToList();
 
         // Assert
-        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(AccessRequest), typeof(OwnCompany), typeof(Role), typeof(User), typeof(WorkGroup)], ignoreOrder: true);
+        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(AccessRequest), typeof(OwnCompany), typeof(OwnCompanyImage), typeof(Role), typeof(User), typeof(WorkGroup)], ignoreOrder: true);
     }
 
     [Fact]

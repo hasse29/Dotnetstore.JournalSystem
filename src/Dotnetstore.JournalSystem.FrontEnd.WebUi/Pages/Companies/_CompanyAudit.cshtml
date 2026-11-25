@@ -1,0 +1,18 @@
+@using System.Globalization
+@model Dotnetstore.JournalSystem.Shared.Responses.Organization.OwnCompanyResponse
+@functions {
+    private static string Describe(DateTime? when, string? who) =>
+        when is { } value
+            ? $"{value.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)} UTC by {who ?? "Unknown"}"
+            : "–";
+}
+
+<section class="card" aria-labelledby="audit-heading" data-testid="audit">
+    <h2 id="audit-heading">History</h2>
+    <dl class="details">
+        <dt>Created</dt>
+        <dd data-testid="audit-created">@Describe(Model.CreatedDate, Model.CreatedByName)</dd>
+        <dt>Last updated</dt>
+        <dd data-testid="audit-updated">@Describe(Model.LastUpdatedDate, Model.LastUpdatedByName)</dd>
+    </dl>
+</section>

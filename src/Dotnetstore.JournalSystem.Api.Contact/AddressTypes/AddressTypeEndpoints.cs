@@ -17,19 +17,25 @@ internal static class AddressTypeEndpoints
     {
         ArgumentNullException.ThrowIfNull(app);
 
-        var group = app
+        var reads = app
             .MapGroup(string.Empty)
-            .WithTags("Address types");
+            .WithTags("Address types")
+            .RequireAuthorization(AuthPolicies.Authenticated);
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.AddressTypes.GetAll, GetAllAsync)
             .WithName("GetAddressTypes")
             .WithSummary("Gets all address types.");
 
-        group
+        reads
             .MapGet(ApiEndpoints.Contact.AddressTypes.GetById, GetByIdAsync)
             .WithName(GetByIdName)
             .WithSummary("Gets an address type by id.");
+
+        var group = app
+            .MapGroup(string.Empty)
+            .WithTags("Address types")
+            .RequireAuthorization(AuthPolicies.Administrator);
 
         group
             .MapPost(ApiEndpoints.Contact.AddressTypes.Create, CreateAsync)

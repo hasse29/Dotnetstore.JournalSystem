@@ -25,9 +25,33 @@ internal sealed class OwnCompanyService(
             .GetByIdAsync(id, cancellationToken)
             .ConfigureAwait(false);
 
-        return ownCompany is not null ?
-            Result<OwnCompanyResponse>.Success(ownCompany.ToOwnCompanyResponse()) :
-            Result<OwnCompanyResponse>.NotFound();
+        if (ownCompany is null)
+        {
+            return Result<OwnCompanyResponse>.NotFound();
+        }
+
+        return Result<OwnCompanyResponse>.Success(ownCompany.ToOwnCompanyResponse() with
+        {
+            CreatedDate = ownCompany.CreatedDate,
+            CreatedByName = await GetUserNameAsync(ownCompany.CreatedBy, cancellationToken).ConfigureAwait(false),
+            LastUpdatedDate = ownCompany.LastUpdatedDate,
+            LastUpdatedByName = await GetUserNameAsync(ownCompany.LastUpdatedBy, cancellationToken).ConfigureAwait(false)
+        });
+    }
+
+    private async Task<string?> GetUserNameAsync(Guid? userId, CancellationToken cancellationToken)
+    {
+        if (userId is not { } id)
+        {
+            return null;
+        }
+
+        var user = await organizationUnitOfWork
+            .Users
+            .GetByIdAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+
+        return user is null ? null : $"{user.FirstName} {user.LastName}";
     }
 
     async ValueTask<Result<OwnCompanyResponse>> IOwnCompanyService.CreateAsync(EditOwnCompanyRequest request, Guid? userId, CancellationToken cancellationToken)

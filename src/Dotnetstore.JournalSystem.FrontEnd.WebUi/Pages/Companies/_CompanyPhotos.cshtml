@@ -1,0 +1,46 @@
+@using Dotnetstore.JournalSystem.Shared.Constants
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies.DetailsModel
+@{
+    var company = Model.Company!;
+}
+
+<section class="card" aria-labelledby="photos-heading" data-testid="photos">
+    <div class="card-header">
+        <h2 id="photos-heading">Photos</h2>
+        @if (Model.CanEdit && !Model.ImagesUnavailable && Model.Photos.Count < OwnCompanyImageConstants.MaxPhotosPerCompany)
+        {
+            <form method="post" enctype="multipart/form-data" class="upload" asp-page="/Companies/Details" asp-page-handler="Photo" asp-route-id="@company.Id">
+                <label class="visually-hidden" for="photo-file">Photo</label>
+                <input id="photo-file" type="file" name="file" accept="image/jpeg,image/png,image/webp" required data-max-bytes="@OwnCompanyImageConstants.MaxSizeBytes" data-testid="photo-file" />
+                <button type="submit" class="btn btn-secondary" data-testid="photo-upload">Add photo</button>
+            </form>
+        }
+    </div>
+
+    @if (Model.ImagesUnavailable)
+    {
+        <p class="muted" data-testid="photos-unavailable">The images could not be loaded right now.</p>
+    }
+    else if (Model.Photos.Count == 0)
+    {
+        <p class="muted" data-testid="photos-empty">No photos yet.</p>
+    }
+    else
+    {
+        <ul class="photo-grid">
+            @foreach (var photo in Model.Photos)
+            {
+                <li class="photo" data-testid="photo">
+                    <img src="@Url.Page("/Companies/Details", "Image", new { id = company.Id, imageId = photo.Id })" alt="@photo.FileName" loading="lazy" />
+                    <span class="muted">@photo.FileName</span>
+                    @if (Model.CanEdit)
+                    {
+                        <form method="post" asp-page="/Companies/Details" asp-page-handler="DeleteImage" asp-route-id="@company.Id" asp-route-imageId="@photo.Id" data-confirm="Delete @photo.FileName?">
+                            <button type="submit" class="btn btn-secondary btn-danger" data-testid="photo-delete">Delete</button>
+                        </form>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</section>

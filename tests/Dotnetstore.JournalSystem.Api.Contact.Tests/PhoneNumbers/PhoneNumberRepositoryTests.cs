@@ -225,4 +225,36 @@ public sealed class PhoneNumberRepositoryTests : IDisposable
         // Assert
         result.ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsOnlyTheRowsOfThatObject()
+    {
+        // Arrange
+        IPhoneNumberRepository repository = _repository;
+        var wanted = Guid.NewGuid();
+        await SeedAsync(
+            PhoneNumberTestData.Create(Guid.NewGuid(), "+46 70 111 11 11", objectId: wanted),
+            PhoneNumberTestData.Create(Guid.NewGuid(), "+46 70 222 22 22", objectId: Guid.NewGuid()));
+
+        // Act
+        var result = await repository.GetByObjectIdAsync(wanted, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldHaveSingleItem().Number.ShouldBe("+46 70 111 11 11");
+        _context.ChangeTracker.Entries().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsEmptyForAnObjectWithoutRows()
+    {
+        // Arrange
+        IPhoneNumberRepository repository = _repository;
+        await SeedAsync(PhoneNumberTestData.Create(Guid.NewGuid(), "+46 70 111 11 11", objectId: Guid.NewGuid()));
+
+        // Act
+        var result = await repository.GetByObjectIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
 }

@@ -39,5 +39,7 @@ jobs:
         run: pwsh tests/Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests/bin/Debug/net11.0/playwright.ps1 install --with-deps chromium
 
       # Integration and E2E tests start SQL Server through Testcontainers, which the runner's Docker provides.
+      # One test project at a time: run together, their SQL Server containers starve the runner and requests
+      # in the E2E tests exceed the web UI's 10 second timeout.
       - name: Test
-        run: dotnet test --no-build --configuration Debug
+        run: dotnet test --no-build --configuration Debug --max-parallel-test-modules 1

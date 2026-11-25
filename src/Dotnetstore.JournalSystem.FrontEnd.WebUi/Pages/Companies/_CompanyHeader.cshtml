@@ -1,0 +1,45 @@
+@using Dotnetstore.JournalSystem.Shared.Constants
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies.DetailsModel
+@{
+    var company = Model.Company!;
+}
+
+<header class="company-header">
+    <div class="company-logo">
+        @if (Model.Logo is not null)
+        {
+            <img src="@Url.Page("/Companies/Details", "Image", new { id = company.Id, imageId = Model.Logo.Id })" alt="Logo of @company.Name" data-testid="logo-image" />
+        }
+        else
+        {
+            <span class="company-logo-placeholder" aria-hidden="true" data-testid="logo-placeholder">@company.Name[..1]</span>
+        }
+    </div>
+    <div class="company-title">
+        <h1 data-testid="company-heading">@company.Name</h1>
+        @if (company.IsSystem)
+        {
+            <span class="badge badge-approved" data-testid="company-system">System</span>
+        }
+        @if (company.WebsiteUrl is not null && company.WebsiteUrl.Scheme is "http" or "https")
+        {
+            <p><a href="@company.WebsiteUrl" rel="noopener noreferrer">@company.WebsiteUrl.Host</a></p>
+        }
+    </div>
+    @if (Model.CanEdit)
+    {
+        <div>
+            <form method="post" enctype="multipart/form-data" class="upload" asp-page="/Companies/Details" asp-page-handler="Logo" asp-route-id="@company.Id" data-testid="logo-form">
+                <label class="visually-hidden" for="logo-file">Logo image</label>
+                <input id="logo-file" type="file" name="file" accept="image/jpeg,image/png,image/webp" required data-max-bytes="@OwnCompanyImageConstants.MaxSizeBytes" data-testid="logo-file" />
+                <button type="submit" class="btn btn-secondary" data-testid="logo-upload">@(Model.Logo is null ? "Upload logo" : "Replace logo")</button>
+            </form>
+            @if (Model.Logo is not null)
+            {
+                <form method="post" asp-page="/Companies/Details" asp-page-handler="DeleteImage" asp-route-id="@company.Id" asp-route-imageId="@Model.Logo.Id" data-confirm="Remove the logo?">
+                    <button type="submit" class="btn btn-secondary btn-danger" data-testid="logo-delete">Remove logo</button>
+                </form>
+            }
+        </div>
+    }
+</header>

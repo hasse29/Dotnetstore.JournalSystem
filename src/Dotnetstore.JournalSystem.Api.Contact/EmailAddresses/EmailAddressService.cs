@@ -20,6 +20,16 @@ internal sealed class EmailAddressService(
         return items.Select(x => x.Decrypt(encryption).ToEmailAddressResponse());
     }
 
+    async Task<IEnumerable<EmailAddressResponse>> IEmailAddressService.GetByObjectIdAsync(Guid objectId, CancellationToken cancellationToken)
+    {
+        var items = await contactUnitOfWork
+            .EmailAddresses
+            .GetByObjectIdAsync(objectId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return items.Select(x => x.Decrypt(encryption).ToEmailAddressResponse());
+    }
+
     async ValueTask<Result<EmailAddressResponse>> IEmailAddressService.GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var emailAddress = await contactUnitOfWork

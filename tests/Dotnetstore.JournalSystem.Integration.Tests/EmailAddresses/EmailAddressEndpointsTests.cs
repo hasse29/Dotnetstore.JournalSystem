@@ -46,7 +46,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetAllReturnsEmptyListWhenNoEmailAddressesExist()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url(), TestContext.Current.CancellationToken);
@@ -61,7 +61,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetAllReturnsAllCreatedEmailAddresses()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateEmailAddressTypeAsync(host.Client);
         await CreateEmailAddressAsync(host.Client, typeId, "a@example.com");
         await CreateEmailAddressAsync(host.Client, typeId, "b@example.com");
@@ -79,7 +79,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsEmailAddress()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateEmailAddressAsync(host.Client, await CreateEmailAddressTypeAsync(host.Client));
 
         // Act
@@ -95,7 +95,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url($"/{Guid.NewGuid()}"), TestContext.Current.CancellationToken);
@@ -108,7 +108,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task GetByIdReturnsNotFoundForRouteThatIsNotAGuid()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.GetAsync(Url("/not-a-guid"), TestContext.Current.CancellationToken);
@@ -121,7 +121,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsCreatedWithLocationAndBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateEmailAddressTypeAsync(host.Client);
 
         // Act
@@ -142,7 +142,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreatedEmailAddressCanBeFetchedAtLocationHeader()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var created = await host.Client.PostAsJsonAsync(Url(), CreateRequest(await CreateEmailAddressTypeAsync(host.Client)), TestContext.Current.CancellationToken);
 
         // Act
@@ -160,7 +160,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemForMissingOrInvalidAddress(string address)
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(Guid.NewGuid(), address), TestContext.Current.CancellationToken);
@@ -175,7 +175,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemAndStoresNothingForTooLongAddress()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateEmailAddressTypeAsync(host.Client);
 
         // Act
@@ -191,7 +191,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemForEmptyReferenceIds()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var request = new EditEmailAddressRequest(Guid.Empty, Guid.Empty, "anna@example.com");
 
         // Act
@@ -208,7 +208,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsValidationProblemAndStoresNothingForUnknownEmailAddressType()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url(), CreateRequest(Guid.NewGuid()), TestContext.Current.CancellationToken);
@@ -225,7 +225,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForEmptyBody()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -239,7 +239,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateReturnsBadRequestForMalformedJson()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         using var content = new StringContent("{ not json", System.Text.Encoding.UTF8, "application/json");
 
         // Act
@@ -253,7 +253,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsUpdatedEmailAddress()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateEmailAddressTypeAsync(host.Client);
         var created = await CreateEmailAddressAsync(host.Client, typeId);
 
@@ -273,7 +273,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsNotFoundForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateEmailAddressTypeAsync(host.Client);
 
         // Act
@@ -287,7 +287,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsValidationProblemAndKeepsStoredValuesForInvalidRequest()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateEmailAddressTypeAsync(host.Client);
         var created = await CreateEmailAddressAsync(host.Client, typeId, "original@example.com");
 
@@ -304,7 +304,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task UpdateReturnsValidationProblemAndKeepsStoredValuesForUnknownEmailAddressType()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateEmailAddressAsync(host.Client, await CreateEmailAddressTypeAsync(host.Client), "original@example.com");
 
         // Act
@@ -320,7 +320,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNoContentAndRemovesEmailAddress()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var created = await CreateEmailAddressAsync(host.Client, await CreateEmailAddressTypeAsync(host.Client));
 
         // Act
@@ -336,7 +336,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task DeleteReturnsNotFoundAndKeepsDataForUnknownId()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         await CreateEmailAddressAsync(host.Client, await CreateEmailAddressTypeAsync(host.Client));
 
         // Act
@@ -352,7 +352,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task UnsupportedMethodReturnsMethodNotAllowed()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
 
         // Act
         using var response = await host.Client.PostAsJsonAsync(Url($"/{Guid.NewGuid()}"), CreateRequest(Guid.NewGuid()), TestContext.Current.CancellationToken);
@@ -365,7 +365,7 @@ public sealed class EmailAddressEndpointsTests(SqlServerFixture fixture)
     public async Task CreateStoresTheAddressEncryptedAndStillReturnsPlainText()
     {
         // Arrange
-        await using var host = await ApiTestHost.CreateAsync(fixture, TestContext.Current.CancellationToken);
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
         var typeId = await CreateEmailAddressTypeAsync(host.Client);
 
         // Act

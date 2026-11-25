@@ -1,0 +1,32 @@
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies.DetailsModel
+
+<section class="card" aria-labelledby="users-heading" data-testid="users">
+    <h2 id="users-heading">Users</h2>
+    @if (Model.Users is null)
+    {
+        <p class="muted" data-testid="users-unavailable">The users could not be loaded right now.</p>
+    }
+    else if (Model.Users.Count == 0)
+    {
+        <p class="muted" data-testid="users-empty">No users belong to this company.</p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.Users)
+                {
+                    <tr data-testid="user-row">
+                        <td>@user.Name</td>
+                        <td>@user.Username</td>
+                        <td>@user.Role</td>
+                        <td>@(user.IsLockedOut ? "Locked" : "Active")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</section>

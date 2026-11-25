@@ -1,5 +1,6 @@
-﻿namespace Dotnetstore.JournalSystem.Shared.Responses.Organization;
+namespace Dotnetstore.JournalSystem.Shared.Responses.Organization;
 
+/// <param name="CreatedDate">The audit values are only filled in when a single company is fetched.</param>
 public sealed record OwnCompanyResponse(
     Guid Id,
     string Name,
@@ -8,4 +9,8 @@ public sealed record OwnCompanyResponse(
     Uri? WebsiteUrl,
     string? CorporateNumber,
     string? TaxId,
-    bool IsSystem);
+    bool IsSystem,
+    DateTime? CreatedDate = null,
+    string? CreatedByName = null,
+    DateTime? LastUpdatedDate = null,
+    string? LastUpdatedByName = null);

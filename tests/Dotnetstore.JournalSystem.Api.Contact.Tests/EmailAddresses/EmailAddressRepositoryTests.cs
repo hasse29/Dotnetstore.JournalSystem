@@ -225,4 +225,36 @@ public sealed class EmailAddressRepositoryTests : IDisposable
         // Assert
         result.ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsOnlyTheRowsOfThatObject()
+    {
+        // Arrange
+        IEmailAddressRepository repository = _repository;
+        var wanted = Guid.NewGuid();
+        await SeedAsync(
+            EmailAddressTestData.Create(Guid.NewGuid(), "wanted@example.com", objectId: wanted),
+            EmailAddressTestData.Create(Guid.NewGuid(), "other@example.com", objectId: Guid.NewGuid()));
+
+        // Act
+        var result = await repository.GetByObjectIdAsync(wanted, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldHaveSingleItem().Address.ShouldBe("wanted@example.com");
+        _context.ChangeTracker.Entries().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetByObjectIdAsyncReturnsEmptyForAnObjectWithoutRows()
+    {
+        // Arrange
+        IEmailAddressRepository repository = _repository;
+        await SeedAsync(EmailAddressTestData.Create(Guid.NewGuid(), "wanted@example.com", objectId: Guid.NewGuid()));
+
+        // Act
+        var result = await repository.GetByObjectIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.ShouldBeEmpty();
+    }
 }
