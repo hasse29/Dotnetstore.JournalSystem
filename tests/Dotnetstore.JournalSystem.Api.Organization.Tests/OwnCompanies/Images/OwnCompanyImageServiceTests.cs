@@ -31,7 +31,7 @@ public sealed class OwnCompanyImageServiceTests : IDisposable
 
     private async Task<Guid> SeedCompanyAsync()
     {
-        IOwnCompanyService companies = new OwnCompanyService(_database.UnitOfWork);
+        IOwnCompanyService companies = new OwnCompanyService(_database.UnitOfWork, new FakeOwnCompanyDeletionOutbox(_database.Context));
         var result = await companies.CreateAsync(new EditOwnCompanyRequest("Pictured AB", null, null, null, null, null), null, Token);
         _database.Context.ChangeTracker.Clear();
         return result.Value.Id;

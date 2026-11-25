@@ -20,6 +20,7 @@ public sealed class OwnCompanyServiceTests : IDisposable
     private readonly OrganizationDataContext _context;
     private readonly OrganizationUnitOfWork _unitOfWork;
     private readonly OwnCompanyService _service;
+    private readonly FakeOwnCompanyDeletionOutbox _outbox;
 
     public OwnCompanyServiceTests(SqlServerFixture fixture)
     {
@@ -30,7 +31,8 @@ public sealed class OwnCompanyServiceTests : IDisposable
         _context = new OrganizationDataContext(_options);
         _context.Database.EnsureCreated();
         _unitOfWork = new OrganizationUnitOfWork(_context, new AccessRequestRepository(_context), new OwnCompanyRepository(_context), new RoleRepository(_context), new UserRepository(_context), new WorkGroupRepository(_context));
-        _service = new OwnCompanyService(_unitOfWork);
+        _outbox = new FakeOwnCompanyDeletionOutbox(_context);
+        _service = new OwnCompanyService(_unitOfWork, _outbox);
     }
 
     public void Dispose()
@@ -214,6 +216,7 @@ public sealed class OwnCompanyServiceTests : IDisposable
         // Assert
         result.IsSuccess.ShouldBeTrue();
         (await CountStoredAsync()).ShouldBe(0);
+        _outbox.Published.ShouldBe([id]);
     }
 
     [Fact]
@@ -229,6 +232,7 @@ public sealed class OwnCompanyServiceTests : IDisposable
         // Assert
         result.Status.ShouldBe(ResultStatus.NotFound);
         (await CountStoredAsync()).ShouldBe(1);
+        _outbox.Published.ShouldBeEmpty();
     }
 
     [Fact]
@@ -248,6 +252,7 @@ public sealed class OwnCompanyServiceTests : IDisposable
         result.Status.ShouldBe(ResultStatus.Conflict);
         result.Errors.ShouldContain("System companies cannot be deleted.");
         (await CountStoredAsync()).ShouldBe(1);
+        _outbox.Published.ShouldBeEmpty();
     }
 
     [Fact]
@@ -266,5 +271,6 @@ public sealed class OwnCompanyServiceTests : IDisposable
         // Assert
         result.Status.ShouldBe(ResultStatus.Conflict);
         (await CountStoredAsync()).ShouldBe(1);
+        _outbox.Published.ShouldBeEmpty();
     }
 }

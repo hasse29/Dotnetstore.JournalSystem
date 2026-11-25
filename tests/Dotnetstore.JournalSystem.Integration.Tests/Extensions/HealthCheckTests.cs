@@ -1,9 +1,10 @@
 using System.Net;
+using Dotnetstore.JournalSystem.Integration.Tests.Fixtures;
 using Shouldly;
 
 namespace Dotnetstore.JournalSystem.Integration.Tests.Extensions;
 
-public sealed class HealthCheckTests
+public sealed class HealthCheckTests(SqlServerFixture fixture)
 {
     [Fact]
     public async Task HealthEndpointReturnsHealthyWithoutDetails()
@@ -22,21 +23,34 @@ public sealed class HealthCheckTests
     }
 
     [Fact]
-    public async Task HealthEndpointStaysHealthyWhenDatabaseIsUnavailable()
+    public async Task HealthEndpointStaysHealthyWhenTheDatabaseGoesAway()
     {
         // Arrange
-        var settings = new Dictionary<string, string?>
-        {
-            ["ConnectionStrings:journalsystem"] = "Server=localhost,1;Database=unreachable;User Id=u;Password=p;Connect Timeout=1;TrustServerCertificate=True"
-        };
-        await using var factory = TestHost.Create("Production", settings);
+        var connectionString = await ProvisionDatabaseAsync();
+        await using var factory = TestHost.Create("Production", Settings(connectionString));
         using var client = factory.CreateClient();
+        await TakeOfflineAsync(connectionString);
 
         // Act
         using var response = await client.GetAsync(new Uri("/health", UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public void TheHostDoesNotStartWhenTheDatabaseIsUnavailable()
+    {
+        // Arrange
+        using var factory = TestHost.Create(
+            "Production",
+            Settings("Server=localhost,1;Database=unreachable;User Id=u;Password=p;Connect Timeout=1;TrustServerCertificate=True"));
+
+        // Act
+        var action = () => factory.CreateClient();
+
+        // Assert
+        action.ShouldThrow<Exception>();
     }
 
     [Fact]
@@ -68,15 +82,13 @@ public sealed class HealthCheckTests
     }
 
     [Fact]
-    public async Task ReadyEndpointReportsUnhealthyWhenDatabaseIsUnavailable()
+    public async Task ReadyEndpointReportsUnhealthyWhenTheDatabaseGoesAway()
     {
         // Arrange
-        var settings = new Dictionary<string, string?>
-        {
-            ["ConnectionStrings:journalsystem"] = "Server=localhost,1;Database=unreachable;User Id=u;Password=p;Connect Timeout=1;TrustServerCertificate=True"
-        };
-        await using var factory = TestHost.Create("Development", settings);
+        var connectionString = await ProvisionDatabaseAsync();
+        await using var factory = TestHost.Create("Development", Settings(connectionString));
         using var client = factory.CreateClient();
+        await TakeOfflineAsync(connectionString);
 
         // Act
         using var response = await client.GetAsync(new Uri("/ready", UriKind.Relative), TestContext.Current.CancellationToken);
@@ -84,4 +96,20 @@ public sealed class HealthCheckTests
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.ServiceUnavailable);
     }
+
+    private static Dictionary<string, string?> Settings(string connectionString) =>
+        new() { ["ConnectionStrings:journalsystem"] = connectionString };
+
+    private async Task<string> ProvisionDatabaseAsync()
+    {
+        var connectionString = fixture.CreateDatabaseConnectionString();
+        await TestDatabase.ProvisionAsync(connectionString, TestContext.Current.CancellationToken);
+        return connectionString;
+    }
+
+    private static Task TakeOfflineAsync(string connectionString) =>
+        TestDatabase.ExecuteOnMasterAsync(
+            connectionString,
+            "ALTER DATABASE [{0}] SET OFFLINE WITH ROLLBACK IMMEDIATE;",
+            TestContext.Current.CancellationToken);
 }

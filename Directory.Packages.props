@@ -38,6 +38,9 @@
     <PackageVersion Include="Testcontainers.MsSql" Version="4.17.0" />
     <PackageVersion Include="Scalar.AspNetCore" Version="3.0.2" />
     <PackageVersion Include="Shouldly" Version="4.3.0" />
+    <PackageVersion Include="WolverineFx.EntityFrameworkCore" Version="6.65.1" />
+    <PackageVersion Include="WolverineFx.RuntimeCompilation" Version="6.65.1" />
+    <PackageVersion Include="WolverineFx.SqlServer" Version="6.65.1" />
     <PackageVersion Include="xunit.v3.mtp-v2" Version="4.0.3" />
   </ItemGroup>
 </Project>

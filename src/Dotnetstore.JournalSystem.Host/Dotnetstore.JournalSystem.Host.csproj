@@ -16,6 +16,8 @@
     <PackageReference Include="Microsoft.Identity.Web.GraphServiceClient" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" />
+    <PackageReference Include="WolverineFx.SqlServer" />
   </ItemGroup>
 
   <ItemGroup>

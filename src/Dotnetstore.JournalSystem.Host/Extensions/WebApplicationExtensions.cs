@@ -13,7 +13,8 @@ internal static class WebApplicationExtensions
             .AddServiceDefaults()
             .RegisterOrganizationServices()
             .RegisterContactServices()
-            .AddJournalAuthentication();
+            .AddJournalAuthentication()
+            .AddJournalMessaging();
 
         builder.WebHost
             .ConfigureRequestLimits();
@@ -57,6 +58,10 @@ internal static class WebApplicationExtensions
 
                 await app.Services
                     .InitializeContactDatabaseAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                await app.Services
+                    .InitializeMessagingDatabaseAsync(cancellationToken)
                     .ConfigureAwait(false);
 
                 var seedFiles = (app.Configuration.GetSection("Seeding:Paths").Get<string[]>()

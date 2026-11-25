@@ -48,6 +48,7 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IOwnCompanyRepository, OwnCompanyRepository>();
         builder.Services.AddScoped<IOrganizationUnitOfWork, OrganizationUnitOfWork>();
         builder.Services.AddScoped<IOwnCompanyService, OwnCompanyService>();
+        builder.Services.AddScoped<IOwnCompanyDeletionOutbox, OwnCompanyDeletionOutbox>();
         builder.Services.AddScoped<IOwnCompanyImageRepository, OwnCompanyImageRepository>();
         builder.Services.AddScoped<IOwnCompanyImageService, OwnCompanyImageService>();
         builder.Services.AddScoped<IRoleRepository, RoleRepository>();
