@@ -22,7 +22,7 @@ internal static class OwnCompanyEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Own companies")
-            .RequireAuthorization(AuthPolicies.Authenticated);
+            .RequireAuthorization(AuthPolicies.Approved);
 
         reads
             .MapGet(ApiEndpoints.Organization.OwnCompanies.GetAll, GetAllAsync)

@@ -20,7 +20,7 @@ internal static class PhoneNumberEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Phone numbers")
-            .RequireAuthorization(AuthPolicies.Authenticated);
+            .RequireAuthorization(AuthPolicies.Approved);
 
         reads
             .MapGet(ApiEndpoints.Contact.PhoneNumbers.GetAll, GetAllAsync)
