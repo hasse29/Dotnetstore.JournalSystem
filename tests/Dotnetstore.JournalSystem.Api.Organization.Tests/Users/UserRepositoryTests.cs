@@ -240,4 +240,32 @@ public sealed class UserRepositoryTests : IDisposable
         user.LockoutEnd.ShouldBeNull();
         user.Username.ShouldBe("anna@example.com");
     }
+
+    [Fact]
+    public async Task ExistsWithRoleIsTrueWhenAUserHasIt()
+    {
+        // Arrange
+        var user = UserTestData.Create(Guid.NewGuid());
+        _database.Context.Users.Add(user);
+        await _database.Context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var exists = await _repository.ExistsWithRoleAsync(user.RoleId, TestContext.Current.CancellationToken);
+
+        // Assert
+        exists.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ExistsWithRoleIsFalseWhenNoUserHasIt()
+    {
+        // Arrange
+        await SeedAsync();
+
+        // Act
+        var exists = await _repository.ExistsWithRoleAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        exists.ShouldBeFalse();
+    }
 }

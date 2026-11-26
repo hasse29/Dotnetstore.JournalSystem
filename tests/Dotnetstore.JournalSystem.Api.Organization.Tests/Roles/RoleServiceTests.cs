@@ -7,6 +7,7 @@ using Dotnetstore.JournalSystem.Api.Organization.Users;
 using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
+using Dotnetstore.JournalSystem.Api.Organization.Tests.Users;
 using Dotnetstore.JournalSystem.Shared.Requests.Organization;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -227,6 +228,169 @@ public sealed class RoleServiceTests : IDisposable
 
         // Assert
         result.Status.ShouldBe(ResultStatus.NotFound);
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    private async Task<Guid> SeedSystemRoleAsync()
+    {
+        var role = RoleTestData.Create(Guid.NewGuid(), "Administrator", "Full access", isSystem: true);
+        _context.Roles.Add(role);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+        return role.Id;
+    }
+
+    private async Task<Role> ReadAsync(Guid id)
+    {
+        _context.ChangeTracker.Clear();
+        return await _context.Roles.AsNoTracking().SingleAsync(x => x.Id == id, TestContext.Current.CancellationToken);
+    }
+
+    [Fact]
+    public async Task CreateAsyncTrimsTheName()
+    {
+        // Arrange
+        IRoleService service = _service;
+
+        // Act
+        var result = await service.CreateAsync(CreateRequest("  Nurse  "), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        (await ReadAsync(result.Value.Id)).Name.ShouldBe("Nurse");
+    }
+
+    [Theory]
+    [InlineData("Nurse")]
+    [InlineData("nurse")]
+    [InlineData("  Nurse ")]
+    public async Task CreateAsyncRefusesATakenName(string name)
+    {
+        // Arrange
+        IRoleService service = _service;
+        await SeedAsync("Nurse");
+
+        // Act
+        var result = await service.CreateAsync(CreateRequest(name), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task UpdateAsyncRefusesTheNameOfAnotherRole()
+    {
+        // Arrange
+        IRoleService service = _service;
+        await SeedAsync("Nurse");
+        var id = await SeedAsync("Doctor");
+
+        // Act
+        var result = await service.UpdateAsync(id, CreateRequest("NURSE"), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        (await ReadAsync(id)).Name.ShouldBe("Doctor");
+    }
+
+    [Fact]
+    public async Task UpdateAsyncAllowsChangingTheCaseOfItsOwnName()
+    {
+        // Arrange
+        IRoleService service = _service;
+        var id = await SeedAsync("nurse");
+
+        // Act
+        var result = await service.UpdateAsync(id, CreateRequest("Nurse"), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        (await ReadAsync(id)).Name.ShouldBe("Nurse");
+    }
+
+    [Fact]
+    public async Task UpdateAsyncStillEditsARoleThatAlreadySharesItsName()
+    {
+        // Arrange
+        IRoleService service = _service;
+        var id = Guid.NewGuid();
+        _context.Roles.AddRange(RoleTestData.Create(id, "Nurse"), RoleTestData.Create(Guid.NewGuid(), "Nurse"));
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.UpdateAsync(id, new EditRoleRequest("Nurse", "Changed"), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        (await ReadAsync(id)).Description.ShouldBe("Changed");
+    }
+
+    [Theory]
+    [InlineData("Boss")]
+    [InlineData("administrator")]
+    public async Task UpdateAsyncRefusesToRenameASystemRole(string name)
+    {
+        // Arrange
+        IRoleService service = _service;
+        var id = await SeedSystemRoleAsync();
+
+        // Act
+        var result = await service.UpdateAsync(id, CreateRequest(name), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        (await ReadAsync(id)).Name.ShouldBe("Administrator");
+    }
+
+    [Fact]
+    public async Task UpdateAsyncChangesTheDescriptionOfASystemRoleAndKeepsItASystemRole()
+    {
+        // Arrange
+        IRoleService service = _service;
+        var id = await SeedSystemRoleAsync();
+
+        // Act
+        var result = await service.UpdateAsync(id, new EditRoleRequest("Administrator", "Changed"), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        var stored = await ReadAsync(id);
+        stored.Description.ShouldBe("Changed");
+        stored.IsSystem.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task DeleteAsyncRefusesASystemRole()
+    {
+        // Arrange
+        IRoleService service = _service;
+        var id = await SeedSystemRoleAsync();
+
+        // Act
+        var result = await service.DeleteAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
+        (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task DeleteAsyncRefusesARoleThatAUserHas()
+    {
+        // Arrange
+        IRoleService service = _service;
+        var user = UserTestData.Create(Guid.NewGuid());
+        _context.Roles.Add(RoleTestData.Create(user.RoleId, "Nurse"));
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        var result = await service.DeleteAsync(user.RoleId, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Status.ShouldBe(ResultStatus.Conflict);
         (await CountStoredAsync()).ShouldBe(1);
     }
 }

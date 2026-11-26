@@ -1,0 +1,116 @@
+@page
+@using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication
+@model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Roles.IndexModel
+@{
+    ViewData["Title"] = "Roles";
+    var canEdit = AccessGate.IsAdministratorOrUnknown(User);
+}
+
+<div class="page-header page-header-row">
+    <div>
+        <h1>Roles</h1>
+        <p>The roles users can have.</p>
+    </div>
+    @if (canEdit && !Model.Unavailable)
+    {
+        <button type="button" class="btn btn-primary" data-dialog-open="role-create-dialog" data-testid="role-add">Add role</button>
+    }
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-success" role="status" data-testid="roles-message">@Model.Message</div>
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert" data-testid="roles-error">@Model.ErrorMessage</div>
+}
+
+@if (Model.Unavailable)
+{
+    <div class="alert alert-danger" role="alert" data-testid="roles-unavailable">
+        The API could not be reached. Roles are not available right now.
+    </div>
+}
+else
+{
+    <section class="card" aria-labelledby="roles-heading">
+        <h2 id="roles-heading">All roles (<span data-testid="roles-count">@Model.Roles.Count</span>)</h2>
+        @if (Model.Roles.Count == 0)
+        {
+            <p class="muted" data-testid="roles-empty">No roles have been added yet.</p>
+        }
+        else
+        {
+            <table class="table" data-testid="roles-table">
+                <thead>
+                    <tr><th>Name</th><th>Description</th>@if (canEdit) { <th class="actions-col"><span class="visually-hidden">Actions</span></th> }</tr>
+                </thead>
+                <tbody>
+                    @foreach (var role in Model.Roles)
+                    {
+                        <tr data-testid="role-@role.Name">
+                            <td>
+                                <strong>@role.Name</strong>
+                                @if (role.IsSystem)
+                                {
+                                    <span class="badge badge-approved" data-testid="role-system">System</span>
+                                }
+                            </td>
+                            <td>@role.Description</td>
+                            @if (canEdit)
+                            {
+                                <td class="actions-col">
+                                    <div class="row-actions">
+                                        <button type="button" class="btn btn-secondary" data-dialog-open="role-edit-@role.Id" data-testid="role-edit">Edit</button>
+                                        @if (!role.IsSystem)
+                                        {
+                                            <form method="post" asp-page-handler="Delete" asp-route-id="@role.Id" data-confirm="Delete @role.Name? This cannot be undone.">
+                                                <button type="submit" class="btn btn-secondary btn-danger" data-testid="role-delete">Delete</button>
+                                            </form>
+                                        }
+                                    </div>
+                                    <dialog class="modal" id="role-edit-@role.Id" aria-labelledby="role-edit-title-@role.Id">
+                                        <form method="post" asp-page-handler="Update" asp-route-id="@role.Id">
+                                            <div class="modal-header">
+                                                <h2 id="role-edit-title-@role.Id">Edit @role.Name</h2>
+                                                <button type="button" class="icon-button" data-dialog-close aria-label="Close">✕</button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <partial name="_RoleFields" model="role" />
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+                                                <button type="submit" class="btn btn-primary" data-testid="role-save">Save</button>
+                                            </div>
+                                        </form>
+                                    </dialog>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+
+    @if (canEdit)
+    {
+        <dialog class="modal" id="role-create-dialog" aria-labelledby="role-create-title">
+            <form method="post" asp-page-handler="Create" data-testid="role-create-form">
+                <div class="modal-header">
+                    <h2 id="role-create-title">Add a role</h2>
+                    <button type="button" class="icon-button" data-dialog-close aria-label="Close">✕</button>
+                </div>
+                <div class="modal-body">
+                    <partial name="_RoleFields" model="(Dotnetstore.JournalSystem.Shared.Responses.Organization.RoleResponse?)null" />
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+                    <button type="submit" class="btn btn-primary" data-testid="role-create">Add role</button>
+                </div>
+            </form>
+        </dialog>
+    }
+}

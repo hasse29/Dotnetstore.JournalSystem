@@ -1,0 +1,10 @@
+@using Dotnetstore.JournalSystem.Shared.Constants
+@model Dotnetstore.JournalSystem.Shared.Responses.Organization.RoleResponse?
+<div class="form-grid">
+    <label>Name
+        <input name="Name" value="@Model?.Name" required readonly="@(Model?.IsSystem == true)" maxlength="@DataSchemeConstants.RoleNameMaxLength" data-testid="role-name" />
+    </label>
+    <label>Description
+        <input name="Description" value="@Model?.Description" maxlength="@DataSchemeConstants.RoleDescriptionMaxLength" data-testid="role-description" />
+    </label>
+</div>

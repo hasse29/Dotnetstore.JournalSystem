@@ -6,7 +6,7 @@ internal static class RoleTestData
 {
     internal static readonly DateTime CreatedDate = new(2026, 1, 2, 3, 4, 5, DateTimeKind.Utc);
 
-    internal static Role Create(Guid id, string name, string description = "Description")
+    internal static Role Create(Guid id, string name, string description = "Description", bool isSystem = false)
     {
         return new Role(
             id,
@@ -19,7 +19,7 @@ internal static class RoleTestData
             null,
             null,
             false,
-            false,
+            isSystem,
             false);
     }
 }

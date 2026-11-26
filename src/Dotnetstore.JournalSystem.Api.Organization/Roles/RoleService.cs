@@ -8,6 +8,16 @@ namespace Dotnetstore.JournalSystem.Api.Organization.Roles;
 internal sealed class RoleService(
     IOrganizationUnitOfWork organizationUnitOfWork) : IRoleService
 {
+    private const string DuplicateNameMessage = "A role with that name already exists.";
+
+    private static EditRoleRequest Trimmed(EditRoleRequest request) => request with { Name = request.Name.Trim() };
+
+    private async Task<bool> NameIsTakenAsync(string name, Guid? exceptId, CancellationToken cancellationToken) =>
+        await organizationUnitOfWork
+            .Roles
+            .ExistsWithNameAsync(name, exceptId, cancellationToken)
+            .ConfigureAwait(false);
+
     async Task<IEnumerable<RoleResponse>> IRoleService.GetAllAsync(CancellationToken cancellationToken)
     {
         var items = await organizationUnitOfWork
@@ -34,8 +44,13 @@ internal sealed class RoleService(
     {
         var role = RoleBuilder
             .Create()
-            .WithCreateValues(request, userId)
+            .WithCreateValues(Trimmed(request), userId)
             .Build();
+
+        if (await NameIsTakenAsync(role.Name, null, cancellationToken).ConfigureAwait(false))
+        {
+            return Result<RoleResponse>.Conflict(DuplicateNameMessage);
+        }
 
         await organizationUnitOfWork
             .Roles
@@ -65,8 +80,21 @@ internal sealed class RoleService(
 
         var roleToUpdate = RoleBuilder
             .Update()
-            .WithUpdateValues(existing, role, userId)
+            .WithUpdateValues(existing, Trimmed(role), userId)
             .Build();
+
+        // The administrator claim is the role's name, so a system role must keep it exactly.
+        if (existing.IsSystem && !string.Equals(existing.Name, roleToUpdate.Name, StringComparison.Ordinal))
+        {
+            return Result<RoleResponse>.Conflict("System roles cannot be renamed.");
+        }
+
+        // Only a new name is checked, so a role that already shares its name can still be edited.
+        if (!string.Equals(existing.Name, roleToUpdate.Name, StringComparison.OrdinalIgnoreCase)
+            && await NameIsTakenAsync(roleToUpdate.Name, id, cancellationToken).ConfigureAwait(false))
+        {
+            return Result<RoleResponse>.Conflict(DuplicateNameMessage);
+        }
 
         organizationUnitOfWork
             .Roles
@@ -95,6 +123,21 @@ internal sealed class RoleService(
         if (existing is null)
         {
             return Result.NotFound();
+        }
+
+        if (existing.IsSystem)
+        {
+            return Result.Conflict("System roles cannot be deleted.");
+        }
+
+        var hasUsers = await organizationUnitOfWork
+            .Users
+            .ExistsWithRoleAsync(id, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (hasUsers)
+        {
+            return Result.Conflict("The role is still used by users. Give them another role first.");
         }
 
         await organizationUnitOfWork

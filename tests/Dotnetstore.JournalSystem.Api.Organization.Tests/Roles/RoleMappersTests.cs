@@ -33,4 +33,19 @@ public sealed class RoleMappersTests
         // Assert
         response.Description.ShouldBeEmpty();
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ToRoleResponseTellsWhetherTheRoleIsASystemRole(bool isSystem)
+    {
+        // Arrange
+        var role = RoleTestData.Create(Guid.NewGuid(), "Administrator", isSystem: isSystem);
+
+        // Act
+        var response = role.ToRoleResponse();
+
+        // Assert
+        response.IsSystem.ShouldBe(isSystem);
+    }
 }

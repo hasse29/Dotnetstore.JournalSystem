@@ -83,7 +83,7 @@ internal static class RoleEndpoints
         };
     }
 
-    private static async Task<Results<CreatedAtRoute<RoleResponse>, ValidationProblem, ProblemHttpResult>> CreateAsync(
+    private static async Task<Results<CreatedAtRoute<RoleResponse>, ValidationProblem, Conflict<string>, ProblemHttpResult>> CreateAsync(
         EditRoleRequest? request,
         IRoleService service,
         CancellationToken cancellationToken)
@@ -98,12 +98,15 @@ internal static class RoleEndpoints
             .CreateAsync(request!, null, cancellationToken)
             .ConfigureAwait(false);
 
-        return result.IsSuccess
-            ? TypedResults.CreatedAtRoute(result.Value, GetByIdName, new RouteValueDictionary { ["id"] = result.Value.Id })
-            : TypedResults.Problem();
+        return result.Status switch
+        {
+            ResultStatus.Ok => TypedResults.CreatedAtRoute(result.Value, GetByIdName, new RouteValueDictionary { ["id"] = result.Value.Id }),
+            ResultStatus.Conflict => TypedResults.Conflict(result.Errors.FirstOrDefault() ?? "Conflict."),
+            _ => TypedResults.Problem()
+        };
     }
 
-    private static async Task<Results<Ok<RoleResponse>, NotFound, ValidationProblem, ProblemHttpResult>> UpdateAsync(
+    private static async Task<Results<Ok<RoleResponse>, NotFound, ValidationProblem, Conflict<string>, ProblemHttpResult>> UpdateAsync(
         Guid id,
         EditRoleRequest? request,
         IRoleService service,
@@ -123,11 +126,12 @@ internal static class RoleEndpoints
         {
             ResultStatus.Ok => TypedResults.Ok(result.Value),
             ResultStatus.NotFound => TypedResults.NotFound(),
+            ResultStatus.Conflict => TypedResults.Conflict(result.Errors.FirstOrDefault() ?? "Conflict."),
             _ => TypedResults.Problem()
         };
     }
 
-    private static async Task<Results<NoContent, NotFound, ProblemHttpResult>> DeleteAsync(
+    private static async Task<Results<NoContent, NotFound, Conflict<string>, ProblemHttpResult>> DeleteAsync(
         Guid id,
         IRoleService service,
         CancellationToken cancellationToken)
@@ -140,6 +144,7 @@ internal static class RoleEndpoints
         {
             ResultStatus.Ok => TypedResults.NoContent(),
             ResultStatus.NotFound => TypedResults.NotFound(),
+            ResultStatus.Conflict => TypedResults.Conflict(result.Errors.FirstOrDefault() ?? "Conflict."),
             _ => TypedResults.Problem()
         };
     }

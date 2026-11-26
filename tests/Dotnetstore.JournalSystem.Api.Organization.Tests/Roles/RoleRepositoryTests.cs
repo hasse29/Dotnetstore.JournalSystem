@@ -184,4 +184,49 @@ public sealed class RoleRepositoryTests : IDisposable
         // Assert
         (await _context.Roles.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(1);
     }
+
+    [Theory]
+    [InlineData("Nurse")]
+    [InlineData("NURSE")]
+    public async Task ExistsWithNameIsTrueForATakenNameWhateverItsCase(string name)
+    {
+        // Arrange
+        IRoleRepository repository = _repository;
+        await SeedAsync(CreateRole("Nurse"));
+
+        // Act
+        var exists = await repository.ExistsWithNameAsync(name, cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        exists.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ExistsWithNameIsFalseForAFreeName()
+    {
+        // Arrange
+        IRoleRepository repository = _repository;
+        await SeedAsync(CreateRole("Nurse"));
+
+        // Act
+        var exists = await repository.ExistsWithNameAsync("Doctor", cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        exists.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task ExistsWithNameIgnoresTheExceptedRole()
+    {
+        // Arrange
+        IRoleRepository repository = _repository;
+        var role = CreateRole("Nurse");
+        await SeedAsync(role);
+
+        // Act
+        var exists = await repository.ExistsWithNameAsync("Nurse", role.Id, TestContext.Current.CancellationToken);
+
+        // Assert
+        exists.ShouldBeFalse();
+    }
 }
