@@ -63,7 +63,8 @@ public sealed class DashboardTests(E2EFixture fixture)
 
         // Assert
         await Expect(dashboard.CurrentUser).ToHaveTextAsync(E2EFixture.UserFullName);
-        await Expect(dashboard.StatValue("users")).ToHaveTextAsync("–");
+        await Expect(dashboard.StatValue("users")).ToHaveCountAsync(0);
+        await Expect(dashboard.RecentTable).ToHaveCountAsync(0);
         await Expect(dashboard.StatValue("roles")).ToHaveTextAsync(new Regex("^[0-9]+$"));
     }
 

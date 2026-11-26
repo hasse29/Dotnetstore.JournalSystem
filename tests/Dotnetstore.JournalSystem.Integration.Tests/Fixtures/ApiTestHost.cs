@@ -76,8 +76,23 @@ internal sealed class ApiTestHost : IAsyncDisposable
         return host;
     }
 
-    /// <summary>Creates a user without the administrator role and signs in as them. Requires an administrator session.</summary>
-    internal async Task SignInAsNewNonAdminAsync(CancellationToken cancellationToken)
+    /// <summary>What a role could do before rights existed, and what existing roles were given.</summary>
+    internal static readonly IReadOnlyList<string> ViewRights =
+    [
+        Permissions.OwnCompanies.View,
+        Permissions.Roles.View,
+        Permissions.WorkGroups.View,
+        Permissions.ContactDetails.View,
+        Permissions.ContactTypes.View
+    ];
+
+    /// <summary>
+    /// Creates a user without the administrator role and signs in as them. Their role holds <see cref="ViewRights"/>
+    /// unless other rights are given. Requires an administrator session.
+    /// </summary>
+    internal async Task SignInAsNewNonAdminAsync(
+        CancellationToken cancellationToken,
+        IReadOnlyList<string>? permissions = null)
     {
         const string username = "nurse@example.com";
         const string password = "a-long-enough-password";
@@ -87,7 +102,7 @@ internal sealed class ApiTestHost : IAsyncDisposable
             cancellationToken);
         using var role = await Client.PostAsJsonAsync(
             new Uri(ApiEndpoints.Organization.Roles.Create, UriKind.Relative),
-            new EditRoleRequest("Nurse", "Description"),
+            new EditRoleRequest("Nurse", "Description", permissions ?? ViewRights),
             cancellationToken);
         role.EnsureSuccessStatusCode();
         var roleId = (await role.Content.ReadFromJsonAsync<RoleResponse>(cancellationToken))!.Id;

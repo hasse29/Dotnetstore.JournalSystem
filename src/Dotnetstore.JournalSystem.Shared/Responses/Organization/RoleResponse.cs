@@ -4,4 +4,5 @@ public sealed record RoleResponse(
     Guid Id,
     string Name,
     string Description,
-    bool IsSystem = false);
+    bool IsSystem = false,
+    IReadOnlyList<string>? Permissions = null);

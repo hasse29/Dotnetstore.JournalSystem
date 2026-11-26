@@ -40,11 +40,12 @@ public sealed class OrganizationMigrationsTests(SqlServerFixture fixture)
         var applied = await context.Database
             .SqlQuery<string>($"SELECT MigrationId AS [Value] FROM [Organization].[__EFMigrationsHistory] ORDER BY MigrationId")
             .ToListAsync(TestContext.Current.CancellationToken);
-        applied.Count.ShouldBe(4);
+        applied.Count.ShouldBe(5);
         applied[0].ShouldEndWith("_InitialCreate");
         applied[1].ShouldEndWith("_AddAccessRequests");
         applied[2].ShouldEndWith("_AddPersonDetails");
         applied[3].ShouldEndWith("_AddOwnCompanyImages");
+        applied[4].ShouldEndWith("_AddRolePermissions");
         await DeleteDatabaseAsync(provider);
     }
 

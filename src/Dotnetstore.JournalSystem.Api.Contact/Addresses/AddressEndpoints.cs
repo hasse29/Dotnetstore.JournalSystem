@@ -20,7 +20,7 @@ internal static class AddressEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Addresses")
-            .RequireAuthorization(AuthPolicies.Approved);
+            .RequireAuthorization(Permissions.ContactDetails.View);
 
         reads
             .MapGet(ApiEndpoints.Contact.Addresses.GetAll, GetAllAsync)
@@ -34,22 +34,24 @@ internal static class AddressEndpoints
 
         var group = app
             .MapGroup(string.Empty)
-            .WithTags("Addresses")
-            .RequireAuthorization(AuthPolicies.Administrator);
+            .WithTags("Addresses");
 
         group
             .MapPost(ApiEndpoints.Contact.Addresses.Create, CreateAsync)
             .WithName("CreateAddress")
+            .RequireAuthorization(Permissions.ContactDetails.Create)
             .WithSummary("Creates an address.");
 
         group
             .MapPut(ApiEndpoints.Contact.Addresses.Update, UpdateAsync)
             .WithName("UpdateAddress")
+            .RequireAuthorization(Permissions.ContactDetails.Edit)
             .WithSummary("Updates an address.");
 
         group
             .MapDelete(ApiEndpoints.Contact.Addresses.Delete, DeleteAsync)
             .WithName("DeleteAddress")
+            .RequireAuthorization(Permissions.ContactDetails.Delete)
             .WithSummary("Deletes an address.");
 
         return app;

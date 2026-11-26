@@ -1,4 +1,5 @@
 using System.Globalization;
+using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication;
 using Dotnetstore.JournalSystem.Shared.Clients;
 using Dotnetstore.JournalSystem.Shared.Clients.Organization;
 using Dotnetstore.JournalSystem.Shared.Constants;
@@ -13,7 +14,8 @@ namespace Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Admin;
 public sealed class AccessRequestsModel(
     IAccessRequestClient requests,
     IRoleClient roles,
-    IOwnCompanyClient ownCompanies) : PageModel
+    IOwnCompanyClient ownCompanies,
+    ICurrentUserProfile currentProfile) : PageModel
 {
     internal const string GenderMale = "male";
     internal const string GenderFemale = "female";
@@ -28,6 +30,8 @@ public sealed class AccessRequestsModel(
 
     public bool Forbidden { get; private set; }
 
+    public bool CanDecide { get; private set; }
+
     public bool Unavailable { get; private set; }
 
     [TempData]
@@ -38,6 +42,9 @@ public sealed class AccessRequestsModel(
 
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
+        var rights = await currentProfile.GetRightsAsync(User, cancellationToken).ConfigureAwait(false);
+        CanDecide = rights.Has(Permissions.AccessRequests.Edit);
+
         try
         {
             var requestsTask = requests.GetAllAsync(null, cancellationToken);
@@ -145,7 +152,7 @@ public sealed class AccessRequestsModel(
             }
             else if (result.IsForbidden)
             {
-                ErrorMessage = "You do not have permission to decide access requests.";
+                ErrorMessage = result.Problem.Detail ?? "You do not have permission to decide access requests.";
             }
             else if (result.IsNotFound)
             {

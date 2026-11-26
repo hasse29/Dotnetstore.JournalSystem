@@ -27,30 +27,33 @@ else
         }
     </section>
 
-    <section class="card" aria-labelledby="recent-heading">
-        <h2 id="recent-heading">Recent sign-ins</h2>
-        @if (Model.RecentSignIns.Count == 0)
-        {
-            <p class="muted" data-testid="recent-empty">No sign-ins recorded yet.</p>
-        }
-        else
-        {
-            <table class="table" data-testid="recent-table">
-                <thead>
-                    <tr><th>Name</th><th>Username</th><th>Provider</th><th>Last sign-in (UTC)</th></tr>
-                </thead>
-                <tbody>
-                    @foreach (var user in Model.RecentSignIns)
-                    {
-                        <tr>
-                            <td>@user.FirstName @user.LastName</td>
-                            <td>@user.Username</td>
-                            <td>@user.AuthProvider</td>
-                            <td>@user.LastLoginAt?.ToString("yyyy-MM-dd HH:mm")</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-    </section>
+    @if (Model.CanViewUsers)
+    {
+        <section class="card" aria-labelledby="recent-heading">
+            <h2 id="recent-heading">Recent sign-ins</h2>
+            @if (Model.RecentSignIns.Count == 0)
+            {
+                <p class="muted" data-testid="recent-empty">No sign-ins recorded yet.</p>
+            }
+            else
+            {
+                <table class="table" data-testid="recent-table">
+                    <thead>
+                        <tr><th>Name</th><th>Username</th><th>Provider</th><th>Last sign-in (UTC)</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var user in Model.RecentSignIns)
+                        {
+                            <tr>
+                                <td>@user.FirstName @user.LastName</td>
+                                <td>@user.Username</td>
+                                <td>@user.AuthProvider</td>
+                                <td>@user.LastLoginAt?.ToString("yyyy-MM-dd HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    }
 }

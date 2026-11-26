@@ -21,6 +21,7 @@ internal sealed class OrganizationDataContext(DbContextOptions<OrganizationDataC
     public DbSet<OwnCompany> OwnCompanies { get; set; }
     public DbSet<OwnCompanyImage> OwnCompanyImages { get; set; }
     public DbSet<Role> Roles { get; set; }
+    public DbSet<RolePermission> RolePermissions { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<WorkGroup> WorkGroups { get; set; }
 

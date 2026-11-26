@@ -16,7 +16,7 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
     // If you encounter a merge conflict in the line below, it means you need to
     // discard one of the migration branches and recreate its migrations on top of
     // the other branch. See https://aka.ms/efcore-docs-migrations-conflicts for more info.
-    public override string LastMigrationId => "20261125085829_AddOwnCompanyImages";
+    public override string LastMigrationId => "20261126033030_AddRolePermissions";
 
     protected override void BuildModel(ModelBuilder modelBuilder)
     {
@@ -232,6 +232,20 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
                 b.ToTable("Role", "Organization");
             });
 
+        modelBuilder.Entity("Dotnetstore.JournalSystem.Api.Organization.Roles.RolePermission", b =>
+            {
+                b.Property<Guid>("RoleId")
+                    .HasColumnType("uniqueidentifier");
+
+                b.Property<string>("Permission")
+                    .HasMaxLength(50)
+                    .HasColumnType("nvarchar(50)");
+
+                b.HasKey("RoleId", "Permission");
+
+                b.ToTable("RolePermission", "Organization");
+            });
+
         modelBuilder.Entity("Dotnetstore.JournalSystem.Api.Organization.Users.User", b =>
             {
                 b.Property<Guid>("Id")
@@ -410,6 +424,15 @@ partial class OrganizationDataContextModelSnapshot : ModelSnapshot
                 b.HasOne("Dotnetstore.JournalSystem.Api.Organization.OwnCompanies.OwnCompany", null)
                     .WithMany()
                     .HasForeignKey("OwnCompanyId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+            });
+
+        modelBuilder.Entity("Dotnetstore.JournalSystem.Api.Organization.Roles.RolePermission", b =>
+            {
+                b.HasOne("Dotnetstore.JournalSystem.Api.Organization.Roles.Role", null)
+                    .WithMany()
+                    .HasForeignKey("RoleId")
                     .OnDelete(DeleteBehavior.Cascade)
                     .IsRequired();
             });

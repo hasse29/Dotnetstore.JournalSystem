@@ -20,7 +20,7 @@ internal static class WorkGroupEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Work groups")
-            .RequireAuthorization(AuthPolicies.Approved);
+            .RequireAuthorization(Permissions.WorkGroups.View);
 
         reads
             .MapGet(ApiEndpoints.Organization.WorkGroups.GetAll, GetAllAsync)
@@ -34,22 +34,24 @@ internal static class WorkGroupEndpoints
 
         var group = app
             .MapGroup(string.Empty)
-            .WithTags("Work groups")
-            .RequireAuthorization(AuthPolicies.Administrator);
+            .WithTags("Work groups");
 
         group
             .MapPost(ApiEndpoints.Organization.WorkGroups.Create, CreateAsync)
             .WithName("CreateWorkGroup")
+            .RequireAuthorization(Permissions.WorkGroups.Create)
             .WithSummary("Creates a work group.");
 
         group
             .MapPut(ApiEndpoints.Organization.WorkGroups.Update, UpdateAsync)
             .WithName("UpdateWorkGroup")
+            .RequireAuthorization(Permissions.WorkGroups.Edit)
             .WithSummary("Updates a work group.");
 
         group
             .MapDelete(ApiEndpoints.Organization.WorkGroups.Delete, DeleteAsync)
             .WithName("DeleteWorkGroup")
+            .RequireAuthorization(Permissions.WorkGroups.Delete)
             .WithSummary("Deletes a work group.");
 
         return app;

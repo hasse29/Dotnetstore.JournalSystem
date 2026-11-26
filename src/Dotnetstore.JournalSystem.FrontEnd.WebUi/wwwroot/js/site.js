@@ -72,3 +72,34 @@
         }
     });
 })();
+
+(function () {
+    "use strict";
+
+    // Ticking a right ticks the ones it needs; unticking one unticks those that need it. The API adds them too.
+    document.addEventListener("change", function (event) {
+        var box = event.target;
+        var group = box.closest && box.closest("[data-permissions]");
+        if (!group || box.type !== "checkbox") {
+            return;
+        }
+
+        var boxes = Array.prototype.slice.call(group.querySelectorAll("input[type=checkbox]"));
+        var requires = function (item) {
+            return (item.getAttribute("data-requires") || "").split(" ").filter(Boolean);
+        };
+        var pending = [box];
+        while (pending.length) {
+            var current = pending.pop();
+            boxes.forEach(function (other) {
+                var related = box.checked
+                    ? requires(current).indexOf(other.value) >= 0
+                    : requires(other).indexOf(current.value) >= 0;
+                if (related && other.checked !== box.checked) {
+                    other.checked = box.checked;
+                    pending.push(other);
+                }
+            });
+        }
+    });
+})();

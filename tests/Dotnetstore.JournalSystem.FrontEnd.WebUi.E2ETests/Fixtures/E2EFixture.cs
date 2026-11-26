@@ -161,9 +161,24 @@ public sealed class E2EFixture : IAsyncLifetime
             ViewportSize = viewport ?? new ViewportSize { Width = 1280, Height = 800 }
         });
 
-    /// <summary>Creates a user through the API as the bootstrap administrator and returns the username.</summary>
-    public async Task<string> CreateUserAsync(string roleName, string? username = null)
+    /// <summary>
+    /// Creates a user through the API as the bootstrap administrator and returns the username. Their role can view
+    /// companies, roles, work groups and contacts unless other rights are given.
+    /// </summary>
+    public async Task<string> CreateUserAsync(
+        string roleName,
+        string? username = null,
+        IReadOnlyList<string>? permissions = null)
     {
+        permissions ??=
+        [
+            Permissions.OwnCompanies.View,
+            Permissions.Roles.View,
+            Permissions.WorkGroups.View,
+            Permissions.ContactDetails.View,
+            Permissions.ContactTypes.View
+        ];
+
         username ??= $"{roleName.ToUpperInvariant()}-{Guid.NewGuid():N}@example.com";
 
         using var client = _api!.CreateClient();
@@ -178,7 +193,7 @@ public sealed class E2EFixture : IAsyncLifetime
 
         using var roleResponse = await client.PostAsJsonAsync(
             new Uri(ApiEndpoints.Organization.Roles.Create, UriKind.Relative),
-            new EditRoleRequest(roleName + "-" + Guid.NewGuid().ToString("N")[..6], "E2E role"));
+            new EditRoleRequest(roleName + "-" + Guid.NewGuid().ToString("N")[..6], "E2E role", permissions));
         roleResponse.EnsureSuccessStatusCode();
         var role = (await roleResponse.Content.ReadFromJsonAsync<RoleResponse>())!;
 

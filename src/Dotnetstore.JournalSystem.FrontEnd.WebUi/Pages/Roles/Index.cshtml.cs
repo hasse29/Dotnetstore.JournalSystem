@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication;
 using Dotnetstore.JournalSystem.Shared.Clients;
 using Dotnetstore.JournalSystem.Shared.Clients.Organization;
 using Dotnetstore.JournalSystem.Shared.Constants;
@@ -13,15 +14,22 @@ public sealed class RoleInput
     public string? Name { get; set; }
 
     public string? Description { get; set; }
+
+    /// <summary>The ticked rights; null when none are.</summary>
+    public IReadOnlyList<string>? Permissions { get; set; }
 }
 
-public sealed class IndexModel(IRoleClient roles) : PageModel
+public sealed class IndexModel(IRoleClient roles, ICurrentUserProfile currentProfile) : PageModel
 {
-    private const string Forbidden = "Only administrators can change roles.";
+    private const string ChangeRefused = "Only administrators can change roles.";
 
     public IReadOnlyList<RoleResponse> Roles { get; private set; } = [];
 
     public bool Unavailable { get; private set; }
+
+    public bool Forbidden { get; private set; }
+
+    public bool CanManage { get; private set; }
 
     [TempData]
     public string? Message { get; set; }
@@ -31,6 +39,10 @@ public sealed class IndexModel(IRoleClient roles) : PageModel
 
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
+        // Rights over roles cannot be delegated.
+        var rights = await currentProfile.GetRightsAsync(User, cancellationToken).ConfigureAwait(false);
+        CanManage = rights.IsAdministrator;
+
         try
         {
             var result = await roles.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -38,6 +50,10 @@ public sealed class IndexModel(IRoleClient roles) : PageModel
             if (result.IsSuccess && result.Value is not null)
             {
                 Roles = result.Value.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            else if (result.IsForbidden)
+            {
+                Forbidden = true;
             }
             else
             {
@@ -109,12 +125,12 @@ public sealed class IndexModel(IRoleClient roles) : PageModel
             _ => null
         };
 
-        return error is null ? new EditRoleRequest(name, description) : null;
+        return error is null ? new EditRoleRequest(name, description, input.Permissions ?? []) : null;
     }
 
     private async Task<IActionResult> DecideAsync(Func<Task<ApiResult>> call, string success)
     {
-        var outcome = await ApiAction.RunAsync(call, success, Forbidden).ConfigureAwait(false);
+        var outcome = await ApiAction.RunAsync(call, success, ChangeRefused).ConfigureAwait(false);
         Message = outcome.Message;
         ErrorMessage = outcome.Error;
 

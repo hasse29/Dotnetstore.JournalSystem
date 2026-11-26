@@ -20,7 +20,7 @@ internal static class PhoneNumberTypeEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Phone number types")
-            .RequireAuthorization(AuthPolicies.Approved);
+            .RequireAuthorization(Permissions.ContactTypes.View);
 
         reads
             .MapGet(ApiEndpoints.Contact.PhoneNumberTypes.GetAll, GetAllAsync)
@@ -34,22 +34,24 @@ internal static class PhoneNumberTypeEndpoints
 
         var group = app
             .MapGroup(string.Empty)
-            .WithTags("Phone number types")
-            .RequireAuthorization(AuthPolicies.Administrator);
+            .WithTags("Phone number types");
 
         group
             .MapPost(ApiEndpoints.Contact.PhoneNumberTypes.Create, CreateAsync)
             .WithName("CreatePhoneNumberType")
+            .RequireAuthorization(Permissions.ContactTypes.Create)
             .WithSummary("Creates an phone number type.");
 
         group
             .MapPut(ApiEndpoints.Contact.PhoneNumberTypes.Update, UpdateAsync)
             .WithName("UpdatePhoneNumberType")
+            .RequireAuthorization(Permissions.ContactTypes.Edit)
             .WithSummary("Updates an phone number type.");
 
         group
             .MapDelete(ApiEndpoints.Contact.PhoneNumberTypes.Delete, DeleteAsync)
             .WithName("DeletePhoneNumberType")
+            .RequireAuthorization(Permissions.ContactTypes.Delete)
             .WithSummary("Deletes an phone number type.");
 
         return app;

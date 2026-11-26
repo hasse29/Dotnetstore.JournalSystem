@@ -20,7 +20,7 @@ internal static class OwnCompanyImageEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Own company images")
-            .RequireAuthorization(AuthPolicies.Approved);
+            .RequireAuthorization(Permissions.OwnCompanies.View);
 
         reads
             .MapGet(ApiEndpoints.Organization.OwnCompanies.Images, GetAllAsync)
@@ -34,13 +34,13 @@ internal static class OwnCompanyImageEndpoints
 
         var group = app
             .MapGroup(string.Empty)
-            .WithTags("Own company images")
-            .RequireAuthorization(AuthPolicies.Administrator);
+            .WithTags("Own company images");
 
         // Antiforgery protects cookie authentication; this API only accepts bearer tokens.
         group
             .MapPut(ApiEndpoints.Organization.OwnCompanies.Logo, SetLogoAsync)
             .WithName("SetOwnCompanyLogo")
+            .RequireAuthorization(Permissions.OwnCompanies.Edit)
             .WithSummary("Uploads or replaces the logo of an own company.")
             .WithMetadata(new RequestSizeLimitAttribute(OwnCompanyImageConstants.MaxRequestBytes))
             .DisableAntiforgery();
@@ -48,6 +48,7 @@ internal static class OwnCompanyImageEndpoints
         group
             .MapPut(ApiEndpoints.Organization.OwnCompanies.Photo, AddPhotoAsync)
             .WithName("AddOwnCompanyPhoto")
+            .RequireAuthorization(Permissions.OwnCompanies.Edit)
             .WithSummary("Adds a photo to an own company, under an id chosen by the caller.")
             .WithMetadata(new RequestSizeLimitAttribute(OwnCompanyImageConstants.MaxRequestBytes))
             .DisableAntiforgery();
@@ -55,6 +56,7 @@ internal static class OwnCompanyImageEndpoints
         group
             .MapDelete(ApiEndpoints.Organization.OwnCompanies.ImageById, DeleteAsync)
             .WithName("DeleteOwnCompanyImage")
+            .RequireAuthorization(Permissions.OwnCompanies.Edit)
             .WithSummary("Deletes a logo or photo of an own company.");
 
         return app;

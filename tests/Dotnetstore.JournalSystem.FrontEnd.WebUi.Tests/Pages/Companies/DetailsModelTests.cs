@@ -1,6 +1,6 @@
 using System.Net;
-using System.Security.Claims;
 using Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies;
+using Dotnetstore.JournalSystem.FrontEnd.WebUi.Tests.Fixtures;
 using Dotnetstore.JournalSystem.Shared.Clients;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Dotnetstore.JournalSystem.Shared.Responses.Contact;
@@ -26,17 +26,12 @@ public sealed class DetailsModelTests
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
-    private DetailsModel Create(FakeOwnCompanyClient companies, string role = RoleNames.Administrator)
-    {
-        var identity = new ClaimsIdentity(
-            [new Claim(AuthClaimTypes.UserId, Guid.NewGuid().ToString()), new Claim(AuthClaimTypes.Role, role)],
-            "test");
-
-        return new DetailsModel(companies, _addresses, _addressTypes, _emails, _emailTypes, _phones, _phoneTypes, _users, _roles)
+    private DetailsModel Create(FakeOwnCompanyClient companies, FakeCurrentUserProfile? profile = null) =>
+        new(companies, _addresses, _addressTypes, _emails, _emailTypes, _phones, _phoneTypes, _users, _roles,
+            profile ?? FakeCurrentUserProfile.Administrator())
         {
-            PageContext = new PageContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) } }
+            PageContext = new PageContext { HttpContext = new DefaultHttpContext() }
         };
-    }
 
     private static FormFile File(int length)
     {
@@ -82,7 +77,7 @@ public sealed class DetailsModelTests
     {
         // Arrange
         _users.Items.Add(User("Anna", _id, Guid.NewGuid()));
-        var model = Create(new FakeOwnCompanyClient(), role: "Nurse");
+        var model = Create(new FakeOwnCompanyClient(), FakeCurrentUserProfile.With(Permissions.OwnCompanies.View));
 
         // Act
         await model.OnGetAsync(_id, Token);
@@ -325,5 +320,58 @@ public sealed class DetailsModelTests
         // Assert
         _phones.DeletedId.ShouldBe(contactId);
         companies.DeletedImageId.ShouldBe(imageId);
+    }
+
+    [Fact]
+    public async Task GetLeavesOutContactsWhenThePersonMayNotViewThem()
+    {
+        // Arrange
+        _phones.Items.Add(new PhoneNumberResponse(Guid.NewGuid(), Guid.NewGuid(), _id, "+46 70 111 11 11"));
+        var model = Create(new FakeOwnCompanyClient(), FakeCurrentUserProfile.With(Permissions.OwnCompanies.View));
+
+        // Act
+        await model.OnGetAsync(_id, Token);
+
+        // Assert
+        model.CanViewContacts.ShouldBeFalse();
+        model.PhoneNumbers.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetOffersOnlyWhatTheRightsAllow()
+    {
+        // Arrange
+        var model = Create(new FakeOwnCompanyClient(), FakeCurrentUserProfile.With(
+            Permissions.OwnCompanies.View,
+            Permissions.ContactDetails.View,
+            Permissions.ContactDetails.Create,
+            Permissions.Users.View));
+
+        // Act
+        await model.OnGetAsync(_id, Token);
+
+        // Assert
+        model.CanEdit.ShouldBeFalse();
+        model.CanDelete.ShouldBeFalse();
+        model.CanViewContacts.ShouldBeTrue();
+        model.CanAddContacts.ShouldBeTrue();
+        model.CanEditContacts.ShouldBeFalse();
+        model.CanDeleteContacts.ShouldBeFalse();
+        model.CanViewUsers.ShouldBeTrue();
+        model.Users.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task GetSendsThoseWhoMayNotViewTheCompanyToTheList()
+    {
+        // Arrange
+        var companies = new FakeOwnCompanyClient { Read = () => FakeOwnCompanyClient.Saved(HttpStatusCode.Forbidden) };
+        var model = Create(companies, FakeCurrentUserProfile.With());
+
+        // Act
+        var result = await model.OnGetAsync(_id, Token);
+
+        // Assert
+        result.ShouldBeOfType<RedirectToPageResult>().PageName.ShouldBe("/Companies/Index");
     }
 }

@@ -9,45 +9,98 @@ namespace Dotnetstore.JournalSystem.Integration.Tests.Extensions;
 
 public sealed class EndpointAuthorizationTests(SqlServerFixture fixture)
 {
-    // What a person needs before an administrator has approved them.
-    private static readonly string[] OpenToUnapproved =
+    // Every route of the API and the one thing it takes to use it. A new route fails the test until it is added here.
+    private static readonly (string Method, string Route, string Policy)[] Required =
     [
-        "GET " + ApiEndpoints.Organization.AccessRequests.Me,
-        "POST " + ApiEndpoints.Organization.AccessRequests.Me,
-        "GET " + ApiEndpoints.Organization.Users.Me
+        ("GET", ApiEndpoints.Organization.OwnCompanies.GetAll, Permissions.OwnCompanies.View),
+        ("GET", ApiEndpoints.Organization.OwnCompanies.GetById, Permissions.OwnCompanies.View),
+        ("POST", ApiEndpoints.Organization.OwnCompanies.Create, Permissions.OwnCompanies.Create),
+        ("PUT", ApiEndpoints.Organization.OwnCompanies.Update, Permissions.OwnCompanies.Edit),
+        ("DELETE", ApiEndpoints.Organization.OwnCompanies.Delete, Permissions.OwnCompanies.Delete),
+        ("GET", ApiEndpoints.Organization.OwnCompanies.Images, Permissions.OwnCompanies.View),
+        ("GET", ApiEndpoints.Organization.OwnCompanies.ImageById, Permissions.OwnCompanies.View),
+        ("PUT", ApiEndpoints.Organization.OwnCompanies.Logo, Permissions.OwnCompanies.Edit),
+        ("PUT", ApiEndpoints.Organization.OwnCompanies.Photo, Permissions.OwnCompanies.Edit),
+        ("DELETE", ApiEndpoints.Organization.OwnCompanies.ImageById, Permissions.OwnCompanies.Edit),
+        ("GET", ApiEndpoints.Organization.Roles.GetAll, Permissions.Roles.View),
+        ("GET", ApiEndpoints.Organization.Roles.GetById, Permissions.Roles.View),
+        ("POST", ApiEndpoints.Organization.Roles.Create, AuthPolicies.Administrator),
+        ("PUT", ApiEndpoints.Organization.Roles.Update, AuthPolicies.Administrator),
+        ("DELETE", ApiEndpoints.Organization.Roles.Delete, AuthPolicies.Administrator),
+        ("GET", ApiEndpoints.Organization.Users.GetAll, Permissions.Users.View),
+        ("GET", ApiEndpoints.Organization.Users.GetById, Permissions.Users.View),
+        ("POST", ApiEndpoints.Organization.Users.Create, Permissions.Users.Create),
+        ("PUT", ApiEndpoints.Organization.Users.Update, Permissions.Users.Edit),
+        ("DELETE", ApiEndpoints.Organization.Users.Delete, Permissions.Users.Delete),
+        ("GET", ApiEndpoints.Organization.WorkGroups.GetAll, Permissions.WorkGroups.View),
+        ("GET", ApiEndpoints.Organization.WorkGroups.GetById, Permissions.WorkGroups.View),
+        ("POST", ApiEndpoints.Organization.WorkGroups.Create, Permissions.WorkGroups.Create),
+        ("PUT", ApiEndpoints.Organization.WorkGroups.Update, Permissions.WorkGroups.Edit),
+        ("DELETE", ApiEndpoints.Organization.WorkGroups.Delete, Permissions.WorkGroups.Delete),
+        ("GET", ApiEndpoints.Organization.AccessRequests.GetAll, Permissions.AccessRequests.View),
+        ("POST", ApiEndpoints.Organization.AccessRequests.Approve, Permissions.AccessRequests.Edit),
+        ("POST", ApiEndpoints.Organization.AccessRequests.Reject, Permissions.AccessRequests.Edit),
+        ("POST", ApiEndpoints.Organization.AccessRequests.Reopen, Permissions.AccessRequests.Edit),
+        ("GET", ApiEndpoints.Organization.AccessRequests.Me, AuthPolicies.Authenticated),
+        ("POST", ApiEndpoints.Organization.AccessRequests.Me, AuthPolicies.Authenticated),
+        ("GET", ApiEndpoints.Organization.Users.Me, AuthPolicies.Authenticated),
+        ("GET", ApiEndpoints.Contact.Addresses.GetAll, Permissions.ContactDetails.View),
+        ("GET", ApiEndpoints.Contact.Addresses.GetById, Permissions.ContactDetails.View),
+        ("POST", ApiEndpoints.Contact.Addresses.Create, Permissions.ContactDetails.Create),
+        ("PUT", ApiEndpoints.Contact.Addresses.Update, Permissions.ContactDetails.Edit),
+        ("DELETE", ApiEndpoints.Contact.Addresses.Delete, Permissions.ContactDetails.Delete),
+        ("GET", ApiEndpoints.Contact.EmailAddresses.GetAll, Permissions.ContactDetails.View),
+        ("GET", ApiEndpoints.Contact.EmailAddresses.GetById, Permissions.ContactDetails.View),
+        ("POST", ApiEndpoints.Contact.EmailAddresses.Create, Permissions.ContactDetails.Create),
+        ("PUT", ApiEndpoints.Contact.EmailAddresses.Update, Permissions.ContactDetails.Edit),
+        ("DELETE", ApiEndpoints.Contact.EmailAddresses.Delete, Permissions.ContactDetails.Delete),
+        ("GET", ApiEndpoints.Contact.PhoneNumbers.GetAll, Permissions.ContactDetails.View),
+        ("GET", ApiEndpoints.Contact.PhoneNumbers.GetById, Permissions.ContactDetails.View),
+        ("POST", ApiEndpoints.Contact.PhoneNumbers.Create, Permissions.ContactDetails.Create),
+        ("PUT", ApiEndpoints.Contact.PhoneNumbers.Update, Permissions.ContactDetails.Edit),
+        ("DELETE", ApiEndpoints.Contact.PhoneNumbers.Delete, Permissions.ContactDetails.Delete),
+        ("GET", ApiEndpoints.Contact.AddressTypes.GetAll, Permissions.ContactTypes.View),
+        ("GET", ApiEndpoints.Contact.AddressTypes.GetById, Permissions.ContactTypes.View),
+        ("POST", ApiEndpoints.Contact.AddressTypes.Create, Permissions.ContactTypes.Create),
+        ("PUT", ApiEndpoints.Contact.AddressTypes.Update, Permissions.ContactTypes.Edit),
+        ("DELETE", ApiEndpoints.Contact.AddressTypes.Delete, Permissions.ContactTypes.Delete),
+        ("GET", ApiEndpoints.Contact.EmailAddressTypes.GetAll, Permissions.ContactTypes.View),
+        ("GET", ApiEndpoints.Contact.EmailAddressTypes.GetById, Permissions.ContactTypes.View),
+        ("POST", ApiEndpoints.Contact.EmailAddressTypes.Create, Permissions.ContactTypes.Create),
+        ("PUT", ApiEndpoints.Contact.EmailAddressTypes.Update, Permissions.ContactTypes.Edit),
+        ("DELETE", ApiEndpoints.Contact.EmailAddressTypes.Delete, Permissions.ContactTypes.Delete),
+        ("GET", ApiEndpoints.Contact.PhoneNumberTypes.GetAll, Permissions.ContactTypes.View),
+        ("GET", ApiEndpoints.Contact.PhoneNumberTypes.GetById, Permissions.ContactTypes.View),
+        ("POST", ApiEndpoints.Contact.PhoneNumberTypes.Create, Permissions.ContactTypes.Create),
+        ("PUT", ApiEndpoints.Contact.PhoneNumberTypes.Update, Permissions.ContactTypes.Edit),
+        ("DELETE", ApiEndpoints.Contact.PhoneNumberTypes.Delete, Permissions.ContactTypes.Delete)
     ];
 
     [Fact]
-    public async Task OnlyTheOwnRequestAndProfileRoutesAreOpenToTheUnapproved()
+    public async Task EveryRouteButLoginNeedsExactlyTheRightListedForIt()
     {
         // Arrange
-        var endpoints = await ReadApiRoutesAsync();
+        var expected = Required.Select(x => $"{Normalize($"{x.Method} {x.Route}")} -> {x.Policy}").ToList();
+        var login = Normalize("POST " + ApiEndpoints.Auth.Login);
 
         // Act
-        var open = endpoints
-            .Where(x => x.Policies.Contains(AuthPolicies.Authenticated))
-            .Select(x => x.Route);
+        var actual = (await ReadApiRoutesAsync())
+            .Where(x => x.Route != login)
+            .Select(x => $"{x.Route} -> {(x.Anonymous ? "anonymous" : string.Join(" + ", x.Policies))}")
+            .ToList();
 
         // Assert
-        open.ShouldBe(OpenToUnapproved.Select(Normalize), ignoreOrder: true);
+        actual.ShouldBe(expected, ignoreOrder: true);
     }
 
     [Fact]
-    public async Task EveryOtherRouteButLoginNeedsAnApprovedAccountOrTheAdministratorRole()
+    public async Task EveryRightIsNeededBySomeRoute()
     {
-        // Arrange
-        var endpoints = await ReadApiRoutesAsync();
-        var exceptions = OpenToUnapproved.Append("POST " + ApiEndpoints.Auth.Login).Select(Normalize).ToHashSet();
-
         // Act
-        var unprotected = endpoints
-            .Where(x => !exceptions.Contains(x.Route))
-            .Where(x => x.Anonymous || x.Policies is not [AuthPolicies.Approved or AuthPolicies.Administrator])
-            .Select(x => x.Route);
+        var policies = (await ReadApiRoutesAsync()).SelectMany(x => x.Policies).ToHashSet(StringComparer.Ordinal);
 
         // Assert
-        endpoints.Count.ShouldBeGreaterThan(exceptions.Count);
-        unprotected.ShouldBeEmpty();
+        Permissions.All.ShouldAllBe(x => policies.Contains(x));
     }
 
     private static string Normalize(string route) => route.Replace(" /", " ", StringComparison.Ordinal);

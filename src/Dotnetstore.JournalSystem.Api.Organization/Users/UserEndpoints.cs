@@ -31,32 +31,36 @@ internal static class UserEndpoints
 
         var group = app
             .MapGroup(string.Empty)
-            .WithTags("Users")
-            .RequireAuthorization(AuthPolicies.Administrator);
+            .WithTags("Users");
 
         group
             .MapGet(ApiEndpoints.Organization.Users.GetAll, GetAllAsync)
             .WithName("GetUsers")
+            .RequireAuthorization(Permissions.Users.View)
             .WithSummary("Gets all users.");
 
         group
             .MapGet(ApiEndpoints.Organization.Users.GetById, GetByIdAsync)
             .WithName(GetByIdName)
+            .RequireAuthorization(Permissions.Users.View)
             .WithSummary("Gets a user by id.");
 
         group
             .MapPost(ApiEndpoints.Organization.Users.Create, CreateAsync)
             .WithName("CreateUser")
+            .RequireAuthorization(Permissions.Users.Create)
             .WithSummary("Creates a local or Entra ID user. For Entra users the response carries a one-time temporary password.");
 
         group
             .MapPut(ApiEndpoints.Organization.Users.Update, UpdateAsync)
             .WithName("UpdateUser")
+            .RequireAuthorization(Permissions.Users.Edit)
             .WithSummary("Updates a user.");
 
         group
             .MapDelete(ApiEndpoints.Organization.Users.Delete, DeleteAsync)
             .WithName("DeleteUser")
+            .RequireAuthorization(Permissions.Users.Delete)
             .WithSummary("Deletes a user.");
 
         return app;
@@ -117,12 +121,21 @@ internal static class UserEndpoints
         CreateUserRequest? request,
         ClaimsPrincipal principal,
         IUserService service,
+        IUserAdministrationGuard guard,
         CancellationToken cancellationToken)
     {
         var errors = UserRequestValidator.Validate(request);
         if (errors.Count > 0)
         {
             return TypedResults.ValidationProblem(errors);
+        }
+
+        var refusal = await guard
+            .CheckAssignmentAsync(ActingUser.From(principal), request!.RoleId, cancellationToken)
+            .ConfigureAwait(false);
+        if (refusal is not null)
+        {
+            return Refused(refusal);
         }
 
         var result = await service
@@ -145,12 +158,21 @@ internal static class UserEndpoints
         EditUserRequest? request,
         ClaimsPrincipal principal,
         IUserService service,
+        IUserAdministrationGuard guard,
         CancellationToken cancellationToken)
     {
         var errors = UserRequestValidator.Validate(request);
         if (errors.Count > 0)
         {
             return TypedResults.ValidationProblem(errors);
+        }
+
+        var refusal = await guard
+            .CheckChangeAsync(ActingUser.From(principal), id, request!.RoleId, cancellationToken)
+            .ConfigureAwait(false);
+        if (refusal is not null)
+        {
+            return Refused(refusal);
         }
 
         var result = await service
@@ -172,11 +194,20 @@ internal static class UserEndpoints
         Guid id,
         ClaimsPrincipal principal,
         IUserService service,
+        IUserAdministrationGuard guard,
         CancellationToken cancellationToken)
     {
         if (principal.GetUserId() == id)
         {
             return TypedResults.Conflict("You cannot delete your own account.");
+        }
+
+        var refusal = await guard
+            .CheckChangeAsync(ActingUser.From(principal), id, null, cancellationToken)
+            .ConfigureAwait(false);
+        if (refusal is not null)
+        {
+            return Refused(refusal);
         }
 
         var result = await service
@@ -193,6 +224,9 @@ internal static class UserEndpoints
             _ => TypedResults.Problem()
         };
     }
+
+    private static ProblemHttpResult Refused(string reason) =>
+        TypedResults.Problem(reason, statusCode: StatusCodes.Status403Forbidden);
 
     private static Dictionary<string, string[]> ToErrors(IEnumerable<ValidationError> validationErrors)
     {

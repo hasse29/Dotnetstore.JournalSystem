@@ -8,6 +8,7 @@ using Dotnetstore.JournalSystem.Api.Organization.WorkGroups;
 using Dotnetstore.JournalSystem.Api.Organization.Services;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.Users;
+using Dotnetstore.JournalSystem.Shared.Constants;
 using Dotnetstore.JournalSystem.Shared.Requests.Organization;
 using Microsoft.EntityFrameworkCore;
 using Shouldly;
@@ -392,5 +393,72 @@ public sealed class RoleServiceTests : IDisposable
         // Assert
         result.Status.ShouldBe(ResultStatus.Conflict);
         (await CountStoredAsync()).ShouldBe(1);
+    }
+
+    private static EditRoleRequest WithRights(string name, params string[] permissions) => new(name, "Description", permissions);
+
+    [Fact]
+    public async Task CreateAsyncStoresTheRightsAndWhatTheyRequire()
+    {
+        // Arrange
+        IRoleService service = _service;
+
+        // Act
+        var result = await service.CreateAsync(WithRights("Nurse", Permissions.WorkGroups.Edit), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        string[] expected = [Permissions.WorkGroups.View, Permissions.WorkGroups.Edit];
+        result.Value.Permissions.ShouldBe(expected);
+        _context.ChangeTracker.Clear();
+        var fetched = await service.GetByIdAsync(result.Value.Id, TestContext.Current.CancellationToken);
+        fetched.Value.Permissions.ShouldBe(expected);
+        (await service.GetAllAsync(TestContext.Current.CancellationToken)).Single().Permissions.ShouldBe(expected);
+    }
+
+    [Fact]
+    public async Task CreateAsyncGivesNoRightsUnlessAsked()
+    {
+        // Arrange
+        IRoleService service = _service;
+
+        // Act
+        var result = await service.CreateAsync(CreateRequest("Nurse"), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Permissions.ShouldNotBeNull().ShouldBeEmpty();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UpdateAsyncChangesRightsOnlyWhenTheyAreSent(bool send)
+    {
+        // Arrange
+        IRoleService service = _service;
+        var id = (await service.CreateAsync(WithRights("Nurse", Permissions.Roles.View), null, TestContext.Current.CancellationToken)).Value.Id;
+        _context.ChangeTracker.Clear();
+        var request = new EditRoleRequest("Nurse", "Changed", send ? [] : null);
+
+        // Act
+        var result = await service.UpdateAsync(id, request, null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        result.Value.Permissions.ShouldNotBeNull().Count.ShouldBe(send ? 0 : 1);
+    }
+
+    [Fact]
+    public async Task UpdateAsyncStoresNoRightsForASystemRoleWhichHasThemAll()
+    {
+        // Arrange
+        IRoleService service = _service;
+        var id = await SeedSystemRoleAsync();
+
+        // Act
+        var result = await service.UpdateAsync(id, WithRights(RoleNames.Administrator, Permissions.Roles.View), null, TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Value.Permissions.ShouldBe(Permissions.All);
+        (await _context.RolePermissions.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(0);
     }
 }

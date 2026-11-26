@@ -181,15 +181,16 @@ internal sealed class UserService(
             .OwnCompanies
             .GetByIdAsync(user.OwnCompanyId, cancellationToken)
             .ConfigureAwait(false);
-        var role = await organizationUnitOfWork
+        var access = await organizationUnitOfWork
             .Roles
-            .GetByIdAsync(user.RoleId, cancellationToken)
+            .GetAccessAsync(user.RoleId, cancellationToken)
             .ConfigureAwait(false);
 
         return Result<MyProfileResponse>.Success(user.ToMyProfileResponse(
             company?.Name ?? string.Empty,
-            role?.Name ?? string.Empty,
-            identityNumbers.Mask(user.SocialSecurityNumber, user.Id)));
+            access?.Name ?? string.Empty,
+            identityNumbers.Mask(user.SocialSecurityNumber, user.Id),
+            access));
     }
 
     async ValueTask<Result> IUserService.DeleteAsync(Guid id, CancellationToken cancellationToken)

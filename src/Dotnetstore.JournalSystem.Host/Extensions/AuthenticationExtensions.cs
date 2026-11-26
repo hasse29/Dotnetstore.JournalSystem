@@ -48,15 +48,24 @@ internal static class AuthenticationExtensions
                         [clientId!, $"api://{clientId}", configuration[$"{EntraSection}:Audience"]!]);
             }
 
-            builder.Services
+            var authorization = builder.Services
                 .AddAuthorizationBuilder()
                 .AddPolicy(AuthPolicies.Authenticated, policy => policy.RequireAuthenticatedUser())
-                .AddPolicy(AuthPolicies.Approved, policy => policy
-                    .RequireAuthenticatedUser()
-                    .RequireClaim(AuthClaimTypes.UserId))
                 .AddPolicy(AuthPolicies.Administrator, policy => policy
                     .RequireAuthenticatedUser()
+                    .RequireClaim(AuthClaimTypes.UserId)
                     .RequireClaim(AuthClaimTypes.Role, RoleNames.Administrator));
+
+            // A Microsoft sign-in that is not approved, or is locked, has no user id and so no rights.
+            foreach (var permission in Permissions.All)
+            {
+                authorization.AddPolicy(permission, policy => policy
+                    .RequireAuthenticatedUser()
+                    .RequireClaim(AuthClaimTypes.UserId)
+                    .RequireAssertion(context =>
+                        context.User.HasClaim(AuthClaimTypes.Role, RoleNames.Administrator) ||
+                        context.User.HasClaim(AuthClaimTypes.Permission, permission)));
+            }
 
             return builder;
         }

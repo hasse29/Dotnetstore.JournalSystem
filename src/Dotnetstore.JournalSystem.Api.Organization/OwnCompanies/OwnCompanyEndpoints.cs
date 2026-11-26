@@ -22,7 +22,7 @@ internal static class OwnCompanyEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Own companies")
-            .RequireAuthorization(AuthPolicies.Approved);
+            .RequireAuthorization(Permissions.OwnCompanies.View);
 
         reads
             .MapGet(ApiEndpoints.Organization.OwnCompanies.GetAll, GetAllAsync)
@@ -36,22 +36,24 @@ internal static class OwnCompanyEndpoints
 
         var group = app
             .MapGroup(string.Empty)
-            .WithTags("Own companies")
-            .RequireAuthorization(AuthPolicies.Administrator);
+            .WithTags("Own companies");
 
         group
             .MapPost(ApiEndpoints.Organization.OwnCompanies.Create, CreateAsync)
             .WithName("CreateOwnCompany")
+            .RequireAuthorization(Permissions.OwnCompanies.Create)
             .WithSummary("Creates an own company.");
 
         group
             .MapPut(ApiEndpoints.Organization.OwnCompanies.Update, UpdateAsync)
             .WithName("UpdateOwnCompany")
+            .RequireAuthorization(Permissions.OwnCompanies.Edit)
             .WithSummary("Updates an own company.");
 
         group
             .MapDelete(ApiEndpoints.Organization.OwnCompanies.Delete, DeleteAsync)
             .WithName("DeleteOwnCompany")
+            .RequireAuthorization(Permissions.OwnCompanies.Delete)
             .WithSummary("Deletes an own company.");
 
         return app;

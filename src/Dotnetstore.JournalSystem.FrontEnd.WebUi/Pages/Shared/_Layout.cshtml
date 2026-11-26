@@ -1,7 +1,9 @@
 @using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication
+@using Dotnetstore.JournalSystem.Shared.Constants
 @inject ICurrentUserProfile CurrentProfile
 @{
     var profile = await CurrentProfile.GetAsync(User, Context.RequestAborted);
+    var rights = UserRights.From(profile);
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -28,16 +30,22 @@
                     <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Profile/Index" ? "active" : null)"
                        asp-page="/Profile/Index" data-testid="nav-profile">My profile</a>
                 </li>
-                <li>
-                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Companies/", StringComparison.Ordinal) == true ? "active" : null)"
-                       asp-page="/Companies/Index" data-testid="nav-companies">Own companies</a>
-                </li>
-                <li>
-                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Roles/Index" ? "active" : null)"
-                       asp-page="/Roles/Index" data-testid="nav-roles">Roles</a>
-                </li>
+                @if (rights.Has(Permissions.OwnCompanies.View))
+                {
+                    <li>
+                        <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Companies/", StringComparison.Ordinal) == true ? "active" : null)"
+                           asp-page="/Companies/Index" data-testid="nav-companies">Own companies</a>
+                    </li>
+                }
+                @if (rights.Has(Permissions.Roles.View))
+                {
+                    <li>
+                        <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Roles/Index" ? "active" : null)"
+                           asp-page="/Roles/Index" data-testid="nav-roles">Roles</a>
+                    </li>
+                }
             </ul>
-            @if (AccessGate.IsAdministratorOrUnknown(User))
+            @if (rights.Has(Permissions.AccessRequests.View))
             {
                 <p class="nav-heading">Administration</p>
                 <ul class="nav-list">
