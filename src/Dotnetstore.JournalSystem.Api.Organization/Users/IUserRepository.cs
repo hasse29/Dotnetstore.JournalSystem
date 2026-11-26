@@ -7,6 +7,7 @@ internal interface IUserRepository : IGenericRepository<User>
     Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
     Task<User?> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken = default);
     Task<bool> ExistsInOwnCompanyAsync(Guid ownCompanyId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsWithRoleAsync(Guid roleId, CancellationToken cancellationToken = default);
 
     Task RegisterFailedLoginAsync(
         Guid id,

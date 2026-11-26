@@ -351,4 +351,60 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
     }
+
+    [Fact]
+    public async Task ATakenNameIsAConflictThatSaysWhy()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
+        var created = await CreateRoleAsync(host.Client);
+
+        // Act
+        using var create = await host.Client.PostAsJsonAsync(Url(), CreateRequest(), TestContext.Current.CancellationToken);
+        using var update = await host.Client.PutAsJsonAsync(Url($"/{created.Id}"), CreateRequest(RoleNames.Administrator), TestContext.Current.CancellationToken);
+
+        // Assert
+        create.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        update.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        (await create.Content.ReadFromJsonAsync<string>(TestContext.Current.CancellationToken)).ShouldBe("A role with that name already exists.");
+    }
+
+    [Fact]
+    public async Task TheAdministratorRoleCannotBeRenamedOrDeleted()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
+        var administrator = (await host.Client.GetFromJsonAsync<RoleResponse[]>(Url(), TestContext.Current.CancellationToken))
+            .ShouldNotBeNull().ShouldHaveSingleItem();
+
+        // Act
+        using var rename = await host.Client.PutAsJsonAsync(Url($"/{administrator.Id}"), CreateRequest("Boss"), TestContext.Current.CancellationToken);
+        using var delete = await host.Client.DeleteAsync(Url($"/{administrator.Id}"), TestContext.Current.CancellationToken);
+        var afterwards = await host.Client.GetFromJsonAsync<RoleResponse>(Url($"/{administrator.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        administrator.IsSystem.ShouldBeTrue();
+        rename.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        delete.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        afterwards.ShouldBe(administrator);
+    }
+
+    [Fact]
+    public async Task ARoleThatAUserHasCannotBeDeleted()
+    {
+        // Arrange
+        await using var host = await ApiTestHost.CreateSignedInAsync(fixture, TestContext.Current.CancellationToken);
+        await host.SignInAsNewNonAdminAsync(TestContext.Current.CancellationToken);
+        await host.SignInAsAdminAsync(TestContext.Current.CancellationToken);
+        var inUse = (await host.Client.GetFromJsonAsync<RoleResponse[]>(Url(), TestContext.Current.CancellationToken))
+            .ShouldNotBeNull().Single(x => x.Name == "Nurse");
+
+        // Act
+        using var response = await host.Client.DeleteAsync(Url($"/{inUse.Id}"), TestContext.Current.CancellationToken);
+        using var afterwards = await host.Client.GetAsync(Url($"/{inUse.Id}"), TestContext.Current.CancellationToken);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.Conflict);
+        afterwards.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
 }

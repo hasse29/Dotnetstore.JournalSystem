@@ -1,13 +1,16 @@
 using Dotnetstore.JournalSystem.Shared.Clients;
 
-namespace Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies;
+namespace Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages;
 
 /// <summary>The message to show after a change: exactly one of the two is set.</summary>
 internal sealed record ApiOutcome(string? Message, string? Error);
 
 internal static class ApiAction
 {
-    internal static async Task<ApiOutcome> RunAsync(Func<Task<ApiResult>> call, string success)
+    internal static async Task<ApiOutcome> RunAsync(
+        Func<Task<ApiResult>> call,
+        string success,
+        string forbidden = "Only administrators can change companies.")
     {
         try
         {
@@ -20,7 +23,7 @@ internal static class ApiAction
 
             if (result.IsForbidden || result.IsUnauthorized)
             {
-                return Failed("Only administrators can change companies.");
+                return Failed(forbidden);
             }
 
             if (result.IsNotFound)

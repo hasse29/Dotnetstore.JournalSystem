@@ -32,6 +32,10 @@
                     <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString()?.StartsWith("/Companies/", StringComparison.Ordinal) == true ? "active" : null)"
                        asp-page="/Companies/Index" data-testid="nav-companies">Own companies</a>
                 </li>
+                <li>
+                    <a class="nav-link @(ViewContext.RouteData.Values["page"]?.ToString() == "/Roles/Index" ? "active" : null)"
+                       asp-page="/Roles/Index" data-testid="nav-roles">Roles</a>
+                </li>
             </ul>
             @if (AccessGate.IsAdministratorOrUnknown(User))
             {

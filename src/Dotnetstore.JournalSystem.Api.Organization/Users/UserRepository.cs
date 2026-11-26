@@ -30,6 +30,14 @@ internal sealed class UserRepository(OrganizationDataContext dataContext) : Gene
             .ConfigureAwait(false);
     }
 
+    async Task<bool> IUserRepository.ExistsWithRoleAsync(Guid roleId, CancellationToken cancellationToken)
+    {
+        return await dataContext.Users
+            .AsNoTracking()
+            .AnyAsync(x => x.RoleId == roleId, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     async Task IUserRepository.RegisterFailedLoginAsync(
         Guid id,
         int maxFailedAttempts,

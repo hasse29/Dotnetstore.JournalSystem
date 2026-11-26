@@ -9,6 +9,7 @@ internal static class RoleMappers
         return new RoleResponse(
             role.Id,
             role.Name,
-            role.Description);
+            role.Description,
+            role.IsSystem);
     }
 }
