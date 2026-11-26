@@ -23,6 +23,8 @@ public sealed class IndexModel(
 
     public bool ApiUnavailable { get; private set; }
 
+    public bool CanViewUsers { get; private set; } = true;
+
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
         try
@@ -45,13 +47,16 @@ public sealed class IndexModel(
                 return RedirectToPage("/Account/Login", new { error = "unauthorized" });
             }
 
-            Stats =
-            [
-                new StatCard("Users", Count(userResult), "users"),
-                new StatCard("Roles", Count(await rolesTask.ConfigureAwait(false)), "roles"),
-                new StatCard("Work groups", Count(await workGroupsTask.ConfigureAwait(false)), "work-groups"),
-                new StatCard("Companies", Count(await companiesTask.ConfigureAwait(false)), "companies")
-            ];
+            CanViewUsers = !userResult.IsForbidden;
+            Stats = new[]
+                {
+                    Card("Users", userResult, "users"),
+                    Card("Roles", await rolesTask.ConfigureAwait(false), "roles"),
+                    Card("Work groups", await workGroupsTask.ConfigureAwait(false), "work-groups"),
+                    Card("Companies", await companiesTask.ConfigureAwait(false), "companies")
+                }
+                .OfType<StatCard>()
+                .ToList();
 
             RecentSignIns = userResult.Value?
                 .Where(static x => x.LastLoginAt is not null)
@@ -71,8 +76,12 @@ public sealed class IndexModel(
         return Page();
     }
 
-    private static string Count<T>(ApiResult<IReadOnlyList<T>> result) =>
-        result is { IsSuccess: true, Value: { } value }
-            ? value.Count.ToString(CultureInfo.InvariantCulture)
-            : "–";
+    // No card at all for what the person may not see; a dash when it could not be counted.
+    private static StatCard? Card<T>(string label, ApiResult<IReadOnlyList<T>> result, string key) =>
+        result.IsForbidden
+            ? null
+            : new StatCard(
+                label,
+                result is { IsSuccess: true, Value: { } value } ? value.Count.ToString(CultureInfo.InvariantCulture) : "–",
+                key);
 }

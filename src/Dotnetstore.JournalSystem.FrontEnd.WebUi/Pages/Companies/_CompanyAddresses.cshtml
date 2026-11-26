@@ -2,7 +2,8 @@
 @model DetailsModel
 @{
     var company = Model.Company!;
-    var canAdd = Model.CanEdit && Model.Addresses is not null && Model.AddressTypes.Count > 0;
+    var hasActions = Model.CanEditContacts || Model.CanDeleteContacts;
+    var canAdd = Model.CanAddContacts && Model.Addresses is not null && Model.AddressTypes.Count > 0;
 }
 
 <section class="card" aria-labelledby="addresses-heading" data-testid="addresses">
@@ -26,7 +27,7 @@
     {
         <table class="table">
             <thead>
-                <tr><th>Type</th><th>Address</th>@if (Model.CanEdit) { <th class="actions-col"><span class="visually-hidden">Actions</span></th> }</tr>
+                <tr><th>Type</th><th>Address</th>@if (hasActions) { <th class="actions-col"><span class="visually-hidden">Actions</span></th> }</tr>
             </thead>
             <tbody>
                 @foreach (var address in Model.Addresses)
@@ -46,16 +47,25 @@
                             <div>@address.PostalCode @address.City</div>
                             <div>@(string.IsNullOrEmpty(address.State) ? address.Country : $"{address.State}, {address.Country}")</div>
                         </td>
-                        @if (Model.CanEdit)
+                        @if (hasActions)
                         {
                             <td class="actions-col">
                                 <div class="row-actions">
-                                    <button type="button" class="btn btn-secondary" data-dialog-open="address-@address.Id" data-testid="address-edit">Edit</button>
-                                    <form method="post" asp-page="/Companies/Details" asp-page-handler="DeleteAddress" asp-route-id="@company.Id" asp-route-contactId="@address.Id" data-confirm="Delete this address?">
-                                        <button type="submit" class="btn btn-secondary btn-danger" data-testid="address-delete">Delete</button>
-                                    </form>
+                                    @if (Model.CanEditContacts)
+                                    {
+                                        <button type="button" class="btn btn-secondary" data-dialog-open="address-@address.Id" data-testid="address-edit">Edit</button>
+                                    }
+                                    @if (Model.CanDeleteContacts)
+                                    {
+                                        <form method="post" asp-page="/Companies/Details" asp-page-handler="DeleteAddress" asp-route-id="@company.Id" asp-route-contactId="@address.Id" data-confirm="Delete this address?">
+                                            <button type="submit" class="btn btn-secondary btn-danger" data-testid="address-delete">Delete</button>
+                                        </form>
+                                    }
                                 </div>
-                                <partial name="_AddressDialog" model="(Model, address)" />
+                                @if (Model.CanEditContacts)
+                                {
+                                    <partial name="_AddressDialog" model="(Model, address)" />
+                                }
                             </td>
                         }
                     </tr>

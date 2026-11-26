@@ -20,7 +20,7 @@ internal static class EmailAddressEndpoints
         var reads = app
             .MapGroup(string.Empty)
             .WithTags("Email addresses")
-            .RequireAuthorization(AuthPolicies.Approved);
+            .RequireAuthorization(Permissions.ContactDetails.View);
 
         reads
             .MapGet(ApiEndpoints.Contact.EmailAddresses.GetAll, GetAllAsync)
@@ -34,22 +34,24 @@ internal static class EmailAddressEndpoints
 
         var group = app
             .MapGroup(string.Empty)
-            .WithTags("Email addresses")
-            .RequireAuthorization(AuthPolicies.Administrator);
+            .WithTags("Email addresses");
 
         group
             .MapPost(ApiEndpoints.Contact.EmailAddresses.Create, CreateAsync)
             .WithName("CreateEmailAddress")
+            .RequireAuthorization(Permissions.ContactDetails.Create)
             .WithSummary("Creates an email address.");
 
         group
             .MapPut(ApiEndpoints.Contact.EmailAddresses.Update, UpdateAsync)
             .WithName("UpdateEmailAddress")
+            .RequireAuthorization(Permissions.ContactDetails.Edit)
             .WithSummary("Updates an email address.");
 
         group
             .MapDelete(ApiEndpoints.Contact.EmailAddresses.Delete, DeleteAsync)
             .WithName("DeleteEmailAddress")
+            .RequireAuthorization(Permissions.ContactDetails.Delete)
             .WithSummary("Deletes an email address.");
 
         return app;

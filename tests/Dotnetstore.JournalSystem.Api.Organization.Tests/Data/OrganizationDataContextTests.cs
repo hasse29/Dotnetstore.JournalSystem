@@ -45,7 +45,7 @@ public sealed class OrganizationDataContextTests
         var entityTypes = context.Model.GetEntityTypes().ToList();
 
         // Assert
-        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(AccessRequest), typeof(OwnCompany), typeof(OwnCompanyImage), typeof(Role), typeof(User), typeof(WorkGroup)], ignoreOrder: true);
+        entityTypes.Select(x => x.ClrType).ShouldBe([typeof(AccessRequest), typeof(OwnCompany), typeof(OwnCompanyImage), typeof(Role), typeof(RolePermission), typeof(User), typeof(WorkGroup)], ignoreOrder: true);
     }
 
     [Fact]

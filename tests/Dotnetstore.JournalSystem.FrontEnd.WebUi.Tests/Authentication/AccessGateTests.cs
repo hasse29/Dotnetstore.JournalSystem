@@ -115,26 +115,4 @@ public sealed class AccessGateTests
         AccessGate.HasApplicationAccount(principal).ShouldBeTrue();
         AccessGate.HasApplicationAccount(Principal(new Claim("oid", "x"))).ShouldBeFalse();
     }
-
-    [Fact]
-    public void TheAdministrationLinkIsShownToAdministratorsAndToUnapprovedMicrosoftSessions()
-    {
-        // Arrange
-        var admin = Principal(new Claim(AuthClaimTypes.UserId, "1"), new Claim(AuthClaimTypes.Role, RoleNames.Administrator));
-        var microsoft = Principal(new Claim("oid", "x"));
-
-        // Act & Assert
-        AccessGate.IsAdministratorOrUnknown(admin).ShouldBeTrue();
-        AccessGate.IsAdministratorOrUnknown(microsoft).ShouldBeTrue();
-    }
-
-    [Fact]
-    public void TheAdministrationLinkIsHiddenFromOrdinaryPasswordUsers()
-    {
-        // Arrange
-        var nurse = Principal(new Claim(AuthClaimTypes.UserId, "2"), new Claim(AuthClaimTypes.Role, "Nurse"));
-
-        // Act & Assert
-        AccessGate.IsAdministratorOrUnknown(nurse).ShouldBeFalse();
-    }
 }

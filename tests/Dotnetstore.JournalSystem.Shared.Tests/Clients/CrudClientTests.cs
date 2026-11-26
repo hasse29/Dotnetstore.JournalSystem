@@ -81,7 +81,7 @@ public sealed class CrudClientTests
         result.IsSuccess.ShouldBeTrue();
         result.StatusCode.ShouldBe(HttpStatusCode.Created);
         handler.Requests.Single().Method.ShouldBe(HttpMethod.Post);
-        handler.Bodies.Single().ShouldBe("""{"name":"Nurse","description":"d"}""");
+        handler.Bodies.Single().ShouldBe("""{"name":"Nurse","description":"d","permissions":null}""");
     }
 
     [Fact]

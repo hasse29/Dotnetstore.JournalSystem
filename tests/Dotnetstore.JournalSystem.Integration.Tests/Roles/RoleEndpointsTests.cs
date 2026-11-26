@@ -77,7 +77,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
-        role.ShouldBe(created);
+        role.ShouldNotBeNull().ShouldBeEquivalentTo(created);
     }
 
     [Fact]
@@ -215,7 +215,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         updated.ShouldNotBeNull().Id.ShouldBe(created.Id);
         updated.Name.ShouldBe("Renamed");
-        fetched.ShouldBe(updated);
+        fetched.ShouldNotBeNull().ShouldBeEquivalentTo(updated);
     }
 
     [Fact]
@@ -386,7 +386,7 @@ public sealed class RoleEndpointsTests(SqlServerFixture fixture)
         administrator.IsSystem.ShouldBeTrue();
         rename.StatusCode.ShouldBe(HttpStatusCode.Conflict);
         delete.StatusCode.ShouldBe(HttpStatusCode.Conflict);
-        afterwards.ShouldBe(administrator);
+        afterwards.ShouldNotBeNull().ShouldBeEquivalentTo(administrator);
     }
 
     [Fact]

@@ -127,4 +127,30 @@ public sealed class EditRoleRequestValidatorTests
         // Assert
         errors.Keys.ShouldBe(["Name", "Description"], ignoreOrder: true);
     }
+
+    [Fact]
+    public void KnownPermissionsAreAccepted()
+    {
+        // Arrange
+        var request = new EditRoleRequest("Nurse", "Description", [Permissions.Users.View]);
+
+        // Act
+        var errors = EditRoleRequestValidator.Validate(request);
+
+        // Assert
+        errors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void UnknownPermissionsAreRefused()
+    {
+        // Arrange
+        var request = new EditRoleRequest("Nurse", "Description", [Permissions.Users.View, "everything:all"]);
+
+        // Act
+        var errors = EditRoleRequestValidator.Validate(request);
+
+        // Assert
+        errors.ShouldContainKey(nameof(EditRoleRequest.Permissions));
+    }
 }

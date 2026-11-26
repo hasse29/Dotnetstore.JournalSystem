@@ -22,6 +22,14 @@ internal sealed class UserRepository(OrganizationDataContext dataContext) : Gene
             .ConfigureAwait(false);
     }
 
+    async Task<User?> IUserRepository.FindUntrackedAsync(Guid id, CancellationToken cancellationToken)
+    {
+        return await dataContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     async Task<bool> IUserRepository.ExistsInOwnCompanyAsync(Guid ownCompanyId, CancellationToken cancellationToken)
     {
         return await dataContext.Users

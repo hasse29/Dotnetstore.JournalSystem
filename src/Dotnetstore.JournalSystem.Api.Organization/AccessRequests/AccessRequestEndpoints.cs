@@ -36,27 +36,30 @@ internal static class AccessRequestEndpoints
 
         var admin = app
             .MapGroup(string.Empty)
-            .WithTags("Access requests")
-            .RequireAuthorization(AuthPolicies.Administrator);
+            .WithTags("Access requests");
 
         admin
             .MapGet(ApiEndpoints.Organization.AccessRequests.GetAll, GetAllAsync)
             .WithName("GetAccessRequests")
+            .RequireAuthorization(Permissions.AccessRequests.View)
             .WithSummary("Gets access requests, optionally filtered by status.");
 
         admin
             .MapPost(ApiEndpoints.Organization.AccessRequests.Approve, ApproveAsync)
             .WithName("ApproveAccessRequest")
+            .RequireAuthorization(Permissions.AccessRequests.Edit)
             .WithSummary("Approves a pending request and creates the Entra user with the chosen role and company.");
 
         admin
             .MapPost(ApiEndpoints.Organization.AccessRequests.Reject, RejectAsync)
             .WithName("RejectAccessRequest")
+            .RequireAuthorization(Permissions.AccessRequests.Edit)
             .WithSummary("Rejects a pending request.");
 
         admin
             .MapPost(ApiEndpoints.Organization.AccessRequests.Reopen, ReopenAsync)
             .WithName("ReopenAccessRequest")
+            .RequireAuthorization(Permissions.AccessRequests.Edit)
             .WithSummary("Moves a rejected request back to pending.");
 
         return app;
@@ -120,12 +123,21 @@ internal static class AccessRequestEndpoints
         ApproveAccessRequestRequest? request,
         ClaimsPrincipal principal,
         IAccessRequestService service,
+        IUserAdministrationGuard guard,
         CancellationToken cancellationToken)
     {
         var errors = Validate(request);
         if (errors.Count > 0)
         {
             return TypedResults.ValidationProblem(errors);
+        }
+
+        var refusal = await guard
+            .CheckAssignmentAsync(ActingUser.From(principal), request!.RoleId, cancellationToken)
+            .ConfigureAwait(false);
+        if (refusal is not null)
+        {
+            return TypedResults.Problem(refusal, statusCode: StatusCodes.Status403Forbidden);
         }
 
         var result = await service

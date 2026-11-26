@@ -1,5 +1,6 @@
 using Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests.Fixtures;
 using Dotnetstore.JournalSystem.FrontEnd.WebUi.E2ETests.Pages;
+using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.Playwright;
 using static Microsoft.Playwright.Assertions;
 
@@ -130,5 +131,81 @@ public sealed class RolesTests(E2EFixture fixture)
 
         // Assert
         await Expect(new LoginPage(page).Heading).ToBeVisibleAsync();
+    }
+
+    [Fact]
+    public async Task TickingARightTicksWhatItRequiresAndTheRightsAreSaved()
+    {
+        // Arrange
+        var (context, roles) = await SignInAsync(E2EFixture.AdminUsername, E2EFixture.AdminPassword);
+        await using var _ = context;
+        var name = UniqueName("Manager");
+        await roles.AddButton.ClickAsync();
+        await roles.CreateForm.GetByTestId("role-name").FillAsync(name);
+
+        // Act
+        await roles.CreateForm.GetByTestId($"permission-{Permissions.Users.Edit}").CheckAsync();
+        await Expect(roles.CreateForm.GetByTestId($"permission-{Permissions.Users.View}")).ToBeCheckedAsync();
+        await Expect(roles.CreateForm.GetByTestId($"permission-{Permissions.OwnCompanies.View}")).ToBeCheckedAsync();
+        await roles.CreateForm.GetByTestId("role-create").ClickAsync();
+        await Expect(roles.Message).ToHaveTextAsync("Role created.");
+
+        // Assert
+        var row = roles.Row(name);
+        await row.GetByTestId("role-edit").ClickAsync();
+        await Expect(row.GetByTestId($"permission-{Permissions.Users.Edit}")).ToBeCheckedAsync();
+        await Expect(row.GetByTestId($"permission-{Permissions.Roles.View}")).ToBeCheckedAsync();
+        await Expect(row.GetByTestId($"permission-{Permissions.Users.Delete}")).Not.ToBeCheckedAsync();
+
+        await row.GetByTestId($"permission-{Permissions.Roles.View}").UncheckAsync();
+        await Expect(row.GetByTestId($"permission-{Permissions.Users.View}")).Not.ToBeCheckedAsync();
+        await Expect(row.GetByTestId($"permission-{Permissions.Users.Edit}")).Not.ToBeCheckedAsync();
+    }
+
+    [Fact]
+    public async Task SomeoneWithOnlyTheRightToAddCompaniesIsOfferedJustThat()
+    {
+        // Arrange
+        var username = await fixture.CreateUserAsync(
+            "Registrar",
+            permissions: [Permissions.OwnCompanies.View, Permissions.OwnCompanies.Create]);
+        var context = await fixture.NewContextAsync();
+        await using var _ = context;
+        var page = await context.NewPageAsync();
+        var login = new LoginPage(page);
+        await login.GotoAsync();
+        await login.SignInAsync(username, E2EFixture.UserPassword);
+        await Expect(new DashboardPage(page).Heading).ToBeVisibleAsync();
+        var companies = new CompaniesPage(page);
+
+        // Act
+        await companies.NavLink.ClickAsync();
+
+        // Assert
+        await Expect(companies.AddButton).ToBeVisibleAsync();
+        await Expect(companies.Row("Test AB").GetByTestId("company-edit")).ToHaveCountAsync(0);
+        await Expect(new RolesPage(page).NavLink).ToHaveCountAsync(0);
+    }
+
+    [Fact]
+    public async Task SomeoneWithNoRightsHasNoLinksAndIsToldWhy()
+    {
+        // Arrange
+        var username = await fixture.CreateUserAsync("Visitor", permissions: []);
+        var context = await fixture.NewContextAsync();
+        await using var _ = context;
+        var page = await context.NewPageAsync();
+        var login = new LoginPage(page);
+        await login.GotoAsync();
+        await login.SignInAsync(username, E2EFixture.UserPassword);
+        await Expect(new DashboardPage(page).Heading).ToBeVisibleAsync();
+
+        // Act
+        await new RolesPage(page).GotoAsync();
+
+        // Assert
+        await Expect(page.GetByTestId("roles-forbidden")).ToBeVisibleAsync();
+        await Expect(new RolesPage(page).NavLink).ToHaveCountAsync(0);
+        await Expect(new CompaniesPage(page).NavLink).ToHaveCountAsync(0);
     }
 }

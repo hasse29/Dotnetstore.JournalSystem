@@ -55,10 +55,11 @@ public static class HostApplicationBuilderExtensions
         builder.Services.AddScoped<IRoleService, RoleService>();
         builder.Services.AddScoped<IUserRepository, UserRepository>();
         builder.Services.AddScoped<IUserService, UserService>();
+        builder.Services.AddScoped<IUserAdministrationGuard, UserAdministrationGuard>();
         builder.Services.AddScoped<IPersonalIdentityNumberProtector, PersonalIdentityNumberProtector>();
         builder.Services.TryAddSingleton(TimeProvider.System);
         builder.Services.AddScoped<IAuthService, AuthService>();
-        builder.Services.AddScoped<IClaimsTransformation, EntraUserClaimsTransformation>();
+        builder.Services.AddScoped<IClaimsTransformation, UserClaimsTransformation>();
 
         if (builder.Configuration.GetValue<bool>(EntraEnabledConfigurationKey))
         {

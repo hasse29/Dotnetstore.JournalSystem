@@ -10,7 +10,7 @@ internal static class ApiAction
     internal static async Task<ApiOutcome> RunAsync(
         Func<Task<ApiResult>> call,
         string success,
-        string forbidden = "Only administrators can change companies.")
+        string forbidden = "You do not have permission to do that.")
     {
         try
         {
@@ -23,7 +23,7 @@ internal static class ApiAction
 
             if (result.IsForbidden || result.IsUnauthorized)
             {
-                return Failed(forbidden);
+                return Failed(result.Problem.Detail ?? forbidden);
             }
 
             if (result.IsNotFound)

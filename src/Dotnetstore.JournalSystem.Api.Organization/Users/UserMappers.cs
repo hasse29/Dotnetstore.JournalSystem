@@ -1,3 +1,4 @@
+using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Shared.Responses.Organization;
 
 namespace Dotnetstore.JournalSystem.Api.Organization.Users;
@@ -26,7 +27,8 @@ internal static class UserMappers
         this User user,
         string ownCompanyName,
         string roleName,
-        string? socialSecurityNumberMasked)
+        string? socialSecurityNumberMasked,
+        RoleAccess? access = null)
     {
         ArgumentNullException.ThrowIfNull(user);
 
@@ -44,7 +46,9 @@ internal static class UserMappers
             ownCompanyName,
             user.RoleId,
             roleName,
-            user.LastLoginAt);
+            user.LastLoginAt,
+            access?.EffectivePermissions ?? [],
+            access?.IsAdministrator ?? false);
     }
 
     private static DateOnly? ToDateOnly(DateTime? value) => value is { } date ? DateOnly.FromDateTime(date) : null;

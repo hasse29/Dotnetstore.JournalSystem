@@ -5,17 +5,16 @@ public static class AuthClaimTypes
     public const string Role = "role";
     public const string UserId = "user_id";
     public const string OwnCompanyId = "own_company_id";
+
+    /// <summary>Added by the API for each right of the caller's role; never taken from a token.</summary>
+    public const string Permission = "permission";
 }
 
 public static class AuthPolicies
 {
     public const string Administrator = "Administrator";
 
-    /// <summary>
-    /// A signed-in caller who may use the application. A Microsoft sign-in that an administrator has not approved, or
-    /// whose account is locked, is authenticated but has no application account.
-    /// </summary>
-    public const string Approved = "Approved";
+    // Each value in Permissions is also a policy name.
 
     /// <summary>Any valid sign-in, approved or not. Only for what a person needs before they are approved.</summary>
     public const string Authenticated = "Authenticated";

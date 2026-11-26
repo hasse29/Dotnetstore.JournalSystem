@@ -8,3 +8,34 @@
         <input name="Description" value="@Model?.Description" maxlength="@DataSchemeConstants.RoleDescriptionMaxLength" data-testid="role-description" />
     </label>
 </div>
+<fieldset class="permissions" data-permissions disabled="@(Model?.IsSystem == true)">
+    <legend>Rights</legend>
+    @if (Model?.IsSystem == true)
+    {
+        <p class="muted">This role always has every right.</p>
+    }
+    <table class="table permission-grid">
+        <thead>
+            <tr><th>Area</th><th>View</th><th>Create</th><th>Edit</th><th>Delete</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var area in Permissions.Areas)
+            {
+                <tr>
+                    <th scope="row">@area.Label</th>
+                    @foreach (var (action, permission) in new[] { ("view", area.View), ("create", area.Create), ("edit", area.Edit), ("delete", area.Delete) })
+                    {
+                        <td>
+                            @if (permission is not null)
+                            {
+                                var requires = Permissions.Requires.TryGetValue(permission, out var required) ? string.Join(' ', required) : null;
+                                <input type="checkbox" name="Permissions" value="@permission" checked="@(Model?.Permissions?.Contains(permission) == true)"
+                                       data-requires="@requires" aria-label="@area.Label: @action" data-testid="permission-@permission" />
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</fieldset>

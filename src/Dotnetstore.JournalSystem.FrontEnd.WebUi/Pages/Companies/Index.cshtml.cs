@@ -1,16 +1,26 @@
+using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication;
 using Dotnetstore.JournalSystem.Shared.Clients;
 using Dotnetstore.JournalSystem.Shared.Clients.Organization;
+using Dotnetstore.JournalSystem.Shared.Constants;
 using Dotnetstore.JournalSystem.Shared.Responses.Organization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies;
 
-public sealed class IndexModel(IOwnCompanyClient ownCompanies) : PageModel
+public sealed class IndexModel(IOwnCompanyClient ownCompanies, ICurrentUserProfile currentProfile) : PageModel
 {
     public IReadOnlyList<OwnCompanyResponse> Companies { get; private set; } = [];
 
     public bool Unavailable { get; private set; }
+
+    public bool Forbidden { get; private set; }
+
+    public bool CanCreate { get; private set; }
+
+    public bool CanEdit { get; private set; }
+
+    public bool CanDelete { get; private set; }
 
     [TempData]
     public string? Message { get; set; }
@@ -20,6 +30,11 @@ public sealed class IndexModel(IOwnCompanyClient ownCompanies) : PageModel
 
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
+        var rights = await currentProfile.GetRightsAsync(User, cancellationToken).ConfigureAwait(false);
+        CanCreate = rights.Has(Permissions.OwnCompanies.Create);
+        CanEdit = rights.Has(Permissions.OwnCompanies.Edit);
+        CanDelete = rights.Has(Permissions.OwnCompanies.Delete);
+
         try
         {
             var result = await ownCompanies.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -27,6 +42,10 @@ public sealed class IndexModel(IOwnCompanyClient ownCompanies) : PageModel
             if (result.IsSuccess && result.Value is not null)
             {
                 Companies = result.Value.OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            }
+            else if (result.IsForbidden)
+            {
+                Forbidden = true;
             }
             else
             {

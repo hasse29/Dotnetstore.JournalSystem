@@ -28,10 +28,13 @@ else
     <partial name="_CompanyHeader" model="Model" />
     <partial name="_CompanyDetails" model="Model" />
     <partial name="_CompanyPhotos" model="Model" />
-    <partial name="_CompanyAddresses" model="Model" />
-    <partial name="_CompanyEmails" model="Model" />
-    <partial name="_CompanyPhones" model="Model" />
-    @if (Model.CanEdit)
+    @if (Model.CanViewContacts)
+    {
+        <partial name="_CompanyAddresses" model="Model" />
+        <partial name="_CompanyEmails" model="Model" />
+        <partial name="_CompanyPhones" model="Model" />
+    }
+    @if (Model.CanViewUsers)
     {
         <partial name="_CompanyUsers" model="Model" />
     }

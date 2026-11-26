@@ -268,4 +268,31 @@ public sealed class UserRepositoryTests : IDisposable
         // Assert
         exists.ShouldBeFalse();
     }
+
+    [Fact]
+    public async Task FindUntrackedReturnsTheUserWithoutTrackingIt()
+    {
+        // Arrange
+        var id = await SeedAsync();
+
+        // Act
+        var user = await _repository.FindUntrackedAsync(id, TestContext.Current.CancellationToken);
+
+        // Assert
+        user.ShouldNotBeNull().Id.ShouldBe(id);
+        _database.Context.ChangeTracker.Entries().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task FindUntrackedReturnsNullForAnUnknownUser()
+    {
+        // Arrange
+        await SeedAsync();
+
+        // Act
+        var user = await _repository.FindUntrackedAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        user.ShouldBeNull();
+    }
 }

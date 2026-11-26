@@ -1,4 +1,5 @@
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
+using Dotnetstore.JournalSystem.Shared.Constants;
 using Shouldly;
 
 namespace Dotnetstore.JournalSystem.Api.Organization.Tests.Roles;
@@ -47,5 +48,31 @@ public sealed class RoleMappersTests
 
         // Assert
         response.IsSystem.ShouldBe(isSystem);
+    }
+
+    [Fact]
+    public void ToRoleResponseListsTheRightsGivenToIt()
+    {
+        // Arrange
+        var role = RoleTestData.Create(Guid.NewGuid(), "Nurse");
+
+        // Act
+        var response = role.ToRoleResponse([Permissions.WorkGroups.View]);
+
+        // Assert
+        response.Permissions.ShouldBe([Permissions.WorkGroups.View]);
+    }
+
+    [Fact]
+    public void ToRoleResponseListsEveryRightForTheAdministrator()
+    {
+        // Arrange
+        var role = RoleTestData.Create(Guid.NewGuid(), RoleNames.Administrator, isSystem: true);
+
+        // Act
+        var response = role.ToRoleResponse();
+
+        // Assert
+        response.Permissions.ShouldBe(Permissions.All);
     }
 }

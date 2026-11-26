@@ -10,6 +10,16 @@ internal sealed class RoleService(
 {
     private const string DuplicateNameMessage = "A role with that name already exists.";
 
+    private async Task<IReadOnlyList<string>> GetPermissionsAsync(Guid roleId, CancellationToken cancellationToken)
+    {
+        var access = await organizationUnitOfWork
+            .Roles
+            .GetAccessAsync(roleId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return access?.Permissions ?? [];
+    }
+
     private static EditRoleRequest Trimmed(EditRoleRequest request) => request with { Name = request.Name.Trim() };
 
     private async Task<bool> NameIsTakenAsync(string name, Guid? exceptId, CancellationToken cancellationToken) =>
@@ -25,7 +35,12 @@ internal sealed class RoleService(
             .GetAllAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return items.Select(x => x.ToRoleResponse());
+        var permissions = await organizationUnitOfWork
+            .Roles
+            .GetAllPermissionsAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return items.Select(x => x.ToRoleResponse(permissions[x.Id]));
     }
 
     async ValueTask<Result<RoleResponse>> IRoleService.GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -35,9 +50,14 @@ internal sealed class RoleService(
             .GetByIdAsync(id, cancellationToken)
             .ConfigureAwait(false);
 
-        return role is not null ?
-            Result<RoleResponse>.Success(role.ToRoleResponse()) :
-            Result<RoleResponse>.NotFound();
+        if (role is null)
+        {
+            return Result<RoleResponse>.NotFound();
+        }
+
+        var permissions = await GetPermissionsAsync(id, cancellationToken).ConfigureAwait(false);
+
+        return Result<RoleResponse>.Success(role.ToRoleResponse(permissions));
     }
 
     async ValueTask<Result<RoleResponse>> IRoleService.CreateAsync(EditRoleRequest request, Guid? userId, CancellationToken cancellationToken)
@@ -57,12 +77,18 @@ internal sealed class RoleService(
             .AddAsync(role, cancellationToken)
             .ConfigureAwait(false);
 
+        var permissions = Shared.Constants.Permissions.WithRequired(request.Permissions ?? []);
+        await organizationUnitOfWork
+            .Roles
+            .SetPermissionsAsync(role.Id, permissions, cancellationToken)
+            .ConfigureAwait(false);
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
 
         return result > 0 ?
-            Result<RoleResponse>.Success(role.ToRoleResponse()) :
+            Result<RoleResponse>.Success(role.ToRoleResponse(permissions)) :
             Result<RoleResponse>.Error("Failed to create the role.");
     }
 
@@ -104,13 +130,27 @@ internal sealed class RoleService(
             .Roles
             .Update(roleToUpdate);
 
+        // A system role has every right, so none are stored for it.
+        if (role.Permissions is { } requested && !roleToUpdate.IsSystem)
+        {
+            await organizationUnitOfWork
+                .Roles
+                .SetPermissionsAsync(id, Shared.Constants.Permissions.WithRequired(requested), cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         var result = await organizationUnitOfWork
             .SaveChangesAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        return result > 0 ?
-            Result<RoleResponse>.Success(roleToUpdate.ToRoleResponse()) :
-            Result<RoleResponse>.Error("Failed to update the role.");
+        if (result <= 0)
+        {
+            return Result<RoleResponse>.Error("Failed to update the role.");
+        }
+
+        var permissions = await GetPermissionsAsync(id, cancellationToken).ConfigureAwait(false);
+
+        return Result<RoleResponse>.Success(roleToUpdate.ToRoleResponse(permissions));
     }
 
     async ValueTask<Result> IRoleService.DeleteAsync(Guid id, CancellationToken cancellationToken)

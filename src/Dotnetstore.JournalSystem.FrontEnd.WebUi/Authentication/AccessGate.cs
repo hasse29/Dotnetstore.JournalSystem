@@ -31,12 +31,6 @@ internal static class AccessGate
         return principal.HasClaim(claim => claim.Type == AuthClaimTypes.UserId);
     }
 
-    internal static bool IsAdministratorOrUnknown(ClaimsPrincipal principal)
-    {
-        ArgumentNullException.ThrowIfNull(principal);
-        return principal.HasClaim(AuthClaimTypes.Role, RoleNames.Administrator) || !HasApplicationAccount(principal);
-    }
-
     internal static AccessGateOutcome Decide(ApiResult<AccessRequestResponse> result)
     {
         ArgumentNullException.ThrowIfNull(result);

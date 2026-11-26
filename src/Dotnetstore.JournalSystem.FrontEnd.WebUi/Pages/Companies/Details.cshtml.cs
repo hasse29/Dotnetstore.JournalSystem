@@ -2,6 +2,7 @@ using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication;
 using Dotnetstore.JournalSystem.Shared.Clients;
 using Dotnetstore.JournalSystem.Shared.Clients.Contact;
 using Dotnetstore.JournalSystem.Shared.Clients.Organization;
+using Dotnetstore.JournalSystem.Shared.Constants;
 using Dotnetstore.JournalSystem.Shared.Responses.Organization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -19,13 +20,26 @@ public sealed partial class DetailsModel(
     IPhoneNumberClient phoneNumbers,
     IPhoneNumberTypeClient phoneNumberTypes,
     IUserClient users,
-    IRoleClient roles) : PageModel
+    IRoleClient roles,
+    ICurrentUserProfile currentProfile) : PageModel
 {
     public OwnCompanyResponse? Company { get; private set; }
 
     public bool CanEdit { get; private set; }
 
-    /// <summary>Null when the users could not be loaded. Only loaded for administrators.</summary>
+    public bool CanDelete { get; private set; }
+
+    public bool CanViewContacts { get; private set; }
+
+    public bool CanAddContacts { get; private set; }
+
+    public bool CanEditContacts { get; private set; }
+
+    public bool CanDeleteContacts { get; private set; }
+
+    public bool CanViewUsers { get; private set; }
+
+    /// <summary>Null when the users could not be loaded. Only loaded for those who may view users.</summary>
     public IReadOnlyList<CompanyUser>? Users { get; private set; }
 
     [TempData]
@@ -36,9 +50,21 @@ public sealed partial class DetailsModel(
 
     public async Task<IActionResult> OnGetAsync(Guid id, CancellationToken cancellationToken)
     {
-        CanEdit = AccessGate.IsAdministratorOrUnknown(User);
+        var rights = await currentProfile.GetRightsAsync(User, cancellationToken).ConfigureAwait(false);
+        CanEdit = rights.Has(Permissions.OwnCompanies.Edit);
+        CanDelete = rights.Has(Permissions.OwnCompanies.Delete);
+        CanViewContacts = rights.Has(Permissions.ContactDetails.View);
+        CanAddContacts = rights.Has(Permissions.ContactDetails.Create);
+        CanEditContacts = rights.Has(Permissions.ContactDetails.Edit);
+        CanDeleteContacts = rights.Has(Permissions.ContactDetails.Delete);
+        CanViewUsers = rights.Has(Permissions.Users.View);
 
         var company = await TryAsync(() => ownCompanies.GetByIdAsync(id, cancellationToken)).ConfigureAwait(false);
+        if (company is { IsForbidden: true })
+        {
+            return RedirectToPage("/Companies/Index");
+        }
+
         if (company is { IsNotFound: true })
         {
             return NotFound();
@@ -51,10 +77,12 @@ public sealed partial class DetailsModel(
         }
 
         await LoadImagesAsync(id, cancellationToken).ConfigureAwait(false);
-        await LoadContactsAsync(id, cancellationToken).ConfigureAwait(false);
+        if (CanViewContacts)
+        {
+            await LoadContactsAsync(id, cancellationToken).ConfigureAwait(false);
+        }
 
-        // The users API is for administrators only.
-        if (CanEdit)
+        if (CanViewUsers)
         {
             await LoadUsersAsync(id, cancellationToken).ConfigureAwait(false);
         }

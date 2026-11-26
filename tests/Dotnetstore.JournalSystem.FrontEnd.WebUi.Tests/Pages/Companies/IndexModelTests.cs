@@ -1,7 +1,10 @@
 using System.Net;
 using Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Companies;
+using Dotnetstore.JournalSystem.FrontEnd.WebUi.Tests.Fixtures;
+using Dotnetstore.JournalSystem.Shared.Constants;
 using Dotnetstore.JournalSystem.Shared.Clients;
 using Dotnetstore.JournalSystem.Shared.Responses.Organization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Shouldly;
@@ -10,6 +13,12 @@ namespace Dotnetstore.JournalSystem.FrontEnd.WebUi.Tests.Pages.Companies;
 
 public sealed class IndexModelTests
 {
+    private static IndexModel Create(FakeOwnCompanyClient client, FakeCurrentUserProfile? profile = null) =>
+        new(client, profile ?? FakeCurrentUserProfile.Administrator())
+        {
+            PageContext = new PageContext { HttpContext = new DefaultHttpContext() }
+        };
+
     private static ApiResult Conflict(string detail) =>
         ApiResult.Create(HttpStatusCode.Conflict, new ApiProblem(null, detail, new Dictionary<string, string[]>()));
 
@@ -20,7 +29,7 @@ public sealed class IndexModelTests
     public async Task ListsAllCompaniesSortedByName()
     {
         // Arrange
-        var model = new IndexModel(Listing(HttpStatusCode.OK, FakeOwnCompanyClient.Company("Zeta AB"), FakeOwnCompanyClient.Company("alpha AB"), FakeOwnCompanyClient.Company("Beta AB")));
+        var model = Create(Listing(HttpStatusCode.OK, FakeOwnCompanyClient.Company("Zeta AB"), FakeOwnCompanyClient.Company("alpha AB"), FakeOwnCompanyClient.Company("Beta AB")));
 
         // Act
         var result = await model.OnGetAsync(TestContext.Current.CancellationToken);
@@ -35,7 +44,7 @@ public sealed class IndexModelTests
     public async Task ShowsAnEmptyListWhenThereAreNoCompanies()
     {
         // Arrange
-        var model = new IndexModel(Listing(HttpStatusCode.OK));
+        var model = Create(Listing(HttpStatusCode.OK));
 
         // Act
         await model.OnGetAsync(TestContext.Current.CancellationToken);
@@ -51,7 +60,7 @@ public sealed class IndexModelTests
     public async Task ReportsUnavailableWhenTheApiRefuses(HttpStatusCode status)
     {
         // Arrange
-        var model = new IndexModel(Listing(status));
+        var model = Create(Listing(status));
 
         // Act
         await model.OnGetAsync(TestContext.Current.CancellationToken);
@@ -65,7 +74,7 @@ public sealed class IndexModelTests
     public async Task ReportsUnavailableWhenTheApiCannotBeReached()
     {
         // Arrange
-        var model = new IndexModel(new FakeOwnCompanyClient { List = () => throw new HttpRequestException("down") });
+        var model = Create(new FakeOwnCompanyClient { List = () => throw new HttpRequestException("down") });
 
         // Act
         await model.OnGetAsync(TestContext.Current.CancellationToken);
@@ -79,7 +88,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeOwnCompanyClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
         var input = new CompanyInput { Name = "  New AB ", Description = " ", WebsiteUrl = "https://example.com", TaxId = " SE1 " };
 
         // Act
@@ -102,7 +111,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeOwnCompanyClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
 
         // Act
         await model.OnPostCreateAsync(new CompanyInput { Name = name }, TestContext.Current.CancellationToken);
@@ -120,7 +129,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeOwnCompanyClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
 
         // Act
         await model.OnPostCreateAsync(new CompanyInput { Name = "New AB", WebsiteUrl = website }, TestContext.Current.CancellationToken);
@@ -135,7 +144,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var problem = new ApiProblem(null, null, new Dictionary<string, string[]> { ["Name"] = ["Name is required."] });
-        var model = new IndexModel(new FakeOwnCompanyClient
+        var model = Create(new FakeOwnCompanyClient
         {
             Write = () => ApiResult.Create<OwnCompanyResponse>(HttpStatusCode.BadRequest, null, problem)
         });
@@ -153,7 +162,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeOwnCompanyClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
 
         // Act
         await model.OnPostUpdateAsync(Guid.NewGuid(), new CompanyInput { Name = "Renamed AB" }, TestContext.Current.CancellationToken);
@@ -167,7 +176,7 @@ public sealed class IndexModelTests
     public async Task UpdateReportsACompanyThatNoLongerExists()
     {
         // Arrange
-        var model = new IndexModel(new FakeOwnCompanyClient { Write = () => FakeOwnCompanyClient.Saved(HttpStatusCode.NotFound) });
+        var model = Create(new FakeOwnCompanyClient { Write = () => FakeOwnCompanyClient.Saved(HttpStatusCode.NotFound) });
 
         // Act
         await model.OnPostUpdateAsync(Guid.NewGuid(), new CompanyInput { Name = "Renamed AB" }, TestContext.Current.CancellationToken);
@@ -181,7 +190,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeOwnCompanyClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
         var id = Guid.NewGuid();
 
         // Act
@@ -197,7 +206,7 @@ public sealed class IndexModelTests
     public async Task DeleteShowsTheReasonWhenTheApiRefusesASystemCompany()
     {
         // Arrange
-        var model = new IndexModel(new FakeOwnCompanyClient { Remove = () => Conflict("System companies cannot be deleted.") });
+        var model = Create(new FakeOwnCompanyClient { Remove = () => Conflict("System companies cannot be deleted.") });
 
         // Act
         await model.OnPostDeleteAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
@@ -211,20 +220,20 @@ public sealed class IndexModelTests
     public async Task DeleteTellsNonAdministratorsTheyAreNotAllowed()
     {
         // Arrange
-        var model = new IndexModel(new FakeOwnCompanyClient { Remove = () => ApiResult.Create(HttpStatusCode.Forbidden) });
+        var model = Create(new FakeOwnCompanyClient { Remove = () => ApiResult.Create(HttpStatusCode.Forbidden) });
 
         // Act
         await model.OnPostDeleteAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
 
         // Assert
-        model.ErrorMessage.ShouldBe("Only administrators can change companies.");
+        model.ErrorMessage.ShouldBe("You do not have permission to do that.");
     }
 
     [Fact]
     public async Task DeleteReportsAnUnreachableApi()
     {
         // Arrange
-        var model = new IndexModel(new FakeOwnCompanyClient { Remove = () => throw new HttpRequestException("down") });
+        var model = Create(new FakeOwnCompanyClient { Remove = () => throw new HttpRequestException("down") });
 
         // Act
         await model.OnPostDeleteAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
@@ -232,5 +241,49 @@ public sealed class IndexModelTests
         // Assert
         model.ErrorMessage.ShouldNotBeNullOrWhiteSpace();
         model.Message.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task OffersEverythingToAnAdministrator()
+    {
+        // Arrange
+        var model = Create(Listing(HttpStatusCode.OK));
+
+        // Act
+        await model.OnGetAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        model.CanCreate.ShouldBeTrue();
+        model.CanEdit.ShouldBeTrue();
+        model.CanDelete.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task OffersOnlyWhatTheRightsAllow()
+    {
+        // Arrange
+        var model = Create(Listing(HttpStatusCode.OK), FakeCurrentUserProfile.With(Permissions.OwnCompanies.View, Permissions.OwnCompanies.Edit));
+
+        // Act
+        await model.OnGetAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        model.CanCreate.ShouldBeFalse();
+        model.CanEdit.ShouldBeTrue();
+        model.CanDelete.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task SaysSoWhenThePersonMayNotViewCompanies()
+    {
+        // Arrange
+        var model = Create(Listing(HttpStatusCode.Forbidden), FakeCurrentUserProfile.With());
+
+        // Act
+        await model.OnGetAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        model.Forbidden.ShouldBeTrue();
+        model.Unavailable.ShouldBeFalse();
     }
 }

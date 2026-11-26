@@ -52,7 +52,7 @@ public sealed class ApprovedAccessTests(SqlServerFixture fixture)
         var company = (await host.Client.GetFromJsonAsync<OwnCompanyResponse[]>(
             Url(ApiEndpoints.Organization.OwnCompanies.GetAll), Token))!.Single();
         using var roleResponse = await host.Client.PostAsJsonAsync(
-            Url(ApiEndpoints.Organization.Roles.Create), new EditRoleRequest("Nurse", "Nurse"), Token);
+            Url(ApiEndpoints.Organization.Roles.Create), new EditRoleRequest("Nurse", "Nurse", ApiTestHost.ViewRights), Token);
         var role = (await roleResponse.Content.ReadFromJsonAsync<RoleResponse>(Token))!;
 
         host.SignInAsMicrosoftPerson(ObjectId);

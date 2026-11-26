@@ -33,6 +33,12 @@ internal static class EditRoleRequestValidator
             errors[nameof(request.Description)] = [$"{nameof(request.Description)} must be at most {DataSchemeConstants.RoleDescriptionMaxLength} characters."];
         }
 
+        var unknown = request.Permissions?.Where(x => !Shared.Constants.Permissions.All.Contains(x)).ToArray();
+        if (unknown is { Length: > 0 })
+        {
+            errors[nameof(request.Permissions)] = [$"Unknown permissions: {string.Join(", ", unknown)}."];
+        }
+
         return errors;
     }
 }

@@ -1,9 +1,8 @@
 @page
-@using Dotnetstore.JournalSystem.FrontEnd.WebUi.Authentication
 @model Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Roles.IndexModel
 @{
     ViewData["Title"] = "Roles";
-    var canEdit = AccessGate.IsAdministratorOrUnknown(User);
+    var canEdit = Model.CanManage;
 }
 
 <div class="page-header page-header-row">
@@ -11,7 +10,7 @@
         <h1>Roles</h1>
         <p>The roles users can have.</p>
     </div>
-    @if (canEdit && !Model.Unavailable)
+    @if (canEdit && !Model.Unavailable && !Model.Forbidden)
     {
         <button type="button" class="btn btn-primary" data-dialog-open="role-create-dialog" data-testid="role-add">Add role</button>
     }
@@ -27,7 +26,13 @@
     <div class="alert alert-danger" role="alert" data-testid="roles-error">@Model.ErrorMessage</div>
 }
 
-@if (Model.Unavailable)
+@if (Model.Forbidden)
+{
+    <div class="alert alert-danger" role="alert" data-testid="roles-forbidden">
+        You do not have permission to view roles.
+    </div>
+}
+else if (Model.Unavailable)
 {
     <div class="alert alert-danger" role="alert" data-testid="roles-unavailable">
         The API could not be reached. Roles are not available right now.

@@ -1,10 +1,12 @@
 using System.Net;
 using Dotnetstore.JournalSystem.FrontEnd.WebUi.Pages.Roles;
+using Dotnetstore.JournalSystem.FrontEnd.WebUi.Tests.Fixtures;
 using Dotnetstore.JournalSystem.Shared.Clients;
 using Dotnetstore.JournalSystem.Shared.Clients.Organization;
 using Dotnetstore.JournalSystem.Shared.Constants;
 using Dotnetstore.JournalSystem.Shared.Requests.Organization;
 using Dotnetstore.JournalSystem.Shared.Responses.Organization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Shouldly;
@@ -52,6 +54,12 @@ public sealed class IndexModelTests
         }
     }
 
+    private static IndexModel Create(FakeRoleClient client, FakeCurrentUserProfile? profile = null) =>
+        new(client, profile ?? FakeCurrentUserProfile.Administrator())
+        {
+            PageContext = new PageContext { HttpContext = new DefaultHttpContext() }
+        };
+
     private static ApiProblem Problem(string detail) => new(null, detail, new Dictionary<string, string[]>());
 
     private static FakeRoleClient Listing(HttpStatusCode status, params string[] names) => new()
@@ -65,7 +73,7 @@ public sealed class IndexModelTests
     public async Task ListsAllRolesSortedByName()
     {
         // Arrange
-        var model = new IndexModel(Listing(HttpStatusCode.OK, "Porter", "doctor", "Nurse"));
+        var model = Create(Listing(HttpStatusCode.OK, "Porter", "doctor", "Nurse"));
 
         // Act
         var result = await model.OnGetAsync(TestContext.Current.CancellationToken);
@@ -80,7 +88,7 @@ public sealed class IndexModelTests
     public async Task ReportsUnavailableWhenTheApiRefuses()
     {
         // Arrange
-        var model = new IndexModel(Listing(HttpStatusCode.InternalServerError));
+        var model = Create(Listing(HttpStatusCode.InternalServerError));
 
         // Act
         await model.OnGetAsync(TestContext.Current.CancellationToken);
@@ -94,7 +102,7 @@ public sealed class IndexModelTests
     public async Task ReportsUnavailableWhenTheApiCannotBeReached()
     {
         // Arrange
-        var model = new IndexModel(new FakeRoleClient { List = () => throw new HttpRequestException("down") });
+        var model = Create(new FakeRoleClient { List = () => throw new HttpRequestException("down") });
 
         // Act
         await model.OnGetAsync(TestContext.Current.CancellationToken);
@@ -108,7 +116,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeRoleClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
 
         // Act
         var result = await model.OnPostCreateAsync(new RoleInput { Name = "  Nurse ", Description = " Care " }, TestContext.Current.CancellationToken);
@@ -116,7 +124,10 @@ public sealed class IndexModelTests
         // Assert
         result.ShouldBeOfType<RedirectToPageResult>();
         model.Message.ShouldBe("Role created.");
-        client.Sent.ShouldBe(new EditRoleRequest("Nurse", "Care"));
+        var sent = client.Sent.ShouldNotBeNull();
+        sent.Name.ShouldBe("Nurse");
+        sent.Description.ShouldBe("Care");
+        sent.Permissions.ShouldNotBeNull().ShouldBeEmpty();
     }
 
     [Fact]
@@ -124,13 +135,13 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeRoleClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
 
         // Act
         await model.OnPostCreateAsync(new RoleInput { Name = "Nurse" }, TestContext.Current.CancellationToken);
 
         // Assert
-        client.Sent.ShouldBe(new EditRoleRequest("Nurse", string.Empty));
+        client.Sent.ShouldNotBeNull().Description.ShouldBeEmpty();
     }
 
     [Theory]
@@ -141,7 +152,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeRoleClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
         var input = new RoleInput { Name = name, Description = new string('x', descriptionLength) };
 
         // Act
@@ -157,7 +168,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeRoleClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
 
         // Act
         await model.OnPostUpdateAsync(Guid.NewGuid(), new RoleInput { Name = "Doctor" }, TestContext.Current.CancellationToken);
@@ -172,7 +183,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeRoleClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
         var input = new RoleInput { Name = new string('x', DataSchemeConstants.RoleNameMaxLength + 1) };
 
         // Act
@@ -187,7 +198,7 @@ public sealed class IndexModelTests
     public async Task UpdateShowsTheApiProblemWhenItRefuses()
     {
         // Arrange
-        var model = new IndexModel(new FakeRoleClient
+        var model = Create(new FakeRoleClient
         {
             Write = () => ApiResult.Create<RoleResponse>(HttpStatusCode.Conflict, null, Problem("System roles cannot be renamed."))
         });
@@ -205,7 +216,7 @@ public sealed class IndexModelTests
     {
         // Arrange
         var client = new FakeRoleClient();
-        var model = new IndexModel(client);
+        var model = Create(client);
         var id = Guid.NewGuid();
 
         // Act
@@ -220,7 +231,7 @@ public sealed class IndexModelTests
     public async Task DeleteTellsNonAdministratorsTheyAreNotAllowed()
     {
         // Arrange
-        var model = new IndexModel(new FakeRoleClient { Remove = () => ApiResult.Create(HttpStatusCode.Forbidden) });
+        var model = Create(new FakeRoleClient { Remove = () => ApiResult.Create(HttpStatusCode.Forbidden) });
 
         // Act
         await model.OnPostDeleteAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
@@ -228,5 +239,50 @@ public sealed class IndexModelTests
         // Assert
         model.ErrorMessage.ShouldBe("Only administrators can change roles.");
         model.Message.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SendsTheTickedRights()
+    {
+        // Arrange
+        var client = new FakeRoleClient();
+        var model = Create(client);
+        var input = new RoleInput { Name = "Nurse", Permissions = [Permissions.Users.View, Permissions.Roles.View] };
+
+        // Act
+        await model.OnPostUpdateAsync(Guid.NewGuid(), input, TestContext.Current.CancellationToken);
+
+        // Assert
+        client.Sent.ShouldNotBeNull().Permissions.ShouldBe([Permissions.Users.View, Permissions.Roles.View]);
+    }
+
+    [Fact]
+    public async Task OnlyAdministratorsAreOfferedChanges()
+    {
+        // Arrange
+        var administrator = Create(Listing(HttpStatusCode.OK));
+        var other = Create(Listing(HttpStatusCode.OK), FakeCurrentUserProfile.With(Permissions.Roles.View));
+
+        // Act
+        await administrator.OnGetAsync(TestContext.Current.CancellationToken);
+        await other.OnGetAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        administrator.CanManage.ShouldBeTrue();
+        other.CanManage.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task SaysSoWhenThePersonMayNotViewRoles()
+    {
+        // Arrange
+        var model = Create(Listing(HttpStatusCode.Forbidden), FakeCurrentUserProfile.With());
+
+        // Act
+        await model.OnGetAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        model.Forbidden.ShouldBeTrue();
+        model.Unavailable.ShouldBeFalse();
     }
 }

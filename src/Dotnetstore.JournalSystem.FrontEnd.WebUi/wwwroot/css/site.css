@@ -234,6 +234,11 @@ body.admin { display: flex; min-height: 100vh; }
 .modal-body { padding: 1.25rem; overflow-y: auto; }
 .modal-body .form-grid { grid-template-columns: 1fr; gap: .85rem; }
 .modal-footer { display: flex; justify-content: flex-end; gap: .5rem; padding: 1rem 1.25rem; border-top: 1px solid var(--border); }
+.permissions { margin: 1rem 0 0; padding: 0; border: 0; min-width: 0; }
+.permissions legend { padding: 0; font-weight: 600; }
+.permission-grid { font-size: .85rem; }
+.permission-grid th, .permission-grid td { padding: .35rem .4rem; text-align: center; }
+.permission-grid th:first-child { text-align: left; }
 
 /* Company details */
 .company-header { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: flex-start; margin-bottom: 1.5rem; }

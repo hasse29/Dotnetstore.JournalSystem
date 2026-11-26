@@ -1,6 +1,7 @@
 using Dotnetstore.JournalSystem.Api.Organization.Data;
 using Dotnetstore.JournalSystem.Api.Organization.Roles;
 using Dotnetstore.JournalSystem.Api.SharedKernel.Services;
+using Dotnetstore.JournalSystem.Shared.Constants;
 using Microsoft.EntityFrameworkCore;
 using Dotnetstore.JournalSystem.Api.Organization.Tests.Fixtures;
 using Shouldly;
@@ -228,5 +229,78 @@ public sealed class RoleRepositoryTests : IDisposable
 
         // Assert
         exists.ShouldBeFalse();
+    }
+
+    [Fact]
+    public async Task GetAccessReturnsTheNameAndRightsOfARole()
+    {
+        // Arrange
+        IRoleRepository repository = _repository;
+        var role = CreateRole("Nurse");
+        await SeedAsync(role);
+        await repository.SetPermissionsAsync(role.Id, [Permissions.Users.View], TestContext.Current.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Act
+        var access = await repository.GetAccessAsync(role.Id, TestContext.Current.CancellationToken);
+
+        // Assert
+        access.ShouldNotBeNull().Name.ShouldBe("Nurse");
+        access.Permissions.ShouldBe([Permissions.Users.View]);
+    }
+
+    [Fact]
+    public async Task GetAccessReturnsNullForAnUnknownRole()
+    {
+        // Arrange
+        IRoleRepository repository = _repository;
+
+        // Act
+        var access = await repository.GetAccessAsync(Guid.NewGuid(), TestContext.Current.CancellationToken);
+
+        // Assert
+        access.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task SetPermissionsReplacesWhatTheRoleHadAndLeavesOtherRolesAlone()
+    {
+        // Arrange
+        IRoleRepository repository = _repository;
+        var role = CreateRole("Nurse");
+        var other = CreateRole("Porter");
+        await SeedAsync(role, other);
+        await repository.SetPermissionsAsync(role.Id, [Permissions.Users.View, Permissions.Roles.View], TestContext.Current.CancellationToken);
+        await repository.SetPermissionsAsync(other.Id, [Permissions.Users.View], TestContext.Current.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        await repository.SetPermissionsAsync(role.Id, [Permissions.Roles.View, Permissions.WorkGroups.View], TestContext.Current.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        var all = await repository.GetAllPermissionsAsync(TestContext.Current.CancellationToken);
+        all[role.Id].ShouldBe([Permissions.Roles.View, Permissions.WorkGroups.View], ignoreOrder: true);
+        all[other.Id].ShouldBe([Permissions.Users.View]);
+    }
+
+    [Fact]
+    public async Task DeletingARoleDeletesItsRights()
+    {
+        // Arrange
+        IRoleRepository repository = _repository;
+        var role = CreateRole("Nurse");
+        await SeedAsync(role);
+        await repository.SetPermissionsAsync(role.Id, [Permissions.Users.View], TestContext.Current.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+        _context.ChangeTracker.Clear();
+
+        // Act
+        await _repository.DeleteAsync(role.Id, TestContext.Current.CancellationToken);
+        await _context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
+        // Assert
+        (await _context.RolePermissions.CountAsync(TestContext.Current.CancellationToken)).ShouldBe(0);
     }
 }
